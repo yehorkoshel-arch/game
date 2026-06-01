@@ -1,0 +1,563 @@
+
+<!-- saved from url=(0051)file:///C:/Users/Yehor/Downloads/preview%20(4).html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+#app{width:680px;height:520px;overflow:hidden;border-radius:12px;border:0.5px solid var(--color-border-tertiary);font-family:var(--font-sans);position:relative;background:#1a1a2e}
+canvas{display:block}
+.screen{position:absolute;inset:0;display:none;flex-direction:column}
+.screen.active{display:flex}
+#sMenu{align-items:center;justify-content:center;background:#1a1a2e}
+#sShop{background:#1a1a2e}
+#sGame{align-items:center;justify-content:center}
+.title{font-size:30px;font-weight:500;color:#ffd700;letter-spacing:2px;margin-bottom:4px}
+.sub{font-size:13px;color:#8899aa;margin-bottom:20px}
+.mbtn{padding:10px 36px;font-size:15px;font-weight:500;border-radius:8px;border:none;cursor:pointer;margin:4px}
+.mbtn-play{background:#ffd700;color:#1a1a2e}
+.mbtn-shop{background:transparent;border:1.5px solid #ffd700;color:#ffd700}
+.mbtn-back{background:transparent;border:1.5px solid #4466aa;color:#88aacc;font-size:14px;padding:8px 24px;border-radius:8px;cursor:pointer}
+.mbtn:hover,.mbtn-back:hover{opacity:0.8}
+.mbtn:active,.mbtn-back:active{transform:scale(0.97)}
+.lang-bar{display:flex;gap:6px;margin-bottom:22px}
+.lbtn{padding:5px 12px;font-size:12px;border-radius:6px;border:1px solid #334466;background:transparent;color:#8899aa;cursor:pointer}
+.lbtn.active{border-color:#ffd700;color:#ffd700;background:#1e1a06}
+.lbtn:hover{border-color:#aabbcc;color:#ccd}
+.shop-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:0.5px solid #2a3a5a;flex-shrink:0}
+.shop-header-title{font-size:17px;font-weight:500;color:#ffd700}
+.shop-coins-badge{font-size:13px;color:#ffd700;background:#251f0a;padding:5px 12px;border-radius:6px;border:1px solid #5a4500}
+.shop-body{flex:1;padding:16px 18px;overflow-y:auto;min-height:0}
+.shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.sitem{background:#1e2444;border-radius:10px;border:1.5px solid #2a3460;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
+.sitem:hover{border-color:#4466aa}
+.sitem.owned{border-color:#ffd700}
+.sitem.selected{border-color:#00e5ff;background:#0a1e30}
+.sitem-name{font-size:13px;color:#aabbcc;text-align:center;font-weight:500}
+.sitem-price{font-size:12px;color:#ffd700}
+.sitem-owned{font-size:12px;color:#6bcb77}
+.sitem canvas{border-radius:6px;background:#0d1220}
+.shop-footer{flex-shrink:0;padding:12px 18px;border-top:0.5px solid #2a3a5a;display:flex;justify-content:flex-start}
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:8px 14px;pointer-events:none}
+.hud-l{font-size:13px;color:#fff;font-weight:500}
+.hud-coin{color:#ffd700;font-size:13px;font-weight:500}
+#ctrlbar{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:6px;padding:8px;background:rgba(0,0,0,0.5)}
+.cbtn{padding:7px 14px;font-size:12px;border-radius:6px;border:1px solid #334;background:rgba(255,255,255,0.07);color:#cde;cursor:pointer}
+.cbtn:hover{background:rgba(255,255,255,0.15)}
+.cbtn:active{transform:scale(0.96)}
+</style>
+
+</head><body><div id="app">
+  <h2 class="sr-only">Kyiv Runner</h2>
+  <div id="sMenu" class="screen">
+    <div class="lang-bar">
+      <button class="lbtn active" data-lang="uk">UA</button>
+      <button class="lbtn" data-lang="en">EN</button>
+      <button class="lbtn" data-lang="de">DE</button>
+      <button class="lbtn" data-lang="fr">FR</button>
+      <button class="lbtn" data-lang="es">ES</button>
+    </div>
+    <div class="title">KYIV RUNNER</div>
+    <div class="sub" id="menuSub">вулицями столиці</div>
+    <button class="mbtn mbtn-play" id="btnPlay">ГРАТИ</button>
+    <button class="mbtn mbtn-shop" id="btnShopOpen">МАГАЗИН</button>
+    <div style="margin-top:14px;font-size:12px;color:#556677"><span id="menuCoinsLabel">Монети</span>: <span id="menuCoins" style="color:#ffd700">396</span> ₴</div>
+  </div>
+  <div id="sShop" class="screen">
+    <div class="shop-header">
+      <div class="shop-header-title" id="shopTitle">Магазин скінів</div>
+      <div class="shop-coins-badge">₴ <span id="shopCoins">396</span></div>
+    </div>
+    <div class="shop-body"><div class="shop-grid" id="shopGrid"><div class="sitem owned selected"><canvas width="52" height="62"></canvas><div class="sitem-name">Школяр</div><div class="sitem-owned">✓ Обрано</div></div><div class="sitem"><canvas width="52" height="62"></canvas><div class="sitem-name">Ніндзя</div><div class="sitem-price">100₴</div></div><div class="sitem"><canvas width="52" height="62"></canvas><div class="sitem-name">Козак</div><div class="sitem-price">180₴</div></div></div></div>
+    <div class="shop-footer"><button class="mbtn-back" id="btnBackShop">← Повернутись до меню</button></div>
+  </div>
+  <div id="sGame" class="screen active">
+    <canvas id="gc" width="680" height="420"></canvas>
+    <div id="hud">
+      <div class="hud-l">♥ <span id="hLives">0</span> &nbsp;&nbsp; <span id="hScore">763</span> <span id="hudPts">очок</span></div>
+      <div class="hud-coin">₴ <span id="hCoins">4</span> &nbsp; <span id="hDist" style="color:#aabbcc">704 м до фінішу</span></div>
+    </div>
+    <div id="ctrlbar">
+      <button class="cbtn" id="cLeft">◀ Ліво</button>
+      <button class="cbtn" id="cJump">▲ Стрибок</button>
+      <button class="cbtn" id="cSlide">▼ Слайд</button>
+      <button class="cbtn" id="cRight">Право ▶</button>
+      <button class="cbtn" id="cMenu" style="border-color:#554;color:#aa9">☰ Меню</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LANGS={
+  uk:{sub:'вулицями столиці',play:'ГРАТИ',shop:'МАГАЗИН',coins:'Монети',shopTitle:'Магазин скінів',back:'← Повернутись до меню',pts:'очок',left:'◀ Ліво',jump:'▲ Стрибок',slide:'▼ Слайд',right:'Право ▶',menu:'☰ Меню',caught:'СПІЙМАЛИ!',win:'ФІНІШУВАВ!',total:'Всього монет',earned:'Зароблено',score:'Рахунок',restart:'Тисни кнопку або клавішу для рестарту',pressAny:'Натисни будь-яку клавішу або кнопку',owned:'✓ Обрано',equip:'Одягнути',skins:[{name:'Школяр'},{name:'Ніндзя'},{name:'Козак'}],dist:'м до фінішу',winBonus:'Бонус фінішу'},
+  en:{sub:'through the streets of the capital',play:'PLAY',shop:'SHOP',coins:'Coins',shopTitle:'Skin Shop',back:'← Back to menu',pts:'pts',left:'◀ Left',jump:'▲ Jump',slide:'▼ Slide',right:'Right ▶',menu:'☰ Menu',caught:'CAUGHT!',win:'FINISHED!',total:'Total coins',earned:'Earned',score:'Score',restart:'Press any key or button to restart',pressAny:'Press any key or button to start',owned:'✓ Equipped',equip:'Equip',skins:[{name:'Schoolboy'},{name:'Ninja'},{name:'Cossack'}],dist:'m to finish',winBonus:'Finish bonus'},
+  de:{sub:'durch die Straßen der Hauptstadt',play:'SPIELEN',shop:'LADEN',coins:'Münzen',shopTitle:'Skin-Shop',back:'← Zurück zum Menü',pts:'Pkt',left:'◀ Links',jump:'▲ Sprung',slide:'▼ Gleiten',right:'Rechts ▶',menu:'☰ Menü',caught:'ERWISCHT!',win:'ZIEL ERREICHT!',total:'Münzen gesamt',earned:'Verdient',score:'Punkte',restart:'Taste drücken zum Neustart',pressAny:'Taste oder Schaltfläche drücken',owned:'✓ Ausgerüstet',equip:'Anziehen',skins:[{name:'Schüler'},{name:'Ninja'},{name:'Kosake'}],dist:'m zum Ziel',winBonus:'Ziel-Bonus'},
+  fr:{sub:'dans les rues de la capitale',play:'JOUER',shop:'BOUTIQUE',coins:'Pièces',shopTitle:'Boutique de skins',back:'← Retour au menu',pts:'pts',left:'◀ Gauche',jump:'▲ Sauter',slide:'▼ Glisser',right:'Droite ▶',menu:'☰ Menu',caught:'ATTRAPÉ!',win:'ARRIVÉE!',total:'Pièces totales',earned:'Gagné',score:'Score',restart:'Appuyez pour recommencer',pressAny:'Appuyez sur une touche ou un bouton',owned:'✓ Équipé',equip:'Équiper',skins:[{name:'Écolier'},{name:'Ninja'},{name:'Cosaque'}],dist:'m à l\'arrivée',winBonus:'Bonus arrivée'},
+  es:{sub:'por las calles de la capital',play:'JUGAR',shop:'TIENDA',coins:'Monedas',shopTitle:'Tienda de skins',back:'← Volver al menú',pts:'pts',left:'◀ Izquierda',jump:'▲ Saltar',slide:'▼ Deslizar',right:'Derecha ▶',menu:'☰ Menú',caught:'¡ATRAPADO!',win:'¡LLEGASTE!',total:'Monedas totales',earned:'Ganado',score:'Puntuación',restart:'Pulsa tecla o botón para reiniciar',pressAny:'Pulsa cualquier tecla o botón',owned:'✓ Equipado',equip:'Equipar',skins:[{name:'Estudiante'},{name:'Ninja'},{name:'Cosaco'}],dist:'m a la meta',winBonus:'Bono meta'}
+};
+const SKINS_BASE=[
+  {id:'default',price:0,body:'#3a7bd5',head:'#f0c080',scarf:'#ff6b6b'},
+  {id:'ninja',price:100,body:'#111',head:'#cccccc',scarf:'#cc0000'},
+  {id:'cossack',price:180,body:'#c0392b',head:'#f0c080',scarf:'#1abc9c'},
+];
+
+const FINISH_DIST=800;
+let lang='uk',totalCoins=0,owned=['default'],selectedSkin='default';
+try{
+  const save=JSON.parse(localStorage.getItem('kyivRunnerSave')||'{}');
+  totalCoins=save.totalCoins||0;
+  owned=save.owned||['default'];
+  selectedSkin=save.selectedSkin||'default';
+}catch(e){}
+function saveGame(){
+  localStorage.setItem('kyivRunnerSave',JSON.stringify({totalCoins,owned,selectedSkin}));
+}
+
+let gameState='idle',score=0,runCoins=0,lives=3,spd=2.8,fr=0,totalDist=0;
+let pLane=1,pY=270,pVY=0,pSlide=false,slideT=0,inv=0,flash=0;
+let obs=[],coins=[],parts=[],confetti=[];
+let bgOff=0,chaserX=-100,raf=null;
+let finishX=9999,finishActive=false,winTimer=0;
+const W=680,H=420,GND=270,LANES=[150,340,530];
+
+function t(){return LANGS[lang];}
+function applyLang(){
+  const L=t();
+  document.getElementById('menuSub').textContent=L.sub;
+  document.getElementById('btnPlay').textContent=L.play;
+  document.getElementById('btnShopOpen').textContent=L.shop;
+  document.getElementById('menuCoinsLabel').textContent=L.coins;
+  document.getElementById('shopTitle').textContent=L.shopTitle;
+  document.getElementById('btnBackShop').textContent=L.back;
+  document.getElementById('hudPts').textContent=L.pts;
+  document.getElementById('cLeft').textContent=L.left;
+  document.getElementById('cJump').textContent=L.jump;
+  document.getElementById('cSlide').textContent=L.slide;
+  document.getElementById('cRight').textContent=L.right;
+  document.getElementById('cMenu').textContent=L.menu;
+  document.querySelectorAll('.lbtn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+  buildShop();
+}
+document.querySelectorAll('.lbtn').forEach(b=>{b.onclick=()=>{lang=b.dataset.lang;applyLang();};});
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function syncCoins(){document.getElementById('menuCoins').textContent=totalCoins;document.getElementById('shopCoins').textContent=totalCoins;}
+
+function drawSkinPreview(canvas,skin){
+  const c=canvas.getContext('2d');c.clearRect(0,0,52,62);
+  c.fillStyle=skin.body;c.fillRect(14,24,24,26);
+  c.fillStyle=skin.head;c.beginPath();c.arc(26,16,14,0,Math.PI*2);c.fill();
+  c.fillStyle=skin.scarf;c.fillRect(17,22,18,6);
+  c.fillStyle='#333';c.fillRect(15,50,9,10);c.fillRect(28,50,9,10);
+}
+function buildShop(){
+  const L=t(),grid=document.getElementById('shopGrid');grid.innerHTML='';
+  SKINS_BASE.forEach((sk,i)=>{
+    const div=document.createElement('div');
+    div.className='sitem'+(owned.includes(sk.id)?' owned':'')+(selectedSkin===sk.id?' selected':'');
+    const cv2=document.createElement('canvas');cv2.width=52;cv2.height=62;drawSkinPreview(cv2,sk);
+    const nm=document.createElement('div');nm.className='sitem-name';nm.textContent=L.skins[i]?L.skins[i].name:sk.id;
+    const pr=document.createElement('div');
+    if(selectedSkin===sk.id){pr.className='sitem-owned';pr.textContent=L.owned;}
+    else if(owned.includes(sk.id)){pr.className='sitem-owned';pr.textContent=L.equip;}
+    else{pr.className='sitem-price';pr.textContent=sk.price+'₴';}
+    div.appendChild(cv2);div.appendChild(nm);div.appendChild(pr);
+    div.onclick=()=>{
+      if(owned.includes(sk.id)){selectedSkin=sk.id;buildShop();}
+      else if(totalCoins>=sk.price){totalCoins-=sk.price;owned.push(sk.id);selectedSkin=sk.id;syncCoins();saveGame();buildShop();}
+    };
+    grid.appendChild(div);
+  });
+}
+
+document.getElementById('btnPlay').onclick=()=>{showScreen('sGame');startGame();};
+document.getElementById('btnShopOpen').onclick=()=>{buildShop();syncCoins();showScreen('sShop');};
+document.getElementById('btnBackShop').onclick=()=>{showScreen('sMenu');syncCoins();saveGame();};
+document.getElementById('cMenu').onclick=()=>{stopGame();showScreen('sMenu');syncCoins();saveGame();};
+document.getElementById('cLeft').onclick=()=>act('ArrowLeft');
+document.getElementById('cRight').onclick=()=>act('ArrowRight');
+document.getElementById('cJump').onclick=()=>act('ArrowUp');
+document.getElementById('cSlide').onclick=()=>act('ArrowDown');
+
+const keys={};
+document.addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
+  if(!keys[e.code]){keys[e.code]=true;act(e.code);}
+});
+document.addEventListener('keyup',e=>{keys[e.code]=false;});
+function act(c){
+  if(gameState==='over'||gameState==='win'){startGame();return;}
+  if(gameState!=='run')return;
+  if((c==='ArrowUp'||c==='Space')&&pY>=GND-2)pVY=-16;
+  if(c==='ArrowDown'){pSlide=true;slideT=44;}
+  if(c==='ArrowLeft')pLane=Math.max(0,pLane-1);
+  if(c==='ArrowRight')pLane=Math.min(2,pLane+1);
+}
+
+function startGame(){
+  score=0;runCoins=0;lives=3;spd=2.8;fr=0;totalDist=0;
+  pLane=1;pY=GND;pVY=0;pSlide=false;slideT=0;
+  obs=[];coins=[];parts=[];confetti=[];
+  bgOff=0;chaserX=-100;inv=0;flash=0;
+  finishX=9999;finishActive=false;winTimer=0;
+  gameState='run';hudUp();
+  if(raf)cancelAnimationFrame(raf);
+  loop();
+}
+function stopGame(){gameState='stopped';if(raf){cancelAnimationFrame(raf);raf=null;}}
+function hudUp(){
+  document.getElementById('hLives').textContent=lives;
+  document.getElementById('hScore').textContent=score;
+  document.getElementById('hCoins').textContent=runCoins;
+  document.getElementById('hudPts').textContent=t().pts;
+  const rem=Math.max(0,Math.round(FINISH_DIST-totalDist));
+  document.getElementById('hDist').textContent=rem>0?rem+' '+t().dist:'';
+}
+
+const cv=document.getElementById('gc'),ctx=cv.getContext('2d');
+
+function spawnObs(){
+  const types=['kiosk','cop','bollard'];
+  obs.push({x:W+30,lane:Math.floor(Math.random()*3),type:types[Math.floor(Math.random()*3)]});
+}
+function spawnCoin(){
+  const l=Math.floor(Math.random()*3),hi=Math.random()<0.35;
+  coins.push({x:W+20,lane:l,y:hi?GND-70:GND,done:false});
+}
+function addParts(x,y,col){
+  for(let i=0;i<7;i++)parts.push({x,y,vx:(Math.random()-0.5)*5,vy:-Math.random()*6-2,life:36,col});
+}
+function addConfetti(){
+  const cols=['#ffd700','#ff6b6b','#6bcb77','#00e5ff','#ff69b4','#ffffff'];
+  for(let i=0;i<60;i++)confetti.push({
+    x:Math.random()*W,y:-10-Math.random()*80,
+    vx:(Math.random()-0.5)*3,vy:2+Math.random()*3,
+    col:cols[Math.floor(Math.random()*cols.length)],
+    size:4+Math.random()*6,life:140,rot:Math.random()*Math.PI*2,rv:(Math.random()-0.5)*0.2
+  });
+}
+
+function drawBG(){
+  ctx.fillStyle='#0d1b2a';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#131e30';ctx.fillRect(0,GND-10,W,H-GND+10);
+
+  const off=(bgOff*0.25)%400;
+  for(let bx=-400;bx<W+400;bx+=400){
+    const x=bx-off;
+    ctx.fillStyle='#1e3a5f';ctx.fillRect(x,80,100,H-130);
+    ctx.fillStyle='#162840';ctx.fillRect(x+120,110,70,H-160);
+    ctx.fillStyle='#1a3050';ctx.fillRect(x+210,60,50,H-110);
+  }
+
+  for(let i=0;i<3;i++){
+    ctx.fillStyle='#1a2030';
+    ctx.fillRect(LANES[i]-42,GND-4,84,H-GND+4);
+  }
+
+  ctx.fillStyle='#22304a';
+  ctx.fillRect(0,GND-5,W,10);
+}
+
+function drawFinishLine(){
+  if(!finishActive)return;
+  const fx=finishX;
+  ctx.fillStyle='#fff';ctx.fillRect(fx-3,GND-120,6,120);
+  ctx.fillStyle='#fff';ctx.fillRect(fx+97,GND-120,6,120);
+  const sq=12;
+  for(let row=0;row<10;row++){
+    for(let col=0;col<9;col++){
+      ctx.fillStyle=(row+col)%2===0?'#fff':'#000';
+      ctx.fillRect(fx-3+col*sq,GND-120+row*sq,sq,sq);
+    }
+  }
+  const ribbonY=GND-122;
+  ctx.fillStyle='#ff0044';
+  ctx.fillRect(fx-3,ribbonY,106,8);
+  const wave=Math.sin(fr*0.08)*4;
+  ctx.fillStyle='#ffd700';ctx.font='bold 13px sans-serif';ctx.textAlign='center';
+  ctx.fillText('FINISH',fx+48,GND-128+wave);
+  ctx.textAlign='left';
+  const flagColors=['#ffd700','#0057b7'];
+  for(let fi=0;fi<2;fi++){
+    const px=fx+(fi===0?-3:97),py=GND-120;
+    ctx.fillStyle='#888';ctx.fillRect(px-2,py-30,4,30);
+    ctx.fillStyle=flagColors[0];ctx.fillRect(px+2,py-28,18,8);
+    ctx.fillStyle=flagColors[1];ctx.fillRect(px+2,py-20,18,8);
+  }
+}
+
+function drawConfetti(){
+  confetti=confetti.filter(c=>{
+    c.x+=c.vx;c.y+=c.vy;c.rot+=c.rv;c.life--;
+    ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.rot);
+    ctx.globalAlpha=Math.min(1,c.life/20);
+    ctx.fillStyle=c.col;ctx.fillRect(-c.size/2,-c.size/4,c.size,c.size/2);
+    ctx.restore();ctx.globalAlpha=1;
+    return c.life>0;
+  });
+}
+
+function getSkin(){return SKINS_BASE.find(s=>s.id===selectedSkin)||SKINS_BASE[0];}
+
+function drawPlayer(){
+  const x=LANES[pLane],y=pY;
+  const al=inv>0?(Math.sin(fr*0.5)>0?0.3:1):1;
+  ctx.globalAlpha=al;
+
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(x,y+8,14,5,0,0,Math.PI*2); ctx.fill();
+
+  // legs
+  const run=Math.sin(fr*0.3)*8;
+  ctx.fillStyle='#111';
+  ctx.fillRect(x-10,y-2,7,18+run);
+  ctx.fillRect(x+3,y-2,7,18-run);
+
+  // shorts
+  ctx.fillStyle='#202020';
+  ctx.fillRect(x-13,y-18,26,16);
+
+  // red shirt
+  ctx.fillStyle='#e53935';
+  ctx.beginPath();
+  ctx.roundRect(x-15,y-42,30,26,6);
+  ctx.fill();
+
+  // bag strap
+  ctx.strokeStyle='#222';
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(x-10,y-40);
+  ctx.lineTo(x+12,y-15);
+  ctx.stroke();
+
+  // head
+  ctx.fillStyle='#f0d0a8';
+  ctx.beginPath();
+  ctx.arc(x,y-54,13,0,Math.PI*2);
+  ctx.fill();
+
+  // blond hair
+  ctx.fillStyle='#e8c45c';
+  ctx.beginPath();
+  ctx.arc(x,y-58,12,Math.PI,0);
+  ctx.fill();
+
+  // arms
+  ctx.strokeStyle='#f0d0a8';
+  ctx.lineWidth=5;
+  ctx.beginPath();
+  ctx.moveTo(x-12,y-34);
+  ctx.lineTo(x-18,y-20+run*0.2);
+  ctx.moveTo(x+12,y-34);
+  ctx.lineTo(x+18,y-20-run*0.2);
+  ctx.stroke();
+
+  ctx.globalAlpha=1;
+}
+function drawChaser(){
+  if(gameState==='win')return;
+  const cx=chaserX,cy=GND;
+  ctx.fillStyle='#cc1111';ctx.fillRect(cx-12,cy-28,24,28);
+  ctx.fillStyle='#1a1a1a';ctx.beginPath();ctx.arc(cx,cy-36,12,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#cc1111';ctx.fillRect(cx-5,cy-52,10,14);
+  ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(cx,cy-54,6,0,Math.PI*2);ctx.fill();
+  const lp=Math.sin(fr*0.32)*10;
+  ctx.fillStyle='#111';ctx.fillRect(cx-11,cy,9,18+lp);ctx.fillRect(cx+2,cy,9,18-lp);
+  ctx.fillStyle='rgba(255,50,50,0.12)';ctx.fillRect(cx-16,cy-58,32,H-cy+58);
+}
+
+function drawObs(o){
+  const x=o.x;
+  if(o.type==='kiosk'){
+    ctx.fillStyle='#c8860a';ctx.fillRect(x-24,GND-46,48,46);
+    ctx.fillStyle='#e8a020';ctx.fillRect(x-24,GND-54,48,10);
+    ctx.fillStyle='#5588aa';ctx.fillRect(x-16,GND-42,32,22);
+    ctx.fillStyle='#ff4444';ctx.font='bold 8px sans-serif';ctx.textAlign='center';ctx.fillText('КІОСК',x,GND-57);ctx.textAlign='left';
+  } else if(o.type==='cop'){
+    ctx.fillStyle='#283593';ctx.fillRect(x-11,GND-46,22,46);
+    ctx.fillStyle='#f0c080';ctx.beginPath();ctx.arc(x,GND-54,11,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1a237e';ctx.fillRect(x-4,GND-68,8,12);
+    ctx.fillStyle='#ffee00';ctx.beginPath();ctx.arc(x,GND-69,5,0,Math.PI*2);ctx.fill();
+    const lp=Math.sin(fr*0.32)*9;
+    ctx.fillStyle='#1a237e';ctx.fillRect(x-10,GND,8,15+lp);ctx.fillRect(x+2,GND,8,15-lp);
+  } else {
+    for(let i=-1;i<=1;i++){ctx.fillStyle='#f0c000';ctx.fillRect(x+i*18-5,GND-36,10,36);ctx.fillStyle='#cc0000';ctx.fillRect(x+i*18-5,GND-40,10,8);}
+    ctx.fillStyle='#ccc';ctx.fillRect(x-24,GND-28,48,5);
+  }
+}
+
+function drawCoin(c){
+  if(c.done)return;
+  const x=LANES[c.lane], y=c.y-14;
+  const g=ctx.createRadialGradient(x,y,0,x,y,20);
+  g.addColorStop(0,'rgba(255,255,180,1)');
+  g.addColorStop(1,'rgba(255,215,0,0)');
+  ctx.fillStyle=g;
+  ctx.beginPath();ctx.arc(x,y,20,0,Math.PI*2);ctx.fill();
+
+  ctx.fillStyle='#ffd700';
+  ctx.beginPath();ctx.arc(x,y,9,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#b8860b';
+  ctx.font='bold 10px sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('₴',x,y+3);
+  ctx.textAlign='left';
+}
+
+function drawDistBar(){
+  const pct=Math.min(totalDist/FINISH_DIST,1);
+  const bw=160,bh=6,bx=W/2-bw/2,by=12;
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillRect(bx,by,bw,bh);
+  ctx.fillStyle='#ffd700';ctx.fillRect(bx,by,bw*pct,bh);
+  ctx.fillStyle='#fff';ctx.font='9px sans-serif';ctx.textAlign='center';
+  ctx.fillText(Math.round(pct*100)+'%',W/2,by+bh+10);
+  ctx.textAlign='left';
+  if(pct>=0.8){
+    ctx.fillStyle='rgba(255,215,0,0.15)';
+    ctx.fillRect(0,0,W,H);
+  }
+}
+
+function pRect(){
+  const x=LANES[pLane];
+  if(pSlide)return{x:x-16,y:pY+11,w:32,h:14};
+  return{x:x-12,y:pY-44,w:24,h:68};
+}
+function oRect(o){
+  if(o.type==='kiosk')return{x:o.x-24,y:GND-46,w:48,h:46};
+  if(o.type==='cop')return{x:o.x-11,y:GND-46,w:22,h:46};
+  return{x:o.x-26,y:GND-40,w:52,h:40};
+}
+function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+
+function drawParts(){
+  parts=parts.filter(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=0.35;p.life--;
+    ctx.globalAlpha=p.life/36;ctx.fillStyle=p.col;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;return p.life>0;
+  });
+}
+
+function drawHUDCanvas(){
+  if(flash>0){ctx.globalAlpha=flash/22*0.4;ctx.fillStyle='#ff2020';ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;flash--;}
+  const bw=90,pct=Math.min(Math.max((chaserX+100)/(LANES[0]-80),0),1);
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillRect(W-bw-10,8,bw,7);
+  ctx.fillStyle=pct>0.7?'#ff4444':'#6bcb77';ctx.fillRect(W-bw-10,8,bw*(1-pct),7);
+}
+
+function drawWinOverlay(){
+  const L=t();
+  const alpha=Math.min(winTimer/30,0.75);
+  ctx.fillStyle=`rgba(5,20,10,${alpha})`;ctx.fillRect(0,0,W,H);
+  if(winTimer<20)return;
+  const a2=Math.min((winTimer-20)/20,1);
+  ctx.globalAlpha=a2;
+  ctx.fillStyle='#ffd700';ctx.font='bold 34px sans-serif';ctx.textAlign='center';
+  ctx.fillText(L.win,W/2,H/2-44);
+  ctx.fillStyle='#6bcb77';ctx.font='16px sans-serif';
+  ctx.fillText(L.score+': '+score,W/2,H/2-6);
+  ctx.fillStyle='#ffd700';ctx.font='14px sans-serif';
+  ctx.fillText(L.earned+': '+runCoins+'₴   '+L.winBonus+': +50₴',W/2,H/2+22);
+  ctx.fillStyle='#aabbcc';ctx.font='13px sans-serif';
+  ctx.fillText(L.total+': '+totalCoins+'₴',W/2,H/2+48);
+  ctx.fillStyle='#8899aa';ctx.font='12px sans-serif';
+  ctx.fillText(L.restart,W/2,H/2+76);
+  ctx.textAlign='left';ctx.globalAlpha=1;
+}
+
+function drawOverlay(){
+  const L=t();
+  ctx.fillStyle='rgba(5,10,20,0.72)';ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';
+  if(gameState==='idle'){
+    ctx.fillStyle='#ffd700';ctx.font='bold 30px sans-serif';ctx.fillText('KYIV RUNNER',W/2,H/2-30);
+    ctx.fillStyle='#8899aa';ctx.font='14px sans-serif';ctx.fillText(L.pressAny,W/2,H/2+10);
+  } else if(gameState==='over'){
+    ctx.fillStyle='#ff4444';ctx.font='bold 28px sans-serif';ctx.fillText(L.caught,W/2,H/2-40);
+    ctx.fillStyle='#ffd700';ctx.font='16px sans-serif';ctx.fillText(L.score+': '+score+'   '+L.earned+': '+runCoins+'₴',W/2,H/2-4);
+    ctx.fillStyle='#6bcb77';ctx.font='13px sans-serif';ctx.fillText(L.total+': '+totalCoins+'₴',W/2,H/2+24);
+    ctx.fillStyle='#8899aa';ctx.font='12px sans-serif';ctx.fillText(L.restart,W/2,H/2+52);
+  }
+  ctx.textAlign='left';
+}
+
+function update(){
+  if(gameState==='win'){
+    winTimer++;
+    if(winTimer===1){addConfetti();addConfetti();}
+    if(winTimer%40===0&&winTimer<120)addConfetti();
+    return;
+  }
+  if(gameState!=='run')return;
+  fr++;
+  spd=2.8+fr*0.002;
+  score=Math.round(fr*spd/10);
+  totalDist+=spd/60;
+
+  if(!finishActive&&totalDist>=FINISH_DIST-200){
+    finishActive=true;
+    finishX=W+100;
+  }
+  if(finishActive){
+    finishX-=spd;
+    if(finishX<W/2&&totalDist>=FINISH_DIST){
+      gameState='win';
+      const bonus=50;
+      runCoins+=bonus;
+      totalCoins+=runCoins+bonus;
+      syncCoins();saveGame();hudUp();
+      winTimer=0;
+      return;
+    }
+  }
+
+  pY+=pVY;pVY+=0.75;
+  if(pY>=GND){pY=GND;pVY=0;}
+  if(pSlide){slideT--;if(slideT<=0)pSlide=false;}
+  if(inv>0)inv--;
+  if(chaserX<LANES[0]-100)chaserX+=0.5+(spd-2.8)*0.1;
+  bgOff+=spd;
+
+  const interval=Math.max(160-Math.floor(spd*6),90);
+  if(fr%interval===0&&totalDist<FINISH_DIST-100)spawnObs();
+  if(fr%120===0&&totalDist<FINISH_DIST-50)spawnCoin();
+
+  obs.forEach(o=>o.x-=spd);coins.forEach(c=>c.x-=spd);
+  obs=obs.filter(o=>o.x>-80);
+  coins=coins.filter(c=>!c.done&&c.x>-20);
+
+  const pr=pRect(),px=LANES[pLane];
+  obs.forEach(o=>{
+    if(o.lane!==pLane)return;
+    if(pSlide&&o.type==='bollard')return;
+    if(pY<GND-50&&o.type==='kiosk')return;
+    if(hit(pr,oRect(o))&&inv===0){
+      lives--;inv=75;flash=22;addParts(px,pY-20,'#ff4444');
+      if(lives<=0){gameState='over';totalCoins+=runCoins;syncCoins();saveGame();}
+      hudUp();
+    }
+  });
+  coins=coins.filter(c=>{
+    if(c.lane!==pLane)return true;
+    const cr={x:LANES[c.lane]-8,y:c.y-22,w:16,h:16};
+    if(hit(pr,cr)){runCoins++;totalCoins++;c.done=true;addParts(LANES[c.lane],c.y-14,'#ffd700');return false;}
+    return true;
+  });
+  if(fr%15===0)hudUp();
+}
+
+function loop(){
+  if(gameState==='stopped')return;
+  ctx.clearRect(0,0,W,H);
+  drawBG();
+  drawFinishLine();
+  coins.forEach(drawCoin);obs.forEach(drawObs);
+  drawChaser();drawPlayer();drawParts();
+  if(gameState==='run'){drawHUDCanvas();drawDistBar();}
+  if(gameState==='win'){drawConfetti();drawWinOverlay();}
+  if(gameState==='idle'||gameState==='over')drawOverlay();
+  update();
+  raf=requestAnimationFrame(loop);
+}
+
+applyLang();
+</script></body></html>
