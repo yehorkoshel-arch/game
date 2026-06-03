@@ -2129,9 +2129,17 @@ function speakAndrii(lines){
 function pickVoice(){
   if(!window.speechSynthesis)return null;
   const voices=window.speechSynthesis.getVoices();
-  return voices.find(v=>v.lang&&v.lang.startsWith('uk'))||
-         voices.find(v=>v.lang&&v.lang.startsWith('ru'))||
-         voices[0]||null;
+  return voices.find(v=>v.lang&&v.lang.startsWith('uk'))||null;
+}
+function normalizeSpeechText(text){
+  return String(text||'')
+    .replace(/Роботрон-9000/g,'Роботрон девять тисяч')
+    .replace(/Роботрон девʼять тисяч/g,'Роботрон девять тисяч')
+    .replace(/ТЦК/g,'те це ка')
+    .replace(/[.,!?;:…"'“”„«»()[\]{}<>—–-]/g,' ')
+    .replace(/[ʼ'`]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
 }
 function speakAndriiForce(lines){
   andriiCooldown=300;
@@ -2139,7 +2147,7 @@ function speakAndriiForce(lines){
   const text=lines[Math.floor(Math.random()*lines.length)];
   bubbleText=text;bubbleTimer=260;
   if(!window.speechSynthesis)return;
-  const u=new SpeechSynthesisUtterance(text);
+  const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
   const voice=pickVoice();
   if(voice)u.voice=voice;
   u.lang=voice?voice.lang:'uk-UA';
@@ -2153,7 +2161,7 @@ function speakSceneLine(line){
   bubbleText=line.text;
   bubbleTimer=360;
   if(!window.speechSynthesis)return;
-  const u=new SpeechSynthesisUtterance(line.text);
+  const u=new SpeechSynthesisUtterance(normalizeSpeechText(line.text));
   const voice=pickVoice();
   if(voice)u.voice=voice;
   u.lang=voice?voice.lang:'uk-UA';
@@ -2166,7 +2174,7 @@ function _doSpeakAndrii(lines){
   const text=lines[Math.floor(Math.random()*lines.length)];
   showAndriiBubble(text);
   if(!window.speechSynthesis)return;
-  const u=new SpeechSynthesisUtterance(text);
+  const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
   const voice=pickVoice();
   if(voice)u.voice=voice;
   u.lang=voice?voice.lang:'uk-UA';
@@ -2432,17 +2440,17 @@ function speakAndWait(text, onDone){
   if(!window.speechSynthesis){onDone();return;}
   window.speechSynthesis.cancel();
 
-  text=text
+  text=normalizeSpeechText(text
     .replace(/Роботрон-9000/g,'Роботрон девʼять тисяч')
     .replace(/Слава Україні/g,'Слава Україні!')
-    .replace(/Андрій/g,'Андрій');
+    .replace(/Андрій/g,'Андрій'));
 
   const chunks=[];
-  const parts=text.replace(/([,!?.])/g,'$1|').split('|');
+  const parts=text.split(/\s+/);
   let cur='';
   parts.forEach(p=>{
-    cur+=p;
-    if(cur.length>=44||(p.match(/[!?.]/)&&cur.trim())){
+    cur+=(cur?' ':'')+p;
+    if(cur.length>=44){
       if(cur.trim())chunks.push(cur.trim());
       cur='';
     }
