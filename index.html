@@ -80,6 +80,9 @@ canvas{display:block}
 #introCanvas{border-radius:10px}
 #introSubtitle{min-height:60px;max-width:560px;text-align:center;font-size:15px;color:#e0e8ff;line-height:1.6;padding:0 20px;margin-top:12px;font-style:italic}
 #voiceStatus{min-height:18px;margin-top:4px;font-size:11px;color:#6688aa;text-align:center}
+#voiceTests{display:flex;gap:8px;margin-top:8px}
+.voice-btn{padding:6px 14px;font-size:12px;border-radius:7px;border:1px solid #334466;background:rgba(255,255,255,0.04);color:#88aacc;cursor:pointer}
+.voice-btn:hover{border-color:#ffd700;color:#ffd700}
 #introSkip{margin-top:10px;padding:7px 24px;font-size:12px;border-radius:7px;border:1px solid #334466;background:transparent;color:#556688;cursor:pointer}
 #introSkip:hover{border-color:#ffd700;color:#ffd700}
 </style>
@@ -90,6 +93,9 @@ canvas{display:block}
     <canvas id="introCanvas" width="340" height="220"></canvas>
     <div id="introSubtitle">Натисни кнопку, щоб почати історію</div>
     <div id="voiceStatus">Голос увімкнеться після натискання</div>
+    <div id="voiceTests">
+      <button class="voice-btn" id="btnAndriiVoice">Голос Андрія</button>
+    </div>
     <button id="introSkip">▶ Почати</button>
   </div>
   <div id="sMenu" class="screen">
@@ -2470,6 +2476,10 @@ function finishIntro(){
 document.getElementById('introSkip').onclick=()=>{
   if(!iStarted){startIntro();return;}
   finishIntro();
+};
+document.getElementById('btnAndriiVoice').onclick=()=>{
+  unlockSpeech();
+  speakText('Привіт! Я Андрій. Допоможи мені добігти до фінішу!',{rate:1.02,pitch:1.65});
 };
 
 // Стартуємо після першого кліку (потрібно для AudioContext)
