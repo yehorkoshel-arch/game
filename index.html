@@ -2109,9 +2109,14 @@ function speakText(text,opts={}){
   const speakNow=()=>{
     window.speechSynthesis.resume();
     const voices=window.speechSynthesis.getVoices();
+    if(opts.allowSystemFallback&&voices.length===0){
+      setVoiceStatus('Завантажую системний голос Андрія...', '#ffd700');
+      setTimeout(speakNow,700);
+      return;
+    }
     const voice=opts.allowSystemFallback?getSystemVoice():getPreferredVoice();
     if(!voice){
-      setVoiceStatus('Український голос не знайдено. Англійський голос вимкнено.', '#ffd700');
+      setVoiceStatus(opts.allowSystemFallback?'Системний голос для Андрія не знайдено.':'Український голос не знайдено. Англійський голос вимкнено.', '#ffd700');
       return;
     }
     const u=new SpeechSynthesisUtterance(text);
@@ -2493,7 +2498,7 @@ document.getElementById('introSkip').onclick=()=>{
   finishIntro();
 };
 document.getElementById('btnAndriiVoice').onclick=()=>{
-  unlockSpeech();
+  if(window.speechSynthesis){window.speechSynthesis.cancel();window.speechSynthesis.resume();}
   speakText('Привіт! Я Андрій. Допоможи мені добігти до фінішу!',{rate:1.02,pitch:1.75,allowSystemFallback:true,character:'Андрій'});
 };
 
