@@ -2096,6 +2096,11 @@ function getPreferredVoice(){
          voices.find(v=>/ukrain/i.test(v.name||''))||
          null;
 }
+function getSystemVoice(){
+  if(!window.speechSynthesis)return null;
+  const voices=window.speechSynthesis.getVoices();
+  return getPreferredVoice()||voices[0]||null;
+}
 function speakText(text,opts={}){
   if(!window.speechSynthesis){
     setVoiceStatus('Браузер не підтримує озвучку', '#ff9a9a');
@@ -2104,18 +2109,18 @@ function speakText(text,opts={}){
   const speakNow=()=>{
     window.speechSynthesis.resume();
     const voices=window.speechSynthesis.getVoices();
-    const ukVoice=getPreferredVoice();
-    if(!ukVoice){
+    const voice=opts.allowSystemFallback?getSystemVoice():getPreferredVoice();
+    if(!voice){
       setVoiceStatus('Український голос не знайдено. Англійський голос вимкнено.', '#ffd700');
       return;
     }
     const u=new SpeechSynthesisUtterance(text);
-    u.voice=ukVoice;
-    u.lang='uk-UA';
+    u.voice=voice;
+    u.lang=(voice.lang&&voice.lang.startsWith('uk'))?'uk-UA':voice.lang;
     u.rate=opts.rate||1.1;
     u.pitch=opts.pitch||1.35;
     u.volume=1;
-    u.onstart=()=>setVoiceStatus('Голос працює: '+ukVoice.name, '#6bcb77');
+    u.onstart=()=>setVoiceStatus((opts.character||'Голос')+' говорить: '+voice.name, '#6bcb77');
     u.onerror=()=>setVoiceStatus('Озвучка заблокована браузером або немає голосу', '#ff9a9a');
     u.onend=()=>setVoiceStatus('Голос готовий', '#6688aa');
     window.speechSynthesis.speak(u);
@@ -2133,19 +2138,20 @@ function speakAndriiForce(lines){
   if(window.speechSynthesis)window.speechSynthesis.cancel();
   const text=lines[Math.floor(Math.random()*lines.length)];
   bubbleText=text;bubbleTimer=260;
-  speakText(text,{rate:1.1,pitch:1.4});
+  speakText(text,{rate:1.05,pitch:1.65,allowSystemFallback:true,character:'Андрій'});
 }
 function speakSceneLine(line){
   if(window.speechSynthesis)window.speechSynthesis.cancel();
   bubbleText=line.text;
   bubbleTimer=360;
   unlockSpeech();
-  speakText(line.text,{rate:line.rate||1,pitch:line.pitch||1});
+  const isAndrii=line.who==='Андрій';
+  speakText(line.text,{rate:line.rate||1,pitch:line.pitch||1,allowSystemFallback:isAndrii,character:line.who});
 }
 function _doSpeakAndrii(lines){
   const text=lines[Math.floor(Math.random()*lines.length)];
   showAndriiBubble(text);
-  speakText(text,{rate:1.1,pitch:1.4});
+  speakText(text,{rate:1.05,pitch:1.65,allowSystemFallback:true,character:'Андрій'});
 }
 function unlockSpeech(text){
   if(!window.speechSynthesis){
@@ -2488,7 +2494,7 @@ document.getElementById('introSkip').onclick=()=>{
 };
 document.getElementById('btnAndriiVoice').onclick=()=>{
   unlockSpeech();
-  speakText('Привіт! Я Андрій. Допоможи мені добігти до фінішу!',{rate:1.02,pitch:1.65});
+  speakText('Привіт! Я Андрій. Допоможи мені добігти до фінішу!',{rate:1.02,pitch:1.75,allowSystemFallback:true,character:'Андрій'});
 };
 
 // Стартуємо після першого кліку (потрібно для AudioContext)
