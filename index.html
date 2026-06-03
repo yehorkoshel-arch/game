@@ -2105,13 +2105,17 @@ function speakText(text,opts={}){
     window.speechSynthesis.resume();
     const voices=window.speechSynthesis.getVoices();
     const ukVoice=getPreferredVoice();
+    if(!ukVoice){
+      setVoiceStatus('Український голос не знайдено. Англійський голос вимкнено.', '#ffd700');
+      return;
+    }
     const u=new SpeechSynthesisUtterance(text);
-    if(ukVoice)u.voice=ukVoice;
+    u.voice=ukVoice;
     u.lang='uk-UA';
     u.rate=opts.rate||1.1;
     u.pitch=opts.pitch||1.35;
     u.volume=1;
-    u.onstart=()=>setVoiceStatus(ukVoice?'Голос працює: '+ukVoice.name:'Говорю системним голосом uk-UA', '#6bcb77');
+    u.onstart=()=>setVoiceStatus('Голос працює: '+ukVoice.name, '#6bcb77');
     u.onerror=()=>setVoiceStatus('Озвучка заблокована браузером або немає голосу', '#ff9a9a');
     u.onend=()=>setVoiceStatus('Голос готовий', '#6688aa');
     window.speechSynthesis.speak(u);
@@ -2434,8 +2438,13 @@ function speakAndWait(text, onDone){
   function speakChunk(){
     if(ci>=chunks.length){onDone();return;}
     const ukVoice=getPreferredVoice();
+    if(!ukVoice){
+      setVoiceStatus('Український голос не знайдено. Робот не буде говорити англійською.', '#ffd700');
+      onDone();
+      return;
+    }
     const u=new SpeechSynthesisUtterance(chunks[ci]);
-    if(ukVoice)u.voice=ukVoice;
+    u.voice=ukVoice;
     u.lang='uk-UA';
     u.rate=0.78;
     u.pitch=0.1;
@@ -2444,7 +2453,7 @@ function speakAndWait(text, onDone){
     let moved=false;
     const next=()=>{if(!moved){moved=true;ci++;speakChunk();}};
     const fb=setTimeout(next, chunks[ci].length*120+1500);
-    u.onstart=()=>setVoiceStatus(ukVoice?'Робот говорить: '+ukVoice.name:'Робот говорить системним голосом uk-UA', '#6bcb77');
+    u.onstart=()=>setVoiceStatus('Робот говорить: '+ukVoice.name, '#6bcb77');
     u.onend=()=>{clearTimeout(fb);next();};
     u.onerror=()=>{setVoiceStatus('Роботову озвучку не вдалося запустити', '#ff9a9a');clearTimeout(fb);next();};
     window.speechSynthesis.speak(u);
@@ -2485,7 +2494,7 @@ document.getElementById('btnAndriiVoice').onclick=()=>{
 // Стартуємо після першого кліку (потрібно для AudioContext)
 function startIntro(){
   iStarted=true;
-  unlockSpeech('Привіт. Я Роботрон девʼять тисяч.');
+  unlockSpeech();
   iFr=0;iPhase=0;iCharIdx=0;iTypedText='';iState=ISTATE.TYPING;
   document.getElementById('introSkip').textContent='▶ Пропустити';
   document.getElementById('introSubtitle').textContent='';
