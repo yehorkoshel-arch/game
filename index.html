@@ -79,10 +79,6 @@ canvas{display:block}
 #sIntro{background:#0a0a1a;align-items:center;justify-content:center;flex-direction:column}
 #introCanvas{border-radius:10px}
 #introSubtitle{min-height:60px;max-width:560px;text-align:center;font-size:15px;color:#e0e8ff;line-height:1.6;padding:0 20px;margin-top:12px;font-style:italic}
-#voiceStatus{min-height:18px;margin-top:4px;font-size:11px;color:#6688aa;text-align:center}
-#voiceTests{display:flex;gap:8px;margin-top:8px}
-.voice-btn{padding:6px 14px;font-size:12px;border-radius:7px;border:1px solid #334466;background:rgba(255,255,255,0.04);color:#88aacc;cursor:pointer}
-.voice-btn:hover{border-color:#ffd700;color:#ffd700}
 #introSkip{margin-top:10px;padding:7px 24px;font-size:12px;border-radius:7px;border:1px solid #334466;background:transparent;color:#556688;cursor:pointer}
 #introSkip:hover{border-color:#ffd700;color:#ffd700}
 </style>
@@ -91,12 +87,8 @@ canvas{display:block}
   <h2 class="sr-only">Kyiv Runner</h2>
 <div id="sIntro" class="screen active">
     <canvas id="introCanvas" width="340" height="220"></canvas>
-    <div id="introSubtitle">Натисни кнопку, щоб почати історію</div>
-    <div id="voiceStatus">Голос увімкнеться після натискання</div>
-    <div id="voiceTests">
-      <button class="voice-btn" id="btnAndriiVoice">Голос Андрія</button>
-    </div>
-    <button id="introSkip">▶ Почати</button>
+    <div id="introSubtitle">?</div>
+    <button id="introSkip">? ??????????</button>
   </div>
   <div id="sMenu" class="screen">
     <button class="gear-btn" id="btnSettingsOpen" title="Налаштування">⚙</button>
@@ -2083,94 +2075,54 @@ function speakAndrii(lines){
   andriiCooldown=180;
   _doSpeakAndrii(lines);
 }
-function setVoiceStatus(text,color){
-  const el=document.getElementById('voiceStatus');
-  if(!el)return;
-  el.textContent=text;
-  if(color)el.style.color=color;
-}
-function getPreferredVoice(){
+function pickVoice(){
   if(!window.speechSynthesis)return null;
   const voices=window.speechSynthesis.getVoices();
   return voices.find(v=>v.lang&&v.lang.startsWith('uk'))||
-         voices.find(v=>/ukrain/i.test(v.name||''))||
-         null;
-}
-function getSystemVoice(){
-  if(!window.speechSynthesis)return null;
-  const voices=window.speechSynthesis.getVoices();
-  return getPreferredVoice()||voices[0]||null;
-}
-function speakText(text,opts={}){
-  if(!window.speechSynthesis){
-    setVoiceStatus('Браузер не підтримує озвучку', '#ff9a9a');
-    return;
-  }
-  const speakNow=()=>{
-    window.speechSynthesis.resume();
-    const voices=window.speechSynthesis.getVoices();
-    if(opts.allowSystemFallback&&voices.length===0){
-      setVoiceStatus('Завантажую системний голос Андрія...', '#ffd700');
-      setTimeout(speakNow,700);
-      return;
-    }
-    const voice=opts.allowSystemFallback?getSystemVoice():getPreferredVoice();
-    if(!voice){
-      setVoiceStatus(opts.allowSystemFallback?'Системний голос для Андрія не знайдено.':'Український голос не знайдено. Англійський голос вимкнено.', '#ffd700');
-      return;
-    }
-    const u=new SpeechSynthesisUtterance(text);
-    u.voice=voice;
-    u.lang=(voice.lang&&voice.lang.startsWith('uk'))?'uk-UA':voice.lang;
-    u.rate=opts.rate||1.1;
-    u.pitch=opts.pitch||1.35;
-    u.volume=1;
-    u.onstart=()=>setVoiceStatus((opts.character||'Голос')+' говорить: '+voice.name, '#6bcb77');
-    u.onerror=()=>setVoiceStatus('Озвучка заблокована браузером або немає голосу', '#ff9a9a');
-    u.onend=()=>setVoiceStatus('Голос готовий', '#6688aa');
-    window.speechSynthesis.speak(u);
-  };
-  if(window.speechSynthesis.getVoices().length===0){
-    setVoiceStatus('Завантажую голоси...', '#ffd700');
-    window.speechSynthesis.onvoiceschanged=speakNow;
-    setTimeout(speakNow,700);
-  } else {
-    speakNow();
-  }
+         voices.find(v=>v.lang&&v.lang.startsWith('ru'))||
+         voices[0]||null;
 }
 function speakAndriiForce(lines){
   andriiCooldown=300;
   if(window.speechSynthesis)window.speechSynthesis.cancel();
   const text=lines[Math.floor(Math.random()*lines.length)];
   bubbleText=text;bubbleTimer=260;
-  speakText(text,{rate:1.05,pitch:1.65,allowSystemFallback:true,character:'Андрій'});
+  if(!window.speechSynthesis)return;
+  const u=new SpeechSynthesisUtterance(text);
+  const voice=pickVoice();
+  if(voice)u.voice=voice;
+  u.lang=voice?voice.lang:'uk-UA';
+  u.rate=1.1;
+  u.pitch=1.4;
+  u.volume=1;
+  window.speechSynthesis.speak(u);
 }
 function speakSceneLine(line){
   if(window.speechSynthesis)window.speechSynthesis.cancel();
   bubbleText=line.text;
   bubbleTimer=360;
-  unlockSpeech();
-  const isAndrii=line.who==='Андрій';
-  speakText(line.text,{rate:line.rate||1,pitch:line.pitch||1,allowSystemFallback:isAndrii,character:line.who});
+  if(!window.speechSynthesis)return;
+  const u=new SpeechSynthesisUtterance(line.text);
+  const voice=pickVoice();
+  if(voice)u.voice=voice;
+  u.lang=voice?voice.lang:'uk-UA';
+  u.rate=line.rate||1;
+  u.pitch=line.pitch||1;
+  u.volume=1;
+  window.speechSynthesis.speak(u);
 }
 function _doSpeakAndrii(lines){
   const text=lines[Math.floor(Math.random()*lines.length)];
   showAndriiBubble(text);
-  speakText(text,{rate:1.05,pitch:1.65,allowSystemFallback:true,character:'Андрій'});
-}
-function unlockSpeech(text){
-  if(!window.speechSynthesis){
-    setVoiceStatus('Браузер не підтримує озвучку', '#ff9a9a');
-    return;
-  }
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.resume();
-  const voices=window.speechSynthesis.getVoices();
-  const ukVoice=getPreferredVoice();
-  if(voices.length===0)setVoiceStatus('Завантажую голоси...', '#ffd700');
-  else if(!ukVoice)setVoiceStatus('Український голос не знайдено, пробую uk-UA системним голосом', '#ffd700');
-  else setVoiceStatus('Український голос знайдено: '+ukVoice.name, '#6bcb77');
-  if(text)speakText(text,{rate:0.9,pitch:0.35});
+  if(!window.speechSynthesis)return;
+  const u=new SpeechSynthesisUtterance(text);
+  const voice=pickVoice();
+  if(voice)u.voice=voice;
+  u.lang=voice?voice.lang:'uk-UA';
+  u.rate=1.1;
+  u.pitch=1.4;
+  u.volume=1;
+  window.speechSynthesis.speak(u);
 }
 
 // Bubble над гравцем
@@ -2222,7 +2174,6 @@ const ix=ic.getContext('2d');
 const IW=340,IH=220;
 let iFr=0,iRaf=null,iPhase=0,iCharIdx=0,iTyping=false;
 let iTypedText='',iPhaseTimer=0;
-let iStarted=false;
 const ISTATE={TYPING:0,PAUSE:1,DONE:2};
 let iState=ISTATE.TYPING;
 
@@ -2430,7 +2381,6 @@ function speakAndWait(text, onDone){
   if(!window.speechSynthesis){onDone();return;}
   window.speechSynthesis.cancel();
 
-  // Ділимо на речення/шматки по ~25 символів
   const chunks=[];
   const parts=text.split(/([,!?.])/);
   let cur='';
@@ -2445,18 +2395,12 @@ function speakAndWait(text, onDone){
   if(chunks.length===0){onDone();return;}
 
   let ci=0;
-
   function speakChunk(){
     if(ci>=chunks.length){onDone();return;}
-    const ukVoice=getPreferredVoice();
-    if(!ukVoice){
-      setVoiceStatus('Український голос не знайдено. Робот не буде говорити англійською.', '#ffd700');
-      onDone();
-      return;
-    }
     const u=new SpeechSynthesisUtterance(chunks[ci]);
-    u.voice=ukVoice;
-    u.lang='uk-UA';
+    const voice=pickVoice();
+    if(voice)u.voice=voice;
+    u.lang=voice?voice.lang:'uk-UA';
     u.rate=0.78;
     u.pitch=0.1;
     u.volume=1;
@@ -2464,13 +2408,11 @@ function speakAndWait(text, onDone){
     let moved=false;
     const next=()=>{if(!moved){moved=true;ci++;speakChunk();}};
     const fb=setTimeout(next, chunks[ci].length*120+1500);
-    u.onstart=()=>setVoiceStatus('Робот говорить: '+ukVoice.name, '#6bcb77');
     u.onend=()=>{clearTimeout(fb);next();};
-    u.onerror=()=>{setVoiceStatus('Роботову озвучку не вдалося запустити', '#ff9a9a');clearTimeout(fb);next();};
+    u.onerror=()=>{clearTimeout(fb);next();};
     window.speechSynthesis.speak(u);
   }
 
-  // Чекаємо voices якщо ще не завантажились
   if(window.speechSynthesis.getVoices().length===0){
     window.speechSynthesis.onvoiceschanged=speakChunk;
     setTimeout(speakChunk,300);
@@ -2493,27 +2435,15 @@ function finishIntro(){
   showScreen('sMenu');
 }
 
-document.getElementById('introSkip').onclick=()=>{
-  if(!iStarted){startIntro();return;}
-  finishIntro();
-};
-document.getElementById('btnAndriiVoice').onclick=()=>{
-  if(window.speechSynthesis){window.speechSynthesis.cancel();window.speechSynthesis.resume();}
-  speakText('Привіт! Я Андрій. Допоможи мені добігти до фінішу!',{rate:1.02,pitch:1.75,allowSystemFallback:true,character:'Андрій'});
-};
+document.getElementById('introSkip').onclick=()=>finishIntro();
 
-// Стартуємо після першого кліку (потрібно для AudioContext)
 function startIntro(){
-  iStarted=true;
-  unlockSpeech();
   iFr=0;iPhase=0;iCharIdx=0;iTypedText='';iState=ISTATE.TYPING;
-  document.getElementById('introSkip').textContent='▶ Пропустити';
   document.getElementById('introSubtitle').textContent='';
   iRaf=requestAnimationFrame(iTick);
   setTimeout(typeNextChar,800);
 }
-// ───────────────────────────────────────────────────────────────────────────
-
+startIntro();
 applyLang();
 
 
