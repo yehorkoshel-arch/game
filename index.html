@@ -409,7 +409,9 @@ let audioCtx = null, musicPlaying = false;
 let musicNodes = []; // keep refs to stop them
 let melodyIdx = 0, bassIdx = 0;
 let nextNoteTime = 0, scheduleAhead = 0.08, schedulerTimer = null;
-const BPM = 112;
+const CHORD_PATTERN = [0,5,7,4,0,9,5,7];
+let drumStep = 0, chordIdx = 0;
+const BPM = 126;
 const BEAT = 60 / BPM;
 
 // Lyric display
@@ -445,6 +447,41 @@ function playNote(freq, startTime, duration, type='sine', gain=0.18, detune=0) {
   musicNodes.push(osc);
   return osc;
 }
+function playNoise(startTime,duration,gain=0.08,filterFreq=900,type='bandpass'){
+  if(!audioCtx)return;
+  const len=Math.max(1,Math.floor(audioCtx.sampleRate*duration));
+  const buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+  const src=audioCtx.createBufferSource(),g=audioCtx.createGain(),f=audioCtx.createBiquadFilter();
+  f.type=type;f.frequency.value=filterFreq;f.Q.value=1.2;
+  g.gain.setValueAtTime(gain,startTime);
+  g.gain.exponentialRampToValueAtTime(0.001,startTime+duration);
+  src.connect(f);f.connect(g);g.connect(audioCtx.destination);
+  src.start(startTime);src.stop(startTime+duration);
+  musicNodes.push(src);
+}
+function scheduleDrums(barStart){
+  const stepDur=BEAT/2;
+  for(let s=0;s<4;s++){
+    const t=barStart+s*stepDur;
+    if((drumStep+s)%4===0){
+      playNote(55,t,0.12,'sine',0.16);
+      playNoise(t,0.08,0.05,150,'lowpass');
+    }
+    if((drumStep+s)%4===2)playNoise(t,0.10,0.07,420,'bandpass');
+    playNoise(t,0.035,(s%2?0.025:0.04),5200,'highpass');
+  }
+  drumStep=(drumStep+4)%16;
+}
+function scheduleChord(root,startTime,dur){
+  const notes=[root,root+4,root+7,root+12];
+  notes.forEach((semi,i)=>{
+    const t=startTime+i*(dur/5);
+    playNote(noteToHz(semi),t,dur*0.55,'sawtooth',0.035,-8+i*5);
+  });
+  playNote(noteToHz(root+7),startTime,dur,'triangle',0.035,6);
+}
 
 function scheduleMusic() {
   if (!musicPlaying || !audioCtx) return;
@@ -452,16 +489,22 @@ function scheduleMusic() {
     const [semi, beats] = MELODY_NOTES[melodyIdx % MELODY_NOTES.length];
     const dur = beats * BEAT;
     const freq = noteToHz(semi);
-    // Main melody – warm triangle
-    playNote(freq, nextNoteTime, dur, 'triangle', 0.20);
-    // Soft harmony a third above
-    playNote(noteToHz(semi + 4), nextNoteTime, dur, 'sine', 0.07);
+    const accent=melodyIdx%4===0?1.15:1;
+    playNote(freq, nextNoteTime, dur*0.94, 'triangle', 0.18*accent);
+    playNote(noteToHz(semi + 12), nextNoteTime+dur*0.04, dur*0.45, 'sine', 0.035);
+    playNote(noteToHz(semi + 4), nextNoteTime, dur*0.8, 'sine', 0.055);
 
-    // Bass every 2 beats
     if (melodyIdx % 2 === 0) {
       const bassSemi = BASS_PATTERN[bassIdx % BASS_PATTERN.length] - 12;
-      playNote(noteToHz(bassSemi), nextNoteTime, dur * 1.8, 'triangle', 0.12);
+      playNote(noteToHz(bassSemi), nextNoteTime, dur * 1.65, 'triangle', 0.13);
+      playNote(noteToHz(bassSemi+12), nextNoteTime+dur*0.48, dur*0.35, 'square', 0.035);
       bassIdx++;
+    }
+    if(melodyIdx%4===0){
+      const root=CHORD_PATTERN[chordIdx%CHORD_PATTERN.length];
+      scheduleChord(root,nextNoteTime,dur*2.2);
+      scheduleDrums(nextNoteTime);
+      chordIdx++;
     }
 
     nextNoteTime += dur;
@@ -479,7 +522,7 @@ function startMusic() {
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
   musicPlaying = true;
-  melodyIdx = 0; bassIdx = 0;
+  melodyIdx = 0; bassIdx = 0; drumStep = 0; chordIdx = 0;
   nextNoteTime = audioCtx.currentTime + 0.1;
   scheduleMusic();
   startLyrics();
@@ -2100,8 +2143,8 @@ function speakAndriiForce(lines){
   const voice=pickVoice();
   if(voice)u.voice=voice;
   u.lang=voice?voice.lang:'uk-UA';
-  u.rate=1.1;
-  u.pitch=1.4;
+  u.rate=0.98;
+  u.pitch=1.55;
   u.volume=1;
   window.speechSynthesis.speak(u);
 }
@@ -2114,8 +2157,8 @@ function speakSceneLine(line){
   const voice=pickVoice();
   if(voice)u.voice=voice;
   u.lang=voice?voice.lang:'uk-UA';
-  u.rate=line.rate||1;
-  u.pitch=line.pitch||1;
+  u.rate=line.rate||0.96;
+  u.pitch=line.pitch||1.25;
   u.volume=1;
   window.speechSynthesis.speak(u);
 }
@@ -2127,8 +2170,8 @@ function _doSpeakAndrii(lines){
   const voice=pickVoice();
   if(voice)u.voice=voice;
   u.lang=voice?voice.lang:'uk-UA';
-  u.rate=1.1;
-  u.pitch=1.4;
+  u.rate=0.98;
+  u.pitch=1.55;
   u.volume=1;
   window.speechSynthesis.speak(u);
 }
@@ -2389,12 +2432,17 @@ function speakAndWait(text, onDone){
   if(!window.speechSynthesis){onDone();return;}
   window.speechSynthesis.cancel();
 
+  text=text
+    .replace(/Роботрон-9000/g,'Роботрон девʼять тисяч')
+    .replace(/Слава Україні/g,'Слава Україні!')
+    .replace(/Андрій/g,'Андрій');
+
   const chunks=[];
-  const parts=text.split(/([,!?.])/);
+  const parts=text.replace(/([,!?.])/g,'$1|').split('|');
   let cur='';
   parts.forEach(p=>{
     cur+=p;
-    if(cur.length>=20||(p.match(/[,!?.]/)&&cur.trim())){
+    if(cur.length>=44||(p.match(/[!?.]/)&&cur.trim())){
       if(cur.trim())chunks.push(cur.trim());
       cur='';
     }
@@ -2409,13 +2457,13 @@ function speakAndWait(text, onDone){
     const voice=pickVoice();
     if(voice)u.voice=voice;
     u.lang=voice?voice.lang:'uk-UA';
-    u.rate=0.78;
-    u.pitch=0.1;
+    u.rate=0.92;
+    u.pitch=0.45;
     u.volume=1;
 
     let moved=false;
     const next=()=>{if(!moved){moved=true;ci++;speakChunk();}};
-    const fb=setTimeout(next, chunks[ci].length*120+1500);
+    const fb=setTimeout(next, chunks[ci].length*82+900);
     u.onend=()=>{clearTimeout(fb);next();};
     u.onerror=()=>{clearTimeout(fb);next();};
     window.speechSynthesis.speak(u);
