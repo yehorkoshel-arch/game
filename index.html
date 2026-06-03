@@ -2149,8 +2149,9 @@ function speakAndriiForce(lines){
   if(!window.speechSynthesis)return;
   const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
   const voice=pickVoice();
+  if(!voice)return;
   if(voice)u.voice=voice;
-  u.lang=voice?voice.lang:'uk-UA';
+  u.lang=voice.lang;
   u.rate=0.98;
   u.pitch=1.55;
   u.volume=1;
@@ -2163,8 +2164,9 @@ function speakSceneLine(line){
   if(!window.speechSynthesis)return;
   const u=new SpeechSynthesisUtterance(normalizeSpeechText(line.text));
   const voice=pickVoice();
+  if(!voice)return;
   if(voice)u.voice=voice;
-  u.lang=voice?voice.lang:'uk-UA';
+  u.lang=voice.lang;
   u.rate=line.rate||0.96;
   u.pitch=line.pitch||1.25;
   u.volume=1;
@@ -2176,8 +2178,9 @@ function _doSpeakAndrii(lines){
   if(!window.speechSynthesis)return;
   const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
   const voice=pickVoice();
+  if(!voice)return;
   if(voice)u.voice=voice;
-  u.lang=voice?voice.lang:'uk-UA';
+  u.lang=voice.lang;
   u.rate=0.98;
   u.pitch=1.55;
   u.volume=1;
@@ -2463,8 +2466,12 @@ function speakAndWait(text, onDone){
     if(ci>=chunks.length){onDone();return;}
     const u=new SpeechSynthesisUtterance(chunks[ci]);
     const voice=pickVoice();
+    if(!voice){
+      setTimeout(onDone, Math.max(1200,text.length*72));
+      return;
+    }
     if(voice)u.voice=voice;
-    u.lang=voice?voice.lang:'uk-UA';
+    u.lang=voice.lang;
     u.rate=0.92;
     u.pitch=0.45;
     u.volume=1;
