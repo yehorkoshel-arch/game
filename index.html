@@ -87,8 +87,8 @@ canvas{display:block}
   <h2 class="sr-only">Kyiv Runner</h2>
 <div id="sIntro" class="screen active">
     <canvas id="introCanvas" width="340" height="220"></canvas>
-    <div id="introSubtitle">…</div>
-    <button id="introSkip">▶ Пропустити</button>
+    <div id="introSubtitle">Натисни кнопку, щоб почати історію</div>
+    <button id="introSkip">▶ Почати</button>
   </div>
   <div id="sMenu" class="screen">
     <button class="gear-btn" id="btnSettingsOpen" title="Налаштування">⚙</button>
@@ -2081,7 +2081,7 @@ function speakText(text,opts={}){
   const speakNow=()=>{
     const voices=window.speechSynthesis.getVoices();
     const ukVoice=voices.find(v=>v.lang&&v.lang.startsWith('uk'))||
-                  voices.find(v=>v.lang&&v.lang.startsWith('ru'))||
+                  voices.find(v=>v.lang==='uk-UA')||
                   voices.find(v=>v.lang&&v.lang.startsWith('en'))||null;
     const u=new SpeechSynthesisUtterance(text);
     if(ukVoice)u.voice=ukVoice;
@@ -2160,6 +2160,7 @@ const ix=ic.getContext('2d');
 const IW=340,IH=220;
 let iFr=0,iRaf=null,iPhase=0,iCharIdx=0,iTyping=false;
 let iTypedText='',iPhaseTimer=0;
+let iStarted=false;
 const ISTATE={TYPING:0,PAUSE:1,DONE:2};
 let iState=ISTATE.TYPING;
 
@@ -2382,13 +2383,14 @@ function speakAndWait(text, onDone){
   if(chunks.length===0){onDone();return;}
 
   let ci=0;
-  const voices=window.speechSynthesis.getVoices();
-  const ukVoice=voices.find(v=>v.lang&&v.lang.startsWith('uk'))||
-                voices.find(v=>v.lang&&v.lang.startsWith('ru'))||
-                null;
 
   function speakChunk(){
     if(ci>=chunks.length){onDone();return;}
+    const voices=window.speechSynthesis.getVoices();
+    const ukVoice=voices.find(v=>v.lang&&v.lang.startsWith('uk'))||
+                  voices.find(v=>v.lang==='uk-UA')||
+                  voices.find(v=>v.lang&&v.lang.startsWith('en'))||
+                  null;
     const u=new SpeechSynthesisUtterance(chunks[ci]);
     if(ukVoice)u.voice=ukVoice;
     u.lang=ukVoice?ukVoice.lang:'uk-UA';
@@ -2427,16 +2429,20 @@ function finishIntro(){
   showScreen('sMenu');
 }
 
-document.getElementById('introSkip').onclick=()=>finishIntro();
+document.getElementById('introSkip').onclick=()=>{
+  if(!iStarted){startIntro();return;}
+  finishIntro();
+};
 
 // Стартуємо після першого кліку (потрібно для AudioContext)
 function startIntro(){
+  iStarted=true;
   iFr=0;iPhase=0;iCharIdx=0;iTypedText='';iState=ISTATE.TYPING;
+  document.getElementById('introSkip').textContent='▶ Пропустити';
   document.getElementById('introSubtitle').textContent='';
   iRaf=requestAnimationFrame(iTick);
   setTimeout(typeNextChar,800);
 }
-startIntro();
 // ───────────────────────────────────────────────────────────────────────────
 
 applyLang();
