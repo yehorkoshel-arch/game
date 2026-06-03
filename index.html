@@ -83,7 +83,7 @@ canvas{display:block}
 #introSkip:hover{border-color:#ffd700;color:#ffd700}
 </style>
 
-</head><body><div id="app">
+</head><body><div id="app" tabindex="0">
   <h2 class="sr-only">Kyiv Runner</h2>
 <div id="sIntro" class="screen active">
     <canvas id="introCanvas" width="340" height="220"></canvas>
@@ -682,6 +682,12 @@ let tckSceneSeenLevels={},tckScene=null;
 const W=680,H=420,GND=270,LANES=[150,340,530];
 
 function t(){return LANGS[lang];}
+function focusApp(){
+  const app=document.getElementById('app');
+  if(app)app.focus({preventScroll:true});
+}
+window.addEventListener('load',()=>setTimeout(focusApp,100));
+document.getElementById('app').addEventListener('pointerdown',focusApp);
 function buildLevelBar(){
   const bar=document.getElementById('lvlBar');
   bar.innerHTML='';
@@ -863,6 +869,7 @@ function buildShop(){
 }
 
 document.getElementById('btnPlay').onclick=()=>{
+  focusApp();
   // Продовжити з останнього збереженого рівня
   currentLevel=currentLocation===0?progressKyiv:progressLviv;
   showScreen('sGame');startLevel();
@@ -939,6 +946,7 @@ function nextLevel(){
 function getLvl(){return getLevels()[Math.min(currentLevel,getLevels().length-1)];}
 
 function startLevel(){
+  focusApp();
   const tckSceneKey=currentLocation+':'+currentLevel;
   if(currentLevel===1&&!tckSceneSeenLevels[tckSceneKey]){
     beginTckScene(tckSceneKey);
@@ -2079,8 +2087,8 @@ function pickVoice(){
   if(!window.speechSynthesis)return null;
   const voices=window.speechSynthesis.getVoices();
   return voices.find(v=>v.lang&&v.lang.startsWith('uk'))||
-         voices.find(v=>/ukrain/i.test(v.name||''))||
-         null;
+         voices.find(v=>v.lang&&v.lang.startsWith('ru'))||
+         voices[0]||null;
 }
 function speakAndriiForce(lines){
   andriiCooldown=300;
@@ -2090,9 +2098,8 @@ function speakAndriiForce(lines){
   if(!window.speechSynthesis)return;
   const u=new SpeechSynthesisUtterance(text);
   const voice=pickVoice();
-  if(!voice)return;
-  u.voice=voice;
-  u.lang='uk-UA';
+  if(voice)u.voice=voice;
+  u.lang=voice?voice.lang:'uk-UA';
   u.rate=1.1;
   u.pitch=1.4;
   u.volume=1;
@@ -2105,9 +2112,8 @@ function speakSceneLine(line){
   if(!window.speechSynthesis)return;
   const u=new SpeechSynthesisUtterance(line.text);
   const voice=pickVoice();
-  if(!voice)return;
-  u.voice=voice;
-  u.lang='uk-UA';
+  if(voice)u.voice=voice;
+  u.lang=voice?voice.lang:'uk-UA';
   u.rate=line.rate||1;
   u.pitch=line.pitch||1;
   u.volume=1;
@@ -2119,9 +2125,8 @@ function _doSpeakAndrii(lines){
   if(!window.speechSynthesis)return;
   const u=new SpeechSynthesisUtterance(text);
   const voice=pickVoice();
-  if(!voice)return;
-  u.voice=voice;
-  u.lang='uk-UA';
+  if(voice)u.voice=voice;
+  u.lang=voice?voice.lang:'uk-UA';
   u.rate=1.1;
   u.pitch=1.4;
   u.volume=1;
@@ -2402,9 +2407,8 @@ function speakAndWait(text, onDone){
     if(ci>=chunks.length){onDone();return;}
     const u=new SpeechSynthesisUtterance(chunks[ci]);
     const voice=pickVoice();
-    if(!voice){onDone();return;}
-    u.voice=voice;
-    u.lang='uk-UA';
+    if(voice)u.voice=voice;
+    u.lang=voice?voice.lang:'uk-UA';
     u.rate=0.78;
     u.pitch=0.1;
     u.volume=1;
@@ -2439,7 +2443,7 @@ function finishIntro(){
   showScreen('sMenu');
 }
 
-document.getElementById('introSkip').onclick=()=>finishIntro();
+document.getElementById('introSkip').onclick=()=>{focusApp();finishIntro();};
 
 function startIntro(){
   iFr=0;iPhase=0;iCharIdx=0;iTypedText='';iState=ISTATE.TYPING;
