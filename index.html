@@ -2174,7 +2174,7 @@ function normalizeSpeechText(text){
 }
 const PIPER_TTS_URL='https://esm.sh/@mintplex-labs/piper-tts-web@latest';
 const PIPER_WASM_PATHS={
-  onnxWasm:'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/',
+  onnxWasm:'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/',
   piperData:'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.data',
   piperWasm:'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.wasm'
 };
@@ -2228,6 +2228,7 @@ async function speakWithPiper(text,onDone){
     if(!clean)return false;
     setTtsStatus('Генерується українська озвучка…');
     if(!piperSessionPromise){
+      tts.TtsSession._instance=null;
       piperSessionPromise=tts.TtsSession.create({
         voiceId,
         wasmPaths:PIPER_WASM_PATHS,
@@ -2248,6 +2249,7 @@ async function speakWithPiper(text,onDone){
     return true;
   }catch(err){
     piperSessionPromise=null;
+    if(tts&&tts.TtsSession)tts.TtsSession._instance=null;
     setTtsStatus('Piper TTS не спрацював. Дивись консоль браузера.');
     console.warn('Piper Ukrainian TTS failed',err);
     return false;
