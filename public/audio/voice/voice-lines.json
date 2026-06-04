@@ -1,0 +1,181 @@
+[
+  {
+    "id": "robot_intro_01",
+    "group": "robot_intro",
+    "text": "Привіт! Я Роботрон-9000."
+  },
+  {
+    "id": "robot_intro_02",
+    "group": "robot_intro",
+    "text": "Хочу розповісти тобі одну важливу історію..."
+  },
+  {
+    "id": "robot_intro_03",
+    "group": "robot_intro",
+    "text": "Жив собі хлопець на ім'я Андрій."
+  },
+  {
+    "id": "robot_intro_04",
+    "group": "robot_intro",
+    "text": "Звичайний київський школяр — добрий і веселий."
+  },
+  {
+    "id": "robot_intro_05",
+    "group": "robot_intro",
+    "text": "Кожного ранку він біг на уроки вулицями міста."
+  },
+  {
+    "id": "robot_intro_06",
+    "group": "robot_intro",
+    "text": "Але сьогодні щось пішло не так..."
+  },
+  {
+    "id": "robot_intro_07",
+    "group": "robot_intro",
+    "text": "Охоронці вирішили його зупинити!"
+  },
+  {
+    "id": "robot_intro_08",
+    "group": "robot_intro",
+    "text": "Андрій не злякався."
+  },
+  {
+    "id": "robot_intro_09",
+    "group": "robot_intro",
+    "text": "Він побіг — швидко, спритно, хоробро!"
+  },
+  {
+    "id": "robot_intro_10",
+    "group": "robot_intro",
+    "text": "Допоможи ему добігти до фінішу."
+  },
+  {
+    "id": "robot_intro_11",
+    "group": "robot_intro",
+    "text": "Слава Україні! 🇺🇦"
+  },
+  {
+    "id": "andrii_start_01",
+    "group": "andrii_start",
+    "text": "Ну що ж, побігли!"
+  },
+  {
+    "id": "andrii_start_02",
+    "group": "andrii_start",
+    "text": "Поїхали! Тримайтесь!"
+  },
+  {
+    "id": "andrii_start_03",
+    "group": "andrii_start",
+    "text": "Вперед, нікого не боюся!"
+  },
+  {
+    "id": "andrii_cop_01",
+    "group": "andrii_cop",
+    "text": "О, охоронець! Не дожене!"
+  },
+  {
+    "id": "andrii_cop_02",
+    "group": "andrii_cop",
+    "text": "Ану, спробуй мене зупини!"
+  },
+  {
+    "id": "andrii_cop_03",
+    "group": "andrii_cop",
+    "text": "Я швидший за тебе!"
+  },
+  {
+    "id": "andrii_cop_04",
+    "group": "andrii_cop",
+    "text": "Біжи-біжи, не доженеш!"
+  },
+  {
+    "id": "andrii_tck_01",
+    "group": "andrii_tck",
+    "text": "ТЦК?! Та я вас не боюся!"
+  },
+  {
+    "id": "andrii_tck_02",
+    "group": "andrii_tck",
+    "text": "Повістку? Ні дякую, побіжу!"
+  },
+  {
+    "id": "andrii_tck_03",
+    "group": "andrii_tck",
+    "text": "Не сьогодні, хлопці!"
+  },
+  {
+    "id": "andrii_tck_04",
+    "group": "andrii_tck",
+    "text": "Я ще встигну на урок!"
+  },
+  {
+    "id": "andrii_hit_01",
+    "group": "andrii_hit",
+    "text": "Ой! Але я не здаюсь!"
+  },
+  {
+    "id": "andrii_hit_02",
+    "group": "andrii_hit",
+    "text": "Все одно добіжу!"
+  },
+  {
+    "id": "andrii_hit_03",
+    "group": "andrii_hit",
+    "text": "Це ще не кінець!"
+  },
+  {
+    "id": "andrii_lose_01",
+    "group": "andrii_lose",
+    "text": "Ай, боляче! Але я повернусь!"
+  },
+  {
+    "id": "andrii_lose_02",
+    "group": "andrii_lose",
+    "text": "Ой боляче... Дайте відпочити!"
+  },
+  {
+    "id": "andrii_lose_03",
+    "group": "andrii_lose",
+    "text": "Ай! Цього разу не вийшло..."
+  },
+  {
+    "id": "andrii_win_01",
+    "group": "andrii_win",
+    "text": "УРА! ПЕРЕМОГА! Я зробив це!"
+  },
+  {
+    "id": "andrii_win_02",
+    "group": "andrii_win",
+    "text": "Ура! Дійшов до фінішу! Слава Україні!"
+  },
+  {
+    "id": "andrii_win_03",
+    "group": "andrii_win",
+    "text": "ПЕРЕМОГА! Ніхто мене не зупинить!"
+  },
+  {
+    "id": "story_tck_01",
+    "group": "story_tck",
+    "speaker": "Андрій",
+    "text": "От лишенько, вони вже близько... Що робити?"
+  },
+  {
+    "id": "story_tck_02",
+    "group": "story_tck",
+    "speaker": "ТЦК",
+    "text": "Підпиши документи, хлопче."
+  },
+  {
+    "id": "story_tck_03",
+    "group": "story_tck",
+    "speaker": "Андрій",
+    "text": "Я не буду підписувати ваші документи!"
+  },
+  {
+    "id": "story_tck_04",
+    "group": "story_tck",
+    "speaker": "ТЦК",
+    "text": "А ну, ти, хлопче, зараз підеш до нас. А ну іди сюди!"
+  }
+]
