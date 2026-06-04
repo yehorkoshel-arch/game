@@ -2129,13 +2129,37 @@ function speakAndrii(lines){
 function pickVoice(){
   if(!window.speechSynthesis)return null;
   const voices=window.speechSynthesis.getVoices();
-  return voices.find(v=>v.lang&&v.lang.startsWith('uk'))||null;
+  return voices.find(v=>{
+    const lang=(v.lang||'').toLowerCase().replace('_','-');
+    const name=(v.name||'').toLowerCase();
+    return lang.startsWith('uk')||name.includes('ukrain')||name.includes('україн')||name.includes('украин');
+  })||null;
+}
+function waitForUkrainianVoice(onReady,onMissing){
+  const voice=pickVoice();
+  if(voice){onReady(voice);return;}
+  if(!window.speechSynthesis){if(onMissing)onMissing();return;}
+  if(window.speechSynthesis.getVoices().length>0){if(onMissing)onMissing();return;}
+  let done=false;
+  const finish=(voice)=>{
+    if(done)return;
+    done=true;
+    window.speechSynthesis.onvoiceschanged=null;
+    if(voice)onReady(voice);
+    else if(onMissing)onMissing();
+  };
+  window.speechSynthesis.onvoiceschanged=()=>finish(pickVoice());
+  setTimeout(()=>finish(pickVoice()),700);
 }
 function normalizeSpeechText(text){
   return String(text||'')
     .replace(/Роботрон-9000/g,'Роботрон девять тисяч')
     .replace(/Роботрон девʼять тисяч/g,'Роботрон девять тисяч')
     .replace(/ТЦК/g,'те це ка')
+    .replace(/Києве/g,'Києве')
+    .replace(/Слава Україні/g,'Слава Україні')
+    .replace(/УРА/g,'Ура')
+    .replace(/ПЕРЕМОГА/g,'Перемога')
     .replace(/[.,!?;:…"'“”„«»()[\]{}<>—–-]/g,' ')
     .replace(/[ʼ'`]/g,'')
     .replace(/\s+/g,' ')
@@ -2147,44 +2171,44 @@ function speakAndriiForce(lines){
   const text=lines[Math.floor(Math.random()*lines.length)];
   bubbleText=text;bubbleTimer=260;
   if(!window.speechSynthesis)return;
-  const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
-  const voice=pickVoice();
-  if(!voice)return;
-  if(voice)u.voice=voice;
-  u.lang=voice.lang;
-  u.rate=0.98;
-  u.pitch=1.55;
-  u.volume=1;
-  window.speechSynthesis.speak(u);
+  waitForUkrainianVoice((voice)=>{
+    const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
+    u.voice=voice;
+    u.lang=voice.lang;
+    u.rate=0.98;
+    u.pitch=1.55;
+    u.volume=1;
+    window.speechSynthesis.speak(u);
+  });
 }
 function speakSceneLine(line){
   if(window.speechSynthesis)window.speechSynthesis.cancel();
   bubbleText=line.text;
   bubbleTimer=360;
   if(!window.speechSynthesis)return;
-  const u=new SpeechSynthesisUtterance(normalizeSpeechText(line.text));
-  const voice=pickVoice();
-  if(!voice)return;
-  if(voice)u.voice=voice;
-  u.lang=voice.lang;
-  u.rate=line.rate||0.96;
-  u.pitch=line.pitch||1.25;
-  u.volume=1;
-  window.speechSynthesis.speak(u);
+  waitForUkrainianVoice((voice)=>{
+    const u=new SpeechSynthesisUtterance(normalizeSpeechText(line.text));
+    u.voice=voice;
+    u.lang=voice.lang;
+    u.rate=line.rate||0.96;
+    u.pitch=line.pitch||1.25;
+    u.volume=1;
+    window.speechSynthesis.speak(u);
+  });
 }
 function _doSpeakAndrii(lines){
   const text=lines[Math.floor(Math.random()*lines.length)];
   showAndriiBubble(text);
   if(!window.speechSynthesis)return;
-  const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
-  const voice=pickVoice();
-  if(!voice)return;
-  if(voice)u.voice=voice;
-  u.lang=voice.lang;
-  u.rate=0.98;
-  u.pitch=1.55;
-  u.volume=1;
-  window.speechSynthesis.speak(u);
+  waitForUkrainianVoice((voice)=>{
+    const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
+    u.voice=voice;
+    u.lang=voice.lang;
+    u.rate=0.98;
+    u.pitch=1.55;
+    u.volume=1;
+    window.speechSynthesis.speak(u);
+  });
 }
 
 // Bubble над гравцем
@@ -2464,13 +2488,13 @@ function speakAndWait(text, onDone){
   let ci=0;
   function speakChunk(){
     if(ci>=chunks.length){onDone();return;}
-    const u=new SpeechSynthesisUtterance(chunks[ci]);
     const voice=pickVoice();
     if(!voice){
-      setTimeout(onDone, Math.max(1200,text.length*72));
+      waitForUkrainianVoice(()=>speakChunk(),()=>setTimeout(onDone, Math.max(1200,text.length*72)));
       return;
     }
-    if(voice)u.voice=voice;
+    const u=new SpeechSynthesisUtterance(chunks[ci]);
+    u.voice=voice;
     u.lang=voice.lang;
     u.rate=0.92;
     u.pitch=0.45;
@@ -2484,12 +2508,7 @@ function speakAndWait(text, onDone){
     window.speechSynthesis.speak(u);
   }
 
-  if(window.speechSynthesis.getVoices().length===0){
-    window.speechSynthesis.onvoiceschanged=speakChunk;
-    setTimeout(speakChunk,300);
-  } else {
-    speakChunk();
-  }
+  waitForUkrainianVoice(()=>speakChunk(),()=>setTimeout(onDone, Math.max(1200,text.length*72)));
 }
 
 function iTick(){
