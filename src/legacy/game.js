@@ -6,6 +6,13 @@ import {
 } from "../levels/levelFactory.js";
 import { loadGameSave, saveGameSave } from "../state/saveState.js";
 import { focusApp, setActiveScreen, setText } from "../ui/dom.js";
+import {
+  cancelSpeech,
+  normalizeSpeechText,
+  PIPER_TTS_ENABLED,
+  setTtsStatus,
+  speakChunksWithSystemVoice,
+} from "../audio/tts.js";
 
 function getLevels() {
   return currentLocation === 0 ? LEVELS_KYIV : LEVELS_LVIV;
@@ -2779,63 +2786,8 @@ function speakAndrii(lines) {
   andriiCooldown = 180;
   _doSpeakAndrii(lines);
 }
-function pickVoice() {
-  if (!window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices();
-  return (
-    voices.find((v) => {
-      const lang = (v.lang || "").toLowerCase().replace("_", "-");
-      return lang === "uk" || lang.startsWith("uk-");
-    }) || null
-  );
-}
-function waitForUkrainianVoice(onReady, onMissing) {
-  const voice = pickVoice();
-  if (voice) {
-    onReady(voice);
-    return;
-  }
-  if (!window.speechSynthesis) {
-    if (onMissing) onMissing();
-    return;
-  }
-  if (window.speechSynthesis.getVoices().length > 0) {
-    if (onMissing) onMissing();
-    return;
-  }
-  let done = false;
-  const finish = (voice) => {
-    if (done) return;
-    done = true;
-    window.speechSynthesis.onvoiceschanged = null;
-    if (voice) onReady(voice);
-    else if (onMissing) onMissing();
-  };
-  window.speechSynthesis.onvoiceschanged = () => finish(pickVoice());
-  setTimeout(() => finish(pickVoice()), 700);
-}
-function showMissingUkrainianVoice() {
-  setTtsStatus(
-    "Український системний голос не знайдено. Не вмикаю російський fallback.",
-  );
-}
 function isPiperEnabled() {
-  return true;
-}
-function normalizeSpeechText(text) {
-  return String(text || "")
-    .replace(/Роботрон-9000/g, "Роботрон девʼять тисяч")
-    .replace(/Роботрон девять тисяч/g, "Роботрон девʼять тисяч")
-    .replace(/ТЦК/g, "те це ка")
-    .replace(/Києве/g, "Києве")
-    .replace(/Слава Україні/g, "Слава Україні")
-    .replace(/УРА/g, "Ура")
-    .replace(/ПЕРЕМОГА/g, "Перемога")
-    .replace(/[.,!?;:…"'“”„«»()[\]{}<>—–-]/g, " ")
-    .replace(/[ʼ']/g, "'")
-    .replace(/`/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return PIPER_TTS_ENABLED;
 }
 const PIPER_TTS_URL =
   "https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.3/dist/piper-tts-web.js";
@@ -2856,10 +2808,6 @@ let piperModulePromise = null,
   piperSource = null,
   piperSessionPromise = null,
   piperSessionVoiceId = null;
-function setTtsStatus(text) {
-  const el = document.getElementById("ttsStatus");
-  if (el) el.textContent = text || "";
-}
 function loadPiperModule() {
   if (piperModulePromise) return piperModulePromise;
   if (location.protocol === "file:") {
@@ -3064,14 +3012,14 @@ async function playPiperWav(wav, onDone) {
 
 function speakAndriiForce(lines) {
   andriiCooldown = 300;
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  cancelSpeech();
   const text = lines[Math.floor(Math.random() * lines.length)];
   bubbleText = text;
   bubbleTimer = 260;
   speakAndWait(text, () => {});
 }
 function speakSceneLine(line) {
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  cancelSpeech();
   bubbleText = line.text;
   bubbleTimer = 360;
   speakAndWait(line.text, () => {});
@@ -3451,77 +3399,7 @@ function speakAndWait(text) {
 }
 
 function speakAndWaitWithSystemVoice(text, onDone) {
-  if (!window.speechSynthesis) {
-    onDone();
-    return;
-  }
-  window.speechSynthesis.cancel();
-
-  // Для системного голосу розбиваємо на шматочки (фікс багу довгих фраз у Chrome)
-  const chunks = [];
-  const parts = text.split(/\s+/);
-  let cur = "";
-  parts.forEach((p) => {
-    cur += (cur ? " " : "") + p;
-    if (cur.length >= 44) {
-      if (cur.trim()) chunks.push(cur.trim());
-      cur = "";
-    }
-  });
-  if (cur.trim()) chunks.push(cur.trim());
-  if (chunks.length === 0) {
-    onDone();
-    return;
-  }
-
-  let ci = 0;
-  function speakChunk() {
-    if (ci >= chunks.length) {
-      onDone();
-      return;
-    }
-    const voice = pickVoice();
-    if (!voice) {
-      waitForUkrainianVoice(
-        () => speakChunk(),
-        () => setTimeout(onDone, Math.max(1200, text.length * 72)),
-      );
-      return;
-    }
-    const u = new SpeechSynthesisUtterance(chunks[ci]);
-    u.voice = voice;
-    u.lang = "uk-UA";
-    u.rate = 0.92;
-    u.pitch = 0.45;
-    u.volume = 1;
-
-    let moved = false;
-    const next = () => {
-      if (!moved) {
-        moved = true;
-        ci++;
-        speakChunk();
-      }
-    };
-    const fb = setTimeout(next, chunks[ci].length * 82 + 900);
-    u.onend = () => {
-      clearTimeout(fb);
-      next();
-    };
-    u.onerror = () => {
-      clearTimeout(fb);
-      next();
-    };
-    window.speechSynthesis.speak(u);
-  }
-
-  waitForUkrainianVoice(
-    () => speakChunk(),
-    () => {
-      showMissingUkrainianVoice();
-      setTimeout(onDone, Math.max(1200, text.length * 72));
-    },
-  );
+  speakChunksWithSystemVoice(text, onDone, { rate: 0.92, pitch: 0.45 });
 }
 
 function iTick() {
@@ -3539,7 +3417,7 @@ function finishIntro() {
     clearTimeout(iPhaseTimer);
     iPhaseTimer = null;
   }
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  cancelSpeech();
   showScreen("sMenu");
 }
 
