@@ -450,6 +450,9 @@ function sfxShot() {
   osc.start(now + 0.03);
   osc.stop(now + 0.18);
 }
+function sfxMachineGunBurst() {
+  [0, 0.055, 0.11].forEach((delay) => setTimeout(sfxShot, delay * 1000));
+}
 function sfxCoin() {
   const c = getSfxCtx();
   if (!c) return;
@@ -1626,6 +1629,70 @@ function drawObs(o) {
     ctx.textAlign = "center";
     ctx.fillText("КІОСК", x, GND - 57);
     ctx.textAlign = "left";
+  } else if (o.type === "machinegun") {
+    const gy = GND;
+    const recoil = o.muzzleFlash > 0 ? Math.sin(fr * 0.9) * 3 : 0;
+
+    ctx.fillStyle = "rgba(0,0,0,0.24)";
+    ctx.beginPath();
+    ctx.ellipse(x, gy + 4, 34, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#1c1c1c";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(x - 18, gy);
+    ctx.lineTo(x - 4, gy - 34);
+    ctx.lineTo(x + 16, gy);
+    ctx.stroke();
+
+    ctx.fillStyle = "#2b2f34";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - 24, gy - 50, 28, 18, 3);
+    else ctx.fillRect(x - 24, gy - 50, 28, 18);
+    ctx.fill();
+    ctx.fillStyle = "#48515a";
+    ctx.fillRect(x - 20, gy - 47, 20, 4);
+
+    ctx.strokeStyle = "#101010";
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(x - 2 + recoil, gy - 43);
+    ctx.lineTo(x - 58 + recoil, gy - 46);
+    ctx.stroke();
+    ctx.strokeStyle = "#444";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x - 6 + recoil, gy - 39);
+    ctx.lineTo(x - 54 + recoil, gy - 42);
+    ctx.stroke();
+
+    ctx.fillStyle = "#6b5a2e";
+    ctx.fillRect(x + 4, gy - 46, 14, 18);
+    ctx.fillStyle = "#d9b64c";
+    for (let i = 0; i < 4; i++) ctx.fillRect(x + 6 + i * 3, gy - 44, 2, 14);
+
+    ctx.fillStyle = "#263238";
+    ctx.beginPath();
+    ctx.arc(x - 1, gy - 40, 11, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (o.muzzleFlash > 0) {
+      o.muzzleFlash--;
+      ctx.fillStyle = "rgba(255,190,30,0.9)";
+      ctx.beginPath();
+      ctx.moveTo(x - 62 + recoil, gy - 46);
+      ctx.lineTo(x - 84 + recoil, gy - 56);
+      ctx.lineTo(x - 80 + recoil, gy - 44);
+      ctx.lineTo(x - 92 + recoil, gy - 38);
+      ctx.lineTo(x - 64 + recoil, gy - 40);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,180,0.65)";
+      ctx.beginPath();
+      ctx.arc(x - 68 + recoil, gy - 45, 7, 0, Math.PI * 2);
+      ctx.fill();
+    }
   } else if (o.type === "cop") {
     const lp = Math.sin(fr * 0.32) * 10;
     const gx = x,
@@ -2104,6 +2171,7 @@ function oRect(o) {
   if (o.type === "kiosk") return { x: o.x - 24, y: GND - 46, w: 48, h: 46 };
   if (o.type === "cop") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
   if (o.type === "tck") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
+  if (o.type === "machinegun") return { x: o.x - 28, y: GND - 54, w: 52, h: 54 };
   return { x: o.x - 26, y: GND - 40, w: 52, h: 40 };
 }
 function hit(a, b) {
@@ -2597,26 +2665,33 @@ function update() {
   coins.forEach((c) => (c.x -= spd));
 
   // ТЦК стрілянина — лише Львів, рівень >= 2 (index >= 2)
-  if (currentLocation === 1 && currentLevel >= 2) {
+  if (currentLocation === 1 && currentLevel >= 1) {
     obs.forEach((o) => {
-      if (o.type !== "tck") return;
+      if (o.type !== "tck" && o.type !== "machinegun") return;
       if (!o.shotCooldown) o.shotCooldown = 0;
       o.shotCooldown--;
       // стріляє коли ТЦК на екрані та ближче 500px до гравця
       const playerX = LANES[pLane];
       const dist = o.x - playerX;
       if (dist > 30 && dist < 480 && o.shotCooldown <= 0) {
-        const fireRate = Math.max(90 - currentLevel * 3, 30);
+        const isMachineGun = o.type === "machinegun";
+        const fireRate = isMachineGun
+          ? Math.max(72 - currentLevel * 2, 34)
+          : Math.max(90 - currentLevel * 3, 30);
         o.shotCooldown = fireRate + ((Math.random() * 40) | 0);
-        bullets.push({
-          x: o.x - 16,
-          y: GND - 38,
-          lane: o.lane,
-          vx: -(spd + 5),
-          life: 80,
-        });
-        o.muzzleFlash = 5;
-        sfxShot();
+        const burst = isMachineGun ? 3 : 1;
+        for (let i = 0; i < burst; i++) {
+          bullets.push({
+            x: o.x - 16 + i * 18,
+            y: isMachineGun ? GND - 44 : GND - 38,
+            lane: o.lane,
+            vx: -(spd + (isMachineGun ? 6.3 : 5)),
+            life: 80,
+          });
+        }
+        o.muzzleFlash = isMachineGun ? 8 : 5;
+        if (isMachineGun) sfxMachineGunBurst();
+        else sfxShot();
       }
     });
   }
