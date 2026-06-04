@@ -57,11 +57,18 @@ function prepareTextForTts(text) {
     .trim();
 }
 
+function quoteWindowsArg(arg) {
+  const value = String(arg);
+  if (!/[()\s^&|<>"]/.test(value)) return value;
+  return `"${value.replace(/(["^&|<>])/g, "^$1")}"`;
+}
+
 function run(command, commandArgs) {
   return new Promise((resolve, reject) => {
+    const windowsCommand = [command, ...commandArgs].map(quoteWindowsArg).join(" ");
     const child = spawn(
       process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : command,
-      process.platform === "win32" ? ["/d", "/s", "/c", command, ...commandArgs] : commandArgs,
+      process.platform === "win32" ? ["/d", "/s", "/c", windowsCommand] : commandArgs,
       {
       cwd: ROOT,
       shell: false,
