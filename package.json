@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "voice:generate": "node scripts/generate-voice.mjs",
+    "voice:generate:female": "node scripts/generate-voice.mjs --voice uk-UA-PolinaNeural"
   },
   "dependencies": {
     "react": "^19.1.0",

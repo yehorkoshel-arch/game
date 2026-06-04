@@ -10,4 +10,4 @@ public/audio/voice/robot_intro_01.webm
 
 Then add a phrase mapping in `src/audio/voiceManifest.js`.
 
-Use `/game/voice-recorder.html` after deploy to record files in the browser.
+Use `npm run voice:generate` to generate files, or `/game/voice-recorder.html` after deploy to record files in the browser.

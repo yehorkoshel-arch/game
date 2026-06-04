@@ -27,6 +27,10 @@
 npm install
 npm run dev
 npm run build
+npm run voice:generate
 ```
+
+`npm run voice:generate` генерує `.mp3` для всіх реплік через Edge TTS голос `uk-UA-OstapNeural` і оновлює `src/audio/voiceManifest.js`.
+Для жіночого голосу можна запустити `npm run voice:generate:female`.
 
 Наступний крок реструктуризації: поступово винести ігрову логіку з `src/legacy/game.js` у модулі `audio`, `levels`, `render` і `state`.
