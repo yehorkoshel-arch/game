@@ -2482,28 +2482,6 @@ function drawBot(f,talking){
   ix.fillText('РОБОТРОН-9000',cx,IH-6);ix.textAlign='left';
 }
 
-// Роботячий beep-голос через Web Audio
-let iBeepTimer=null;
-function robotBeep(active){
-  if(!active){if(iBeepTimer){clearInterval(iBeepTimer);iBeepTimer=null;}return;}
-  if(iBeepTimer)return;
-  iBeepTimer=setInterval(()=>{
-    const c=getSfxCtx();if(!c)return;
-    const now=c.currentTime;
-    const freqs=[180,220,160,240,200];
-    const freq=freqs[Math.floor(Math.random()*freqs.length)];
-    const osc=c.createOscillator(),g=c.createGain();
-    osc.type='square';osc.frequency.value=freq;
-    const filt=c.createBiquadFilter();filt.type='bandpass';filt.frequency.value=400;filt.Q.value=2;
-    const vib=c.createOscillator(),vg=c.createGain();
-    vib.frequency.value=8;vg.gain.value=20;vib.connect(vg);vg.connect(osc.frequency);
-    g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(0.14,now+0.01);
-    g.gain.setValueAtTime(0.14,now+0.06);g.gain.linearRampToValueAtTime(0,now+0.09);
-    osc.connect(filt);filt.connect(g);g.connect(c.destination);
-    osc.start(now);vib.start(now);osc.stop(now+0.1);vib.stop(now+0.1);
-  },110);
-}
-
 // Друкарська машинка по символах
 function typeNextChar(){
   if(iState!==ISTATE.TYPING)return;
@@ -2601,7 +2579,6 @@ function iTick(){
 function finishIntro(){
   if(iRaf){cancelAnimationFrame(iRaf);iRaf=null;}
   if(iPhaseTimer){clearTimeout(iPhaseTimer);iPhaseTimer=null;}
-  robotBeep(false);
   if(window.speechSynthesis)window.speechSynthesis.cancel();
   showScreen('sMenu');
 }
