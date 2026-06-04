@@ -2165,6 +2165,66 @@ function normalizeSpeechText(text){
     .replace(/\s+/g,' ')
     .trim();
 }
+const PIPER_TTS_URL='https://esm.sh/@mintplex-labs/piper-tts-web@latest';
+const PIPER_UK_VOICES=[
+  'uk_UA-lada-x_low',
+  'uk_UA-mykyta-high',
+  'uk_UA-oleksa-high',
+  'uk_UA-tetiana-high',
+  'uk_UA-ukrainian_tts-medium'
+];
+let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false;
+function loadPiperModule(){
+  if(piperModulePromise)return piperModulePromise;
+  piperModulePromise=import(PIPER_TTS_URL).catch(err=>{
+    piperFailed=true;
+    console.warn('Piper TTS module unavailable',err);
+    return null;
+  });
+  return piperModulePromise;
+}
+async function pickPiperUkrainianVoice(tts){
+  if(piperVoiceId)return piperVoiceId;
+  try{
+    if(tts&&tts.voices){
+      const voices=await tts.voices();
+      const ids=Array.isArray(voices)?voices:Object.keys(voices||{});
+      piperVoiceId=ids.find(id=>/^uk[_-]UA/i.test(id))||
+                   ids.find(id=>/ukrain|україн|украин/i.test(id));
+    }
+  }catch(err){
+    console.warn('Piper voice list unavailable',err);
+  }
+  piperVoiceId=piperVoiceId||PIPER_UK_VOICES[0];
+  return piperVoiceId;
+}
+async function speakWithPiper(text,onDone){
+  if(piperFailed){return false;}
+  const tts=await loadPiperModule();
+  if(!tts||!tts.predict){piperFailed=true;return false;}
+  try{
+    const voiceId=await pickPiperUkrainianVoice(tts);
+    const clean=normalizeSpeechText(text);
+    if(!clean)return false;
+    const wav=await tts.predict({text:clean,voiceId},progress=>{
+      if(progress&&progress.total){
+        console.log('Piper TTS',Math.round(progress.loaded*100/progress.total)+'%');
+      }
+    });
+    if(piperAudio){
+      piperAudio.pause();
+      URL.revokeObjectURL(piperAudio.src);
+    }
+    piperAudio=new Audio(URL.createObjectURL(wav));
+    piperAudio.onended=()=>{if(onDone)onDone();};
+    piperAudio.onerror=()=>{if(onDone)onDone();};
+    await piperAudio.play();
+    return true;
+  }catch(err){
+    console.warn('Piper Ukrainian TTS failed',err);
+    return false;
+  }
+}
 function speakAndriiForce(lines){
   andriiCooldown=300;
   if(window.speechSynthesis)window.speechSynthesis.cancel();
@@ -2464,13 +2524,20 @@ function advancePhase(){
 
 // Говоримо фразу голосом — ділимо на короткі шматки для надійності в Chrome
 function speakAndWait(text, onDone){
-  if(!window.speechSynthesis){onDone();return;}
-  window.speechSynthesis.cancel();
-
   text=normalizeSpeechText(text
     .replace(/Роботрон-9000/g,'Роботрон девʼять тисяч')
     .replace(/Слава Україні/g,'Слава Україні!')
     .replace(/Андрій/g,'Андрій'));
+
+  speakWithPiper(text,onDone).then(usedPiper=>{
+    if(usedPiper)return;
+    speakAndWaitWithSystemVoice(text,onDone);
+  });
+}
+
+function speakAndWaitWithSystemVoice(text, onDone){
+  if(!window.speechSynthesis){onDone();return;}
+  window.speechSynthesis.cancel();
 
   const chunks=[];
   const parts=text.split(/\s+/);
