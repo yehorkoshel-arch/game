@@ -1,31 +1,18 @@
 import { LANGS, LOCATION_NAMES, SKINS_BASE } from '../data/gameData.js';
 import { getLevelNames, LEVELS_KYIV, LEVELS_LVIV } from '../levels/levelFactory.js';
+import { loadGameSave, saveGameSave } from '../state/saveState.js';
 
 function getLevels(){return currentLocation===0?LEVELS_KYIV:LEVELS_LVIV;}
 
 const FINISH_DIST=800;
-let lang='uk',totalCoins=0,owned=['default'],selectedSkin='default';
-let currentLevel=0;
-let currentLocation=0; // 0=Київ, 1=Львів
-let progressKyiv=0, progressLviv=0; // скільки рівнів пройдено у кожній локації
-let settingDiff='normal',settingLives=3,settingDist=800,settingSound=false,settingVib=false;
-try{
-  const save=JSON.parse(localStorage.getItem('kyivRunnerSave')||'{}');
-  totalCoins=save.totalCoins||0;
-  owned=save.owned||['default'];
-  selectedSkin=save.selectedSkin||'default';
-  settingDiff=save.settingDiff||'normal';
-  settingLives=save.settingLives||3;
-  settingDist=save.settingDist||800;
-  settingSound=save.settingSound||false;
-  settingVib=save.settingVib||false;
-  currentLevel=save.currentLevel||0;
-  currentLocation=save.currentLocation||0;
-  progressKyiv=save.progressKyiv||0;
-  progressLviv=save.progressLviv||0;
-}catch(e){}
+const save=loadGameSave();
+let lang='uk',totalCoins=save.totalCoins||0,owned=save.owned||['default'],selectedSkin=save.selectedSkin||'default';
+let currentLevel=save.currentLevel||0;
+let currentLocation=save.currentLocation||0; // 0=Київ, 1=Львів
+let progressKyiv=save.progressKyiv||0, progressLviv=save.progressLviv||0; // скільки рівнів пройдено у кожній локації
+let settingDiff=save.settingDiff||'normal',settingLives=save.settingLives||3,settingDist=save.settingDist||800,settingSound=save.settingSound||false,settingVib=save.settingVib||false;
 function saveGame(){
-  localStorage.setItem('kyivRunnerSave',JSON.stringify({totalCoins,owned,selectedSkin,settingDiff,settingLives,settingDist,settingSound,settingVib,currentLevel,currentLocation,progressKyiv,progressLviv}));
+  saveGameSave({totalCoins,owned,selectedSkin,settingDiff,settingLives,settingDist,settingSound,settingVib,currentLevel,currentLocation,progressKyiv,progressLviv});
 }
 
 // ── MUSIC ENGINE ─────────────────────────────────────────────────────────────
