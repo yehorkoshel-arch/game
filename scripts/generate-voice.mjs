@@ -26,6 +26,12 @@ for (let i = 2; i < process.argv.length; i++) {
 const voice = String(args.get("voice") || process.env.VOICE || DEFAULT_VOICE);
 const lang = String(args.get("lang") || process.env.LANG_CODE || DEFAULT_LANG);
 const group = args.get("group") ? String(args.get("group")) : "";
+const ids = args.get("id")
+  ? String(args.get("id"))
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean)
+  : [];
 const limit = args.get("limit") ? Number(args.get("limit")) : 0;
 const force = Boolean(args.get("force"));
 
@@ -55,7 +61,7 @@ function run(command, commandArgs) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, commandArgs, {
       cwd: ROOT,
-      shell: false,
+      shell: process.platform === "win32",
       stdio: "inherit",
     });
     child.on("exit", (code) => {
@@ -89,6 +95,7 @@ function toManifest(lines) {
 
 let lines = JSON.parse(await readFile(LINES_PATH, "utf8"));
 if (group) lines = lines.filter((line) => line.group === group);
+if (ids.length > 0) lines = lines.filter((line) => ids.includes(line.id));
 if (limit > 0) lines = lines.slice(0, limit);
 
 console.log(`Generating ${lines.length} voice files`);
@@ -104,7 +111,7 @@ for (const line of lines) {
     continue;
   }
   console.log(`Generate ${line.id}.mp3`);
-  await run(process.platform === "win32" ? "npx.cmd" : "npx", [
+  await run("npx", [
     "--yes",
     "node-edge-tts@1.2.10",
     "--text",
