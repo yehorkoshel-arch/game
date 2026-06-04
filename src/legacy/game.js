@@ -593,10 +593,12 @@ let obs = [],
   coins = [],
   parts = [],
   confetti = [],
-  bullets = [];
+  bullets = [],
+  playerBullets = [];
 let bgOff = 0,
   chaserX = -100,
   raf = null;
+let fireCooldown = 0;
 let finishX = 9999,
   finishActive = false,
   winTimer = 0,
@@ -672,7 +674,7 @@ function applyLang() {
   document.getElementById("cJump").textContent = L.jump;
   document.getElementById("cSlide").textContent = L.slide;
   document.getElementById("cRight").textContent = L.right;
-  document.getElementById("cMenu").textContent = L.menu;
+  document.getElementById("cMenu").textContent = currentLocation === 1 ? "Вогонь" : L.menu;
   document
     .querySelectorAll(".lbtn")
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
@@ -890,7 +892,7 @@ document.querySelectorAll(".loc-tab").forEach((b) => {
     currentLocation = Number(b.dataset.loc);
     currentLevel = currentLocation === 0 ? progressKyiv : progressLviv;
     saveGame();
-    buildLevelBar();
+    applyLang();
   };
 });
 document.getElementById("btnShopOpen").onclick = () => {
@@ -912,6 +914,10 @@ document.getElementById("btnBackSettings").onclick = () => {
   showScreen("sMenu");
 };
 document.getElementById("cMenu").onclick = () => {
+  if (gameState === "run" && currentLocation === 1) {
+    fireAndriiMachineGun();
+    return;
+  }
   stopGame();
   showScreen("sMenu");
   syncCoins();
@@ -956,7 +962,7 @@ document.getElementById("cSlide").onclick = () => act("ArrowDown");
 const keys = {};
 document.addEventListener("keydown", (e) => {
   if (
-    ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(
+    ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "KeyF"].includes(
       e.code,
     )
   )
@@ -1008,6 +1014,24 @@ function act(c) {
     pLane++;
     sfxStep(1);
   }
+  if (c === "KeyF") fireAndriiMachineGun();
+}
+
+function fireAndriiMachineGun() {
+  if (gameState !== "run" || currentLocation !== 1 || fireCooldown > 0) return;
+  fireCooldown = 16;
+  const x = LANES[pLane] + 24;
+  const y = pSlide ? pY - 12 : pY - 34;
+  for (let i = 0; i < 3; i++) {
+    playerBullets.push({
+      x: x + i * 12,
+      y: y - i * 2,
+      lane: pLane,
+      vx: 11 + i * 0.9,
+      life: 46,
+    });
+  }
+  sfxMachineGunBurst();
 }
 
 function nextLevel() {
@@ -1062,6 +1086,8 @@ function startLevel() {
   parts = [];
   confetti = [];
   bullets = [];
+  playerBullets = [];
+  fireCooldown = 0;
   bgOff = 0;
   chaserX = -100;
   inv = 0;
@@ -1166,6 +1192,22 @@ function drawBullets() {
     ctx.fillStyle = "#ffcc00";
     ctx.beginPath();
     ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+  playerBullets.forEach((b) => {
+    const alpha = Math.min(1, b.life / 12);
+    ctx.globalAlpha = alpha * 0.35;
+    ctx.fillStyle = "#3aa7ff";
+    ctx.fillRect(b.x - 20, b.y - 2, 22, 4);
+    ctx.globalAlpha = alpha;
+    const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 6);
+    g.addColorStop(0, "#fff6a0");
+    g.addColorStop(0.55, "#ffd700");
+    g.addColorStop(1, "rgba(0,120,255,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
   });
@@ -1382,6 +1424,36 @@ function drawPlayer() {
     ctx.moveTo(x + 12, y - 34);
     ctx.lineTo(x + 18, y - 20 - run * 0.2);
     ctx.stroke();
+
+    if (currentLocation === 1) {
+      ctx.strokeStyle = "#17191d";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(x + 12, y - 31);
+      ctx.lineTo(x + 42, y - 35);
+      ctx.stroke();
+      ctx.strokeStyle = "#4b5560";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 16, y - 28);
+      ctx.lineTo(x + 38, y - 31);
+      ctx.stroke();
+      ctx.fillStyle = "#2c3036";
+      ctx.fillRect(x + 18, y - 28, 9, 11);
+      ctx.fillStyle = "#d7b94a";
+      ctx.fillRect(x + 25, y - 29, 4, 9);
+      if (fireCooldown > 10) {
+        ctx.fillStyle = "rgba(255,210,70,0.9)";
+        ctx.beginPath();
+        ctx.moveTo(x + 44, y - 35);
+        ctx.lineTo(x + 58, y - 42);
+        ctx.lineTo(x + 54, y - 34);
+        ctx.lineTo(x + 61, y - 29);
+        ctx.lineTo(x + 45, y - 31);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
 
     // head
     ctx.fillStyle = sk.mask || sk.skin;
@@ -1629,70 +1701,6 @@ function drawObs(o) {
     ctx.textAlign = "center";
     ctx.fillText("КІОСК", x, GND - 57);
     ctx.textAlign = "left";
-  } else if (o.type === "machinegun") {
-    const gy = GND;
-    const recoil = o.muzzleFlash > 0 ? Math.sin(fr * 0.9) * 3 : 0;
-
-    ctx.fillStyle = "rgba(0,0,0,0.24)";
-    ctx.beginPath();
-    ctx.ellipse(x, gy + 4, 34, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = "#1c1c1c";
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(x - 18, gy);
-    ctx.lineTo(x - 4, gy - 34);
-    ctx.lineTo(x + 16, gy);
-    ctx.stroke();
-
-    ctx.fillStyle = "#2b2f34";
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(x - 24, gy - 50, 28, 18, 3);
-    else ctx.fillRect(x - 24, gy - 50, 28, 18);
-    ctx.fill();
-    ctx.fillStyle = "#48515a";
-    ctx.fillRect(x - 20, gy - 47, 20, 4);
-
-    ctx.strokeStyle = "#101010";
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    ctx.moveTo(x - 2 + recoil, gy - 43);
-    ctx.lineTo(x - 58 + recoil, gy - 46);
-    ctx.stroke();
-    ctx.strokeStyle = "#444";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(x - 6 + recoil, gy - 39);
-    ctx.lineTo(x - 54 + recoil, gy - 42);
-    ctx.stroke();
-
-    ctx.fillStyle = "#6b5a2e";
-    ctx.fillRect(x + 4, gy - 46, 14, 18);
-    ctx.fillStyle = "#d9b64c";
-    for (let i = 0; i < 4; i++) ctx.fillRect(x + 6 + i * 3, gy - 44, 2, 14);
-
-    ctx.fillStyle = "#263238";
-    ctx.beginPath();
-    ctx.arc(x - 1, gy - 40, 11, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (o.muzzleFlash > 0) {
-      o.muzzleFlash--;
-      ctx.fillStyle = "rgba(255,190,30,0.9)";
-      ctx.beginPath();
-      ctx.moveTo(x - 62 + recoil, gy - 46);
-      ctx.lineTo(x - 84 + recoil, gy - 56);
-      ctx.lineTo(x - 80 + recoil, gy - 44);
-      ctx.lineTo(x - 92 + recoil, gy - 38);
-      ctx.lineTo(x - 64 + recoil, gy - 40);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "rgba(255,255,180,0.65)";
-      ctx.beginPath();
-      ctx.arc(x - 68 + recoil, gy - 45, 7, 0, Math.PI * 2);
-      ctx.fill();
-    }
   } else if (o.type === "cop") {
     const lp = Math.sin(fr * 0.32) * 10;
     const gx = x,
@@ -2171,7 +2179,6 @@ function oRect(o) {
   if (o.type === "kiosk") return { x: o.x - 24, y: GND - 46, w: 48, h: 46 };
   if (o.type === "cop") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
   if (o.type === "tck") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
-  if (o.type === "machinegun") return { x: o.x - 28, y: GND - 54, w: 52, h: 54 };
   return { x: o.x - 26, y: GND - 40, w: 52, h: 40 };
 }
 function hit(a, b) {
@@ -2641,6 +2648,7 @@ function update() {
     if (slideT <= 0) pSlide = false;
   }
   if (inv > 0) inv--;
+  if (fireCooldown > 0) fireCooldown--;
   if (chaserX < LANES[0] - 100) chaserX += 0.5 + (spd - 2.8) * 0.1;
   if (andriiCooldown > 0) andriiCooldown--;
 
@@ -2667,31 +2675,24 @@ function update() {
   // ТЦК стрілянина — лише Львів, рівень >= 2 (index >= 2)
   if (currentLocation === 1 && currentLevel >= 1) {
     obs.forEach((o) => {
-      if (o.type !== "tck" && o.type !== "machinegun") return;
+      if (o.type !== "tck") return;
       if (!o.shotCooldown) o.shotCooldown = 0;
       o.shotCooldown--;
       // стріляє коли ТЦК на екрані та ближче 500px до гравця
       const playerX = LANES[pLane];
       const dist = o.x - playerX;
       if (dist > 30 && dist < 480 && o.shotCooldown <= 0) {
-        const isMachineGun = o.type === "machinegun";
-        const fireRate = isMachineGun
-          ? Math.max(72 - currentLevel * 2, 34)
-          : Math.max(90 - currentLevel * 3, 30);
+        const fireRate = Math.max(90 - currentLevel * 3, 30);
         o.shotCooldown = fireRate + ((Math.random() * 40) | 0);
-        const burst = isMachineGun ? 3 : 1;
-        for (let i = 0; i < burst; i++) {
-          bullets.push({
-            x: o.x - 16 + i * 18,
-            y: isMachineGun ? GND - 44 : GND - 38,
-            lane: o.lane,
-            vx: -(spd + (isMachineGun ? 6.3 : 5)),
-            life: 80,
-          });
-        }
-        o.muzzleFlash = isMachineGun ? 8 : 5;
-        if (isMachineGun) sfxMachineGunBurst();
-        else sfxShot();
+        bullets.push({
+          x: o.x - 16,
+          y: GND - 38,
+          lane: o.lane,
+          vx: -(spd + 5),
+          life: 80,
+        });
+        o.muzzleFlash = 5;
+        sfxShot();
       }
     });
   }
@@ -2702,6 +2703,24 @@ function update() {
     b.life--;
   });
   bullets = bullets.filter((b) => b.life > 0 && b.x > -20);
+  playerBullets.forEach((b) => {
+    b.x += b.vx;
+    b.life--;
+  });
+  playerBullets = playerBullets.filter((b) => b.life > 0 && b.x < W + 40);
+
+  playerBullets = playerBullets.filter((b) => {
+    let hitEnemy = false;
+    obs = obs.filter((o) => {
+      if (hitEnemy || b.lane !== o.lane || (o.type !== "tck" && o.type !== "cop")) return true;
+      const br = { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
+      if (!hit(br, oRect(o))) return true;
+      hitEnemy = true;
+      addParts(o.x, GND - 36, "#ffd700");
+      return false;
+    });
+    return !hitEnemy;
+  });
 
   obs = obs.filter((o) => o.x > -80);
   coins = coins.filter((c) => !c.done && c.x > -20);
