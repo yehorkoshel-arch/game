@@ -2840,7 +2840,7 @@ function normalizeSpeechText(text) {
 const PIPER_TTS_URL =
   "https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.3/dist/piper-tts-web.js";
 const PIPER_WASM_PATHS = {
-  onnxWasm: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/",
+  onnxWasm: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/",
   piperData:
     "https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.data",
   piperWasm:
