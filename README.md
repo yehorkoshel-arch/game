@@ -10,6 +10,7 @@
 - `src/data/gameData.js` - тексти інтерфейсу, скіни та назви локацій.
 - `src/levels/levelFactory.js` - генерація рівнів, палітр трас і наборів перешкод.
 - `src/state/saveState.js` - читання та запис прогресу гри в браузері.
+- `src/ui/dom.js` - невеликі DOM-helper-и для фокуса, екранів і тексту.
 - `src/main.tsx` - запуск React.
 - `src/styles/global.css` - стилі гри.
 - `src/legacy/game.js` - поточна JavaScript-логіка гри без переписування.

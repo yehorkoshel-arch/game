@@ -1,6 +1,7 @@
 import { LANGS, LOCATION_NAMES, SKINS_BASE } from '../data/gameData.js';
 import { getLevelNames, LEVELS_KYIV, LEVELS_LVIV } from '../levels/levelFactory.js';
 import { loadGameSave, saveGameSave } from '../state/saveState.js';
+import { focusApp, setActiveScreen, setText } from '../ui/dom.js';
 
 function getLevels(){return currentLocation===0?LEVELS_KYIV:LEVELS_LVIV;}
 
@@ -359,10 +360,6 @@ let tckSceneSeenLevels={},tckScene=null;
 const W=680,H=420,GND=270,LANES=[150,340,530];
 
 function t(){return LANGS[lang];}
-function focusApp(){
-  const app=document.getElementById('app');
-  if(app)app.focus({preventScroll:true});
-}
 window.addEventListener('load',()=>setTimeout(focusApp,100));
 function unlockGameAudio(){
   const c=getSfxCtx();
@@ -450,13 +447,12 @@ function buildSettings(){
 document.querySelectorAll('.lbtn').forEach(b=>{b.onclick=()=>{lang=b.dataset.lang;applyLang();if(musicPlaying){stopLyrics();startLyrics();}};});
 
 function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  setActiveScreen(id);
   if(settingSound){
     if(id==='sMenu'||id==='sGame'){startMusic();}else{stopMusic();}
   }
 }
-function syncCoins(){document.getElementById('menuCoins').textContent=totalCoins;document.getElementById('shopCoins').textContent=totalCoins;}
+function syncCoins(){setText('menuCoins',totalCoins);setText('shopCoins',totalCoins);}
 
 function drawSkinPreview(canvas,sk){
   const c=canvas.getContext('2d');
