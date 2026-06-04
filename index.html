@@ -79,6 +79,7 @@ canvas{display:block}
 #sIntro{background:#0a0a1a;align-items:center;justify-content:center;flex-direction:column}
 #introCanvas{border-radius:10px}
 #introSubtitle{min-height:60px;max-width:560px;text-align:center;font-size:15px;color:#e0e8ff;line-height:1.6;padding:0 20px;margin-top:12px;font-style:italic}
+#ttsStatus{min-height:18px;margin-top:4px;font-size:11px;color:#6f86a8;text-align:center}
 #introSkip{margin-top:10px;padding:7px 24px;font-size:12px;border-radius:7px;border:1px solid #334466;background:transparent;color:#556688;cursor:pointer}
 #introSkip:hover{border-color:#ffd700;color:#ffd700}
 </style>
@@ -88,6 +89,7 @@ canvas{display:block}
 <div id="sIntro" class="screen active">
     <canvas id="introCanvas" width="340" height="220"></canvas>
     <div id="introSubtitle">…</div>
+    <div id="ttsStatus"></div>
     <button id="introSkip">▶ Пропустити</button>
   </div>
   <div id="sMenu" class="screen">
@@ -735,7 +737,7 @@ function unlockGameAudio(){
   if(c&&c.state==='suspended')c.resume().catch(()=>{});
   loadPiperModule();
 }
-document.getElementById('app').addEventListener('pointerdown',()=>{focusApp();unlockGameAudio();});
+document.getElementById('app').addEventListener('pointerdown',()=>{focusApp();unlockGameAudio();beginIntroAfterGesture();});
 function buildLevelBar(){
   const bar=document.getElementById('lvlBar');
   bar.innerHTML='';
@@ -2173,16 +2175,24 @@ function normalizeSpeechText(text){
 const PIPER_TTS_URL='https://esm.sh/@mintplex-labs/piper-tts-web@latest';
 const PIPER_UK_VOICES=[
   'uk_UA-lada-x_low',
-  'uk_UA-mykyta-high',
-  'uk_UA-oleksa-high',
-  'uk_UA-tetiana-high',
   'uk_UA-ukrainian_tts-medium'
 ];
 let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false,piperSource=null;
+function setTtsStatus(text){
+  const el=document.getElementById('ttsStatus');
+  if(el)el.textContent=text||'';
+}
 function loadPiperModule(){
   if(piperModulePromise)return piperModulePromise;
+  if(location.protocol==='file:'){
+    piperFailed=true;
+    setTtsStatus('Piper TTS працює через GitHub Pages або localhost, не через file://');
+    return Promise.resolve(null);
+  }
+  setTtsStatus('Завантаження українського Piper TTS…');
   piperModulePromise=import(PIPER_TTS_URL).catch(err=>{
     piperFailed=true;
+    setTtsStatus('Piper TTS не завантажився. Перевір інтернет або відкрий сайт через GitHub Pages.');
     console.warn('Piper TTS module unavailable',err);
     return null;
   });
@@ -2211,14 +2221,19 @@ async function speakWithPiper(text,onDone){
     const voiceId=await pickPiperUkrainianVoice(tts);
     const clean=normalizeSpeechText(text);
     if(!clean)return false;
+    setTtsStatus('Генерується українська озвучка…');
     const wav=await tts.predict({text:clean,voiceId},progress=>{
       if(progress&&progress.total){
-        console.log('Piper TTS',Math.round(progress.loaded*100/progress.total)+'%');
+        const pct=Math.round(progress.loaded*100/progress.total);
+        setTtsStatus('Завантаження голосу: '+pct+'%');
+        console.log('Piper TTS',pct+'%');
       }
     });
     await playPiperWav(wav,onDone);
+    setTtsStatus('');
     return true;
   }catch(err){
+    setTtsStatus('Piper TTS не спрацював. Дивись консоль браузера.');
     console.warn('Piper Ukrainian TTS failed',err);
     return false;
   }
@@ -2343,7 +2358,7 @@ const STORY=[
 const ic=document.getElementById('introCanvas');
 const ix=ic.getContext('2d');
 const IW=340,IH=220;
-let iFr=0,iRaf=null,iPhase=0,iCharIdx=0,iTyping=false;
+let iFr=0,iRaf=null,iPhase=0,iCharIdx=0,iTyping=false,introStarted=false;
 let iTypedText='',iPhaseTimer=0;
 const ISTATE={TYPING:0,PAUSE:1,DONE:2};
 let iState=ISTATE.TYPING;
@@ -2586,12 +2601,21 @@ function finishIntro(){
 document.getElementById('introSkip').onclick=()=>{focusApp();finishIntro();};
 
 function startIntro(){
+  introStarted=true;
   iFr=0;iPhase=0;iCharIdx=0;iTypedText='';iState=ISTATE.TYPING;
   document.getElementById('introSubtitle').textContent='';
   iRaf=requestAnimationFrame(iTick);
   setTimeout(typeNextChar,800);
 }
-startIntro();
+function beginIntroAfterGesture(){
+  if(introStarted)return;
+  if(location.protocol==='file:'){
+    setTtsStatus('Для Piper TTS відкрий через GitHub Pages або localhost, не file://');
+  }
+  startIntro();
+}
+drawBot(0,false);
+document.getElementById('introSubtitle').textContent='Натисни на екран, щоб увімкнути українську озвучку.';
 applyLang();
 
 
