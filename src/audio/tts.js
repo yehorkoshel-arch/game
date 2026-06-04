@@ -5,9 +5,35 @@ export function setTtsStatus(text) {
   if (element) element.textContent = text || "";
 }
 
+function getAvailableVoiceSummary() {
+  if (!window.speechSynthesis) return "speechSynthesis недоступний";
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) return "голоси ще не завантажились";
+  return voices
+    .map((voice) => `${voice.name} (${voice.lang || "без lang"})`)
+    .join(", ");
+}
+
+function reportAvailableVoices() {
+  if (!window.speechSynthesis) return;
+  const voices = window.speechSynthesis.getVoices();
+  console.info("Available browser TTS voices:", getAvailableVoiceSummary());
+  if (console.table) {
+    console.table(
+      voices.map((voice) => ({
+        name: voice.name,
+        lang: voice.lang,
+        localService: voice.localService,
+        default: voice.default,
+      })),
+    );
+  }
+}
+
 export function showMissingUkrainianVoice() {
+  reportAvailableVoices();
   setTtsStatus(
-    "Український системний голос не знайдено. Не вмикаю російський fallback.",
+    "Український голос uk-UA не знайдено в браузері. Встанови український голос у системі або використовуй готові аудіофайли.",
   );
 }
 
