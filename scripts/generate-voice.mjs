@@ -1,6 +1,8 @@
-import { spawn } from "node:child_process";
 import { readdir, readFile, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
+
+const { EdgeTTS } = createRequire(import.meta.url)("node-edge-tts");
 
 const ROOT = process.cwd();
 const DEFAULT_VOICE = "uk-UA-OstapNeural";
@@ -57,32 +59,6 @@ function prepareTextForTts(text) {
     .trim();
 }
 
-function quoteWindowsArg(arg) {
-  const value = String(arg);
-  if (!/[()\s^&|<>"]/.test(value)) return value;
-  return `"${value.replace(/(["^&|<>])/g, "^$1")}"`;
-}
-
-function run(command, commandArgs) {
-  return new Promise((resolve, reject) => {
-    const windowsCommand = [command, ...commandArgs].map(quoteWindowsArg).join(" ");
-    const child = spawn(
-      process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : command,
-      process.platform === "win32" ? ["/d", "/s", "/c", windowsCommand] : commandArgs,
-      {
-      cwd: ROOT,
-      shell: false,
-      stdio: "inherit",
-      },
-    );
-    child.on("exit", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`${command} exited with ${code}`));
-    });
-    child.on("error", reject);
-  });
-}
-
 async function exists(filePath) {
   try {
     await readFile(filePath);
@@ -114,6 +90,13 @@ console.log(`Generating ${lines.length} voice files`);
 console.log(`Voice: ${voice}`);
 console.log(`Language: ${lang}`);
 
+const tts = new EdgeTTS({
+  voice,
+  lang,
+  outputFormat: "audio-24khz-48kbitrate-mono-mp3",
+  timeout: 30000,
+});
+
 for (const line of lines) {
   const outFile = path.join(OUT_DIR, `${line.id}.mp3`);
   if (!force && (await exists(outFile))) {
@@ -121,18 +104,7 @@ for (const line of lines) {
     continue;
   }
   console.log(`Generate ${line.id}.mp3`);
-  await run("npx", [
-    "--yes",
-    "node-edge-tts@1.2.10",
-    "--text",
-    prepareTextForTts(line.text),
-    "--filepath",
-    outFile,
-    "--voice",
-    voice,
-    "--lang",
-    lang,
-  ]);
+  await tts.ttsPromise(prepareTextForTts(line.text), outFile);
 }
 
 const voiceFiles = new Set(
