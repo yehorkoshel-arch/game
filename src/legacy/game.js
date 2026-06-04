@@ -1793,8 +1793,8 @@ function isPiperEnabled(){
 }
 function normalizeSpeechText(text){
   return String(text||'')
-    .replace(/Роботрон-9000/g,'Роботрон девять тисяч')
-    .replace(/Роботрон девʼять тисяч/g,'Роботрон девять тисяч')
+    .replace(/Роботрон-9000/g,'Роботрон девʼять тисяч')
+    .replace(/Роботрон девять тисяч/g,'Роботрон девʼять тисяч')
     .replace(/ТЦК/g,'те це ка')
     .replace(/Києве/g,'Києве')
     .replace(/Слава Україні/g,'Слава Україні')
@@ -1812,7 +1812,8 @@ const PIPER_WASM_PATHS={
   piperWasm:'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.wasm'
 };
 const PIPER_UK_LOCALE='uk_UA';
-const PIPER_UK_VOICES=[PIPER_UK_LOCALE];
+const PIPER_UK_MODEL='uk_UA-ukrainian_tts-medium';
+const PIPER_UK_VOICES=[PIPER_UK_MODEL];
 let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false,piperSource=null,piperSessionPromise=null,piperSessionVoiceId=null;
 function setTtsStatus(text){
   const el=document.getElementById('ttsStatus');
@@ -1840,12 +1841,12 @@ async function pickPiperUkrainianVoice(tts){
     if(tts&&tts.voices){
       const voices=await tts.voices();
       const ids=Array.isArray(voices)?voices.map(voice=>typeof voice==='string'?voice:voice.id||voice.voiceId||voice.locale).filter(Boolean):Object.keys(voices||{});
-      piperVoiceId=ids.find(id=>id===PIPER_UK_LOCALE)||null;
+      piperVoiceId=ids.find(id=>id===PIPER_UK_MODEL)||null;
     }
   }catch(err){
     console.warn('Piper voice list unavailable',err);
   }
-  piperVoiceId=piperVoiceId||PIPER_UK_LOCALE;
+  piperVoiceId=piperVoiceId||PIPER_UK_MODEL;
   return piperVoiceId;
 }
 function piperErrorMessage(err){
