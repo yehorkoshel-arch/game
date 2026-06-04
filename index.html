@@ -2173,11 +2173,16 @@ function normalizeSpeechText(text){
     .trim();
 }
 const PIPER_TTS_URL='https://esm.sh/@mintplex-labs/piper-tts-web@latest';
+const PIPER_WASM_PATHS={
+  onnxWasm:'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/',
+  piperData:'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.data',
+  piperWasm:'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.wasm'
+};
 const PIPER_UK_VOICES=[
   'uk_UA-lada-x_low',
   'uk_UA-ukrainian_tts-medium'
 ];
-let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false,piperSource=null;
+let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false,piperSource=null,piperSessionPromise=null;
 function setTtsStatus(text){
   const el=document.getElementById('ttsStatus');
   if(el)el.textContent=text||'';
@@ -2216,23 +2221,33 @@ async function pickPiperUkrainianVoice(tts){
 async function speakWithPiper(text,onDone){
   if(piperFailed){return false;}
   const tts=await loadPiperModule();
-  if(!tts||!tts.predict){piperFailed=true;return false;}
+  if(!tts||!tts.TtsSession){piperFailed=true;return false;}
   try{
     const voiceId=await pickPiperUkrainianVoice(tts);
     const clean=normalizeSpeechText(text);
     if(!clean)return false;
     setTtsStatus('Генерується українська озвучка…');
-    const wav=await tts.predict({text:clean,voiceId},progress=>{
-      if(progress&&progress.total){
-        const pct=Math.round(progress.loaded*100/progress.total);
-        setTtsStatus('Завантаження голосу: '+pct+'%');
-        console.log('Piper TTS',pct+'%');
-      }
-    });
+    if(!piperSessionPromise){
+      piperSessionPromise=tts.TtsSession.create({
+        voiceId,
+        wasmPaths:PIPER_WASM_PATHS,
+        progress:(progress)=>{
+          if(progress&&progress.total){
+            const pct=Math.round(progress.loaded*100/progress.total);
+            setTtsStatus('Завантаження голосу: '+pct+'%');
+            console.log('Piper TTS',pct+'%');
+          }
+        },
+        logger:(message)=>console.log('Piper TTS',message)
+      });
+    }
+    const session=await piperSessionPromise;
+    const wav=await session.predict(clean);
     await playPiperWav(wav,onDone);
     setTtsStatus('');
     return true;
   }catch(err){
+    piperSessionPromise=null;
     setTtsStatus('Piper TTS не спрацював. Дивись консоль браузера.');
     console.warn('Piper Ukrainian TTS failed',err);
     return false;
