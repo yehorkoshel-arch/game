@@ -1789,7 +1789,7 @@ function showMissingUkrainianVoice(){
   setTtsStatus('Український системний голос не знайдено. Не вмикаю російський fallback.');
 }
 function isPiperEnabled(){
-  return false;
+  return true;
 }
 function normalizeSpeechText(text){
   return String(text||'')
@@ -1811,10 +1811,8 @@ const PIPER_WASM_PATHS={
   piperData:'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.data',
   piperWasm:'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.wasm'
 };
-const PIPER_UK_VOICES=[
-  'uk_UA-ukrainian_tts-medium',
-  'uk_UA-lada-x_low'
-];
+const PIPER_UK_LOCALE='uk_UA';
+const PIPER_UK_VOICES=[PIPER_UK_LOCALE];
 let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false,piperSource=null,piperSessionPromise=null,piperSessionVoiceId=null;
 function setTtsStatus(text){
   const el=document.getElementById('ttsStatus');
@@ -1841,14 +1839,13 @@ async function pickPiperUkrainianVoice(tts){
   try{
     if(tts&&tts.voices){
       const voices=await tts.voices();
-      const ids=Array.isArray(voices)?voices:Object.keys(voices||{});
-      piperVoiceId=ids.find(id=>/^uk[_-]UA/i.test(id))||
-                   ids.find(id=>/ukrain|україн|украин/i.test(id));
+      const ids=Array.isArray(voices)?voices.map(voice=>typeof voice==='string'?voice:voice.id||voice.voiceId||voice.locale).filter(Boolean):Object.keys(voices||{});
+      piperVoiceId=ids.find(id=>id===PIPER_UK_LOCALE)||null;
     }
   }catch(err){
     console.warn('Piper voice list unavailable',err);
   }
-  piperVoiceId=piperVoiceId||PIPER_UK_VOICES[0];
+  piperVoiceId=piperVoiceId||PIPER_UK_LOCALE;
   return piperVoiceId;
 }
 function piperErrorMessage(err){
