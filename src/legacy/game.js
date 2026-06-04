@@ -2832,14 +2832,15 @@ function normalizeSpeechText(text) {
     .replace(/УРА/g, "Ура")
     .replace(/ПЕРЕМОГА/g, "Перемога")
     .replace(/[.,!?;:…"'“”„«»()[\]{}<>—–-]/g, " ")
-    .replace(/[ʼ'`]/g, "")
+    .replace(/[ʼ']/g, "'")
+    .replace(/`/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
 const PIPER_TTS_URL =
   "https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.3/dist/piper-tts-web.js";
 const PIPER_WASM_PATHS = {
-  onnxWasm: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/",
+  onnxWasm: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/",
   piperData:
     "https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.data",
   piperWasm:
@@ -2980,7 +2981,7 @@ async function speakWithPiper(text, onDone) {
 
 // Оновлена функція для чистого та плавного відтворення аудіо з Piper
 async function playPiperWav(wav, onDone) {
-  // 1. Повністю зупиняємо попереднє активне відтворення
+  // Зупиняємо попереднє відтворення
   if (piperAudio) {
     piperAudio.pause();
     piperAudio.onended = null;
@@ -2997,14 +2998,23 @@ async function playPiperWav(wav, onDone) {
     piperSource = null;
   }
 
-  // 2. Для Piper використовуємо виключно HTMLAudioElement (тег Audio).
-  // Це автоматично виправляє "марсіанську мову" та пищання, оскільки браузер самостійно
-  // робить апаратну ресемплізацію 22050 Гц у системну частоту виходу (44100 або 48000 Гц).
+  // *** КЛЮЧОВЕ ВИПРАВЛЕННЯ: читаємо Blob один раз ***
+  // Зберігаємо arrayBuffer до того, як створювати Object URL,
+  // щоб fallback теж мав дані навіть якщо Blob вже "витрачений".
+  let arrayBuf = null;
   try {
-    const audioUrl = URL.createObjectURL(wav);
-    piperAudio = new Audio(audioUrl);
+    arrayBuf = await wav.arrayBuffer();
+  } catch (e) {
+    console.warn("Piper: не вдалося прочитати WAV Blob", e);
+    if (onDone) onDone();
+    return;
+  }
 
-    // Синхронізація завершення озвучення репліки
+  // Спроба 1: HTMLAudioElement (правильна ресемплізація 22050→системна частота)
+  try {
+    const blob2 = new Blob([arrayBuf], { type: "audio/wav" });
+    const audioUrl = URL.createObjectURL(blob2);
+    piperAudio = new Audio(audioUrl);
     piperAudio.onended = () => {
       try {
         URL.revokeObjectURL(audioUrl);
@@ -3012,42 +3022,43 @@ async function playPiperWav(wav, onDone) {
       piperAudio = null;
       if (onDone) onDone();
     };
-
     piperAudio.onerror = () => {
       try {
         URL.revokeObjectURL(audioUrl);
       } catch (e) {}
       piperAudio = null;
-      if (onDone) onDone();
+      // Не викликаємо onDone тут — передаємо у fallback нижче
     };
-
     await piperAudio.play();
+    return; // успіх
   } catch (err) {
     console.warn(
-      "HTMLAudioElement play failed. Falling back to Web Audio API...",
+      "HTMLAudioElement play failed, fallback to Web Audio API",
       err,
     );
+  }
 
-    // Резервний варіант (Fallback) на випадок обмежень iframe
-    const c = getSfxCtx();
-    if (c) {
-      if (c.state === "suspended") await c.resume();
-      const audioData = await wav.arrayBuffer();
-
-      // Спроба нативного декодування аудіо-буфера
-      const buffer = await c.decodeAudioData(audioData.slice(0));
-      const source = c.createBufferSource();
-      source.buffer = buffer;
-      source.connect(c.destination);
-      source.onended = () => {
-        piperSource = null;
-        if (onDone) onDone();
-      };
-      piperSource = source;
-      source.start();
-    } else {
+  // Спроба 2: Web Audio API fallback
+  const c = getSfxCtx();
+  if (!c) {
+    if (onDone) onDone();
+    return;
+  }
+  if (c.state === "suspended") await c.resume();
+  try {
+    const buffer = await c.decodeAudioData(arrayBuf.slice(0));
+    const source = c.createBufferSource();
+    source.buffer = buffer;
+    source.connect(c.destination);
+    source.onended = () => {
+      piperSource = null;
       if (onDone) onDone();
-    }
+    };
+    piperSource = source;
+    source.start();
+  } catch (e) {
+    console.warn("Web Audio decodeAudioData failed", e);
+    if (onDone) onDone();
   }
 }
 
