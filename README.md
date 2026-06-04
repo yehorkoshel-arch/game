@@ -7,6 +7,7 @@
 - `index.html` - точка входу Vite і import map для browser TTS.
 - `src/App.tsx` - основна React-збірка екранів і підключення ігрової логіки після монтування.
 - `src/components/` - окремі React-компоненти екранів гри.
+- `src/data/gameData.js` - тексти інтерфейсу, скіни та назви локацій.
 - `src/main.tsx` - запуск React.
 - `src/styles/global.css` - стилі гри.
 - `src/legacy/game.js` - поточна JavaScript-логіка гри без переписування.
@@ -21,4 +22,4 @@ npm run dev
 npm run build
 ```
 
-Наступний крок реструктуризації: поступово винести ігрову логіку з `src/legacy/game.js` у модулі `audio`, `levels`, `render`, `state` і React-компоненти.
+Наступний крок реструктуризації: поступово винести ігрову логіку з `src/legacy/game.js` у модулі `audio`, `levels`, `render` і `state`.
