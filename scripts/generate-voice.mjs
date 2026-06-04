@@ -44,11 +44,18 @@ function normalizeSpeechText(text) {
     .trim();
 }
 
+function prepareTextForTts(text) {
+  return String(text || "")
+    .replace(/[—–]/g, ", ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function run(command, commandArgs) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, commandArgs, {
       cwd: ROOT,
-      shell: process.platform === "win32",
+      shell: false,
       stdio: "inherit",
     });
     child.on("exit", (code) => {
@@ -97,11 +104,11 @@ for (const line of lines) {
     continue;
   }
   console.log(`Generate ${line.id}.mp3`);
-  await run("npx", [
+  await run(process.platform === "win32" ? "npx.cmd" : "npx", [
     "--yes",
     "node-edge-tts@1.2.10",
     "--text",
-    line.text,
+    prepareTextForTts(line.text),
     "--filepath",
     outFile,
     "--voice",
