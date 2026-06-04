@@ -2172,7 +2172,7 @@ function normalizeSpeechText(text){
     .replace(/\s+/g,' ')
     .trim();
 }
-const PIPER_TTS_URL='https://esm.sh/@mintplex-labs/piper-tts-web@latest';
+const PIPER_TTS_URL='https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.3/dist/piper-tts-web.js';
 const PIPER_WASM_PATHS={
   onnxWasm:'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/',
   piperData:'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.data',
@@ -2197,7 +2197,7 @@ function loadPiperModule(){
   setTtsStatus('Завантаження українського Piper TTS…');
   piperModulePromise=import(PIPER_TTS_URL).catch(err=>{
     piperFailed=true;
-    setTtsStatus('Piper TTS не завантажився. Перевір інтернет або відкрий сайт через GitHub Pages.');
+    setTtsStatus('Piper TTS build не завантажився з CDN. Перевір консоль.');
     console.warn('Piper TTS module unavailable',err);
     return null;
   });
