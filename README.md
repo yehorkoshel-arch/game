@@ -24,12 +24,14 @@
 ## Команди
 
 ```bash
+cd C:\Users\Yehor\Documents\Codex\2026-06-03\github-repo\work\game
 npm install
 npm run dev
 npm run build
 npm run voice:generate
 ```
 
+Для цих команд потрібен звичайний Node.js LTS з npm у системному PATH.
 `npm run voice:generate` генерує `.mp3` для всіх реплік через Edge TTS голос `uk-UA-OstapNeural` і оновлює `src/audio/voiceManifest.js`.
 Для жіночого голосу можна запустити `npm run voice:generate:female`.
 
