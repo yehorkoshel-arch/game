@@ -83,6 +83,13 @@ canvas{display:block}
 #introSkip{margin-top:10px;padding:7px 24px;font-size:12px;border-radius:7px;border:1px solid #334466;background:transparent;color:#556688;cursor:pointer}
 #introSkip:hover{border-color:#ffd700;color:#ffd700}
 </style>
+<script type="importmap">
+{
+  "imports": {
+    "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort.min.mjs"
+  }
+}
+</script>
 
 </head><body><div id="app" tabindex="0">
   <h2 class="sr-only">Kyiv Runner</h2>
@@ -2275,6 +2282,7 @@ async function speakWithPiper(text,onDone){
   }catch(err){
     piperSessionPromise=null;
     if(tts&&tts.TtsSession)tts.TtsSession._instance=null;
+    if(/resolve module specifier|Failed to fetch dynamically imported module/i.test(piperErrorMessage(err)))piperFailed=true;
     setTtsStatus('Piper TTS помилка: '+piperErrorMessage(err));
     console.warn('Piper Ukrainian TTS failed',err);
     return false;
