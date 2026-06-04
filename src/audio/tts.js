@@ -36,9 +36,7 @@ function reportAvailableVoices() {
 
 export function showMissingUkrainianVoice() {
   reportAvailableVoices();
-  setTtsStatus(
-    "Український голос uk-UA не знайдено в браузері. Встанови український голос у системі або використовуй готові аудіофайли.",
-  );
+  setTtsStatus("");
 }
 
 export function cancelSpeech() {

@@ -3441,16 +3441,11 @@ function startIntro() {
 }
 function beginIntroAfterGesture() {
   if (introStarted) return;
-  if (location.protocol === "file:") {
-    setTtsStatus(
-      "Для Piper TTS відкрий через GitHub Pages або localhost, не file://",
-    );
-  }
   startIntro();
 }
 drawBot(0, false);
 document.getElementById("introSubtitle").textContent =
-  "Натисни на екран, щоб увімкнути українську озвучку.";
+  "Натисни на екран, щоб почати.";
 applyLang();
 
 // CUSTOM STORY PATCH
