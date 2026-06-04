@@ -260,6 +260,7 @@ function scheduleMusic() {
   schedulerTimer = setTimeout(scheduleMusic, 25);
 }
 
+// Запуск музичного супроводу
 function startMusic() {
   if (musicPlaying) return;
   if (!audioCtx) {
@@ -2977,9 +2978,9 @@ async function speakWithPiper(text, onDone) {
   }
 }
 
-// Функція для чистого відтворення згенерованого аудіофайлу
+// Оновлена функція для чистого та плавного відтворення аудіо з Piper
 async function playPiperWav(wav, onDone) {
-  // Очищаємо попереднє асинхронне відтворення
+  // 1. Повністю зупиняємо попереднє активне відтворення
   if (piperAudio) {
     piperAudio.pause();
     piperAudio.onended = null;
@@ -2996,14 +2997,14 @@ async function playPiperWav(wav, onDone) {
     piperSource = null;
   }
 
-  // Для Piper НАЙКРАЩИЙ варіант — відтворювати через нативний тег Audio.
-  // Браузер сам автоматично робить апаратний ресемплінг з 22050 Гц у системні 44100/48000 Гц.
-  // Це повністю прибирає ефект «писклявої мови інопланетян» чи «незрозумілого шипіння».
+  // 2. Для Piper використовуємо виключно HTMLAudioElement (тег Audio).
+  // Це автоматично виправляє "марсіанську мову" та пищання, оскільки браузер самостійно
+  // робить апаратну ресемплізацію 22050 Гц у системну частоту виходу (44100 або 48000 Гц).
   try {
     const audioUrl = URL.createObjectURL(wav);
     piperAudio = new Audio(audioUrl);
 
-    // Синхронізуємо завершення
+    // Синхронізація завершення озвучення репліки
     piperAudio.onended = () => {
       try {
         URL.revokeObjectURL(audioUrl);
@@ -3023,17 +3024,17 @@ async function playPiperWav(wav, onDone) {
     await piperAudio.play();
   } catch (err) {
     console.warn(
-      "Play via HTMLAudioElement failed, falling back to Web Audio API...",
+      "HTMLAudioElement play failed. Falling back to Web Audio API...",
       err,
     );
 
-    // Резервний варіант (Fallback) на випадок, якщо тег Audio заблоковано в iframe
+    // Резервний варіант (Fallback) на випадок обмежень iframe
     const c = getSfxCtx();
     if (c) {
       if (c.state === "suspended") await c.resume();
       const audioData = await wav.arrayBuffer();
 
-      // Декодуємо аудіодані. Браузер спробує ресемплювати самостійно в AudioContext
+      // Спроба нативного декодування аудіо-буфера
       const buffer = await c.decodeAudioData(audioData.slice(0));
       const source = c.createBufferSource();
       source.buffer = buffer;
