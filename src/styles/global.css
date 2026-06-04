@@ -77,6 +77,5 @@ canvas{display:block}
 #sIntro{background:#0a0a1a;align-items:center;justify-content:center;flex-direction:column}
 #introCanvas{border-radius:10px}
 #introSubtitle{min-height:60px;max-width:560px;text-align:center;font-size:15px;color:#e0e8ff;line-height:1.6;padding:0 20px;margin-top:12px;font-style:italic}
-#ttsStatus{min-height:18px;margin-top:4px;font-size:11px;color:#6f86a8;text-align:center}
 #introSkip{margin-top:10px;padding:7px 24px;font-size:12px;border-radius:7px;border:1px solid #334466;background:transparent;color:#556688;cursor:pointer}
 #introSkip:hover{border-color:#ffd700;color:#ffd700}

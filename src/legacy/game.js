@@ -9,10 +9,7 @@ import { focusApp, setActiveScreen, setText } from "../ui/dom.js";
 import {
   cancelSpeech,
   normalizeSpeechText,
-  PIPER_TTS_ENABLED,
   playRecordedVoice,
-  setTtsStatus,
-  speakChunksWithSystemVoice,
 } from "../audio/tts.js";
 
 function getLevels() {
@@ -615,7 +612,6 @@ window.addEventListener("load", () => setTimeout(focusApp, 100));
 function unlockGameAudio() {
   const c = getSfxCtx();
   if (c && c.state === "suspended") c.resume().catch(() => {});
-  loadPiperModule();
 }
 document.getElementById("app").addEventListener("pointerdown", () => {
   focusApp();
@@ -2787,230 +2783,6 @@ function speakAndrii(lines) {
   andriiCooldown = 180;
   _doSpeakAndrii(lines);
 }
-function isPiperEnabled() {
-  return PIPER_TTS_ENABLED;
-}
-const PIPER_TTS_URL =
-  "https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.3/dist/piper-tts-web.js";
-const PIPER_WASM_PATHS = {
-  onnxWasm: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/",
-  piperData:
-    "https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.data",
-  piperWasm:
-    "https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.wasm",
-};
-const PIPER_UK_LOCALE = "uk_UA";
-const PIPER_UK_MODEL = "uk_UA-ukrainian_tts-medium";
-const PIPER_UK_VOICES = [PIPER_UK_MODEL];
-let piperModulePromise = null,
-  piperVoiceId = null,
-  piperAudio = null,
-  piperFailed = false,
-  piperSource = null,
-  piperSessionPromise = null,
-  piperSessionVoiceId = null;
-function loadPiperModule() {
-  if (piperModulePromise) return piperModulePromise;
-  if (location.protocol === "file:") {
-    piperFailed = true;
-    setTtsStatus(
-      "Piper TTS працює через GitHub Pages або localhost, не через file://",
-    );
-    return Promise.resolve(null);
-  }
-  setTtsStatus("Завантаження українського Piper TTS…");
-  piperModulePromise = import(/* @vite-ignore */ PIPER_TTS_URL).catch((err) => {
-    piperFailed = true;
-    setTtsStatus("Piper TTS build не завантажився з CDN. Перевір консоль.");
-    console.warn("Piper TTS module unavailable", err);
-    return null;
-  });
-  return piperModulePromise;
-}
-async function pickPiperUkrainianVoice(tts) {
-  if (piperVoiceId) return piperVoiceId;
-  try {
-    if (tts && tts.voices) {
-      const voices = await tts.voices();
-      const ids = Array.isArray(voices)
-        ? voices
-            .map((voice) =>
-              typeof voice === "string"
-                ? voice
-                : voice.id || voice.voiceId || voice.locale,
-            )
-            .filter(Boolean)
-        : Object.keys(voices || {});
-      piperVoiceId = ids.find((id) => id === PIPER_UK_MODEL) || null;
-    }
-  } catch (err) {
-    console.warn("Piper voice list unavailable", err);
-  }
-  piperVoiceId = piperVoiceId || PIPER_UK_MODEL;
-  return piperVoiceId;
-}
-function piperErrorMessage(err) {
-  return String((err && err.message) || err || "невідома помилка")
-    .replace(/\s+/g, " ")
-    .slice(0, 180);
-}
-function createPiperSession(tts, voiceId) {
-  tts.TtsSession._instance = null;
-  piperSessionVoiceId = voiceId;
-  return tts.TtsSession.create({
-    voiceId,
-    wasmPaths: PIPER_WASM_PATHS,
-    progress: (progress) => {
-      if (progress && progress.total) {
-        const pct = Math.round((progress.loaded * 100) / progress.total);
-        setTtsStatus("Завантаження голосу: " + pct + "%");
-        console.log("Piper TTS", pct + "%");
-      }
-    },
-    logger: (message) => console.log("Piper TTS", message),
-  });
-}
-async function speakWithPiper(text, onDone) {
-  if (piperFailed) {
-    return false;
-  }
-  const tts = await loadPiperModule();
-  if (!tts || !tts.TtsSession) {
-    piperFailed = true;
-    return false;
-  }
-  const attempted = [];
-  try {
-    const clean = normalizeSpeechText(text);
-    if (!clean) return false;
-    const preferred = await pickPiperUkrainianVoice(tts);
-    const voiceIds = [preferred, ...PIPER_UK_VOICES].filter(
-      (id, i, arr) => id && arr.indexOf(id) === i,
-    );
-    let lastErr = null;
-    for (const voiceId of voiceIds) {
-      attempted.push(voiceId);
-      try {
-        setTtsStatus("Генерується українська озвучка: " + voiceId);
-        if (!piperSessionPromise || piperSessionVoiceId !== voiceId) {
-          piperSessionPromise = createPiperSession(tts, voiceId);
-        }
-        const session = await piperSessionPromise;
-        const wav = await session.predict(clean);
-        await playPiperWav(wav, onDone);
-        setTtsStatus("");
-        piperVoiceId = voiceId;
-        return true;
-      } catch (err) {
-        lastErr = err;
-        piperSessionPromise = null;
-        piperSessionVoiceId = null;
-        tts.TtsSession._instance = null;
-        console.warn("Piper Ukrainian TTS voice failed", voiceId, err);
-      }
-    }
-    throw (
-      lastErr ||
-      new Error("No Ukrainian Piper voice worked: " + attempted.join(", "))
-    );
-  } catch (err) {
-    piperSessionPromise = null;
-    if (tts && tts.TtsSession) tts.TtsSession._instance = null;
-    if (
-      /resolve module specifier|Failed to fetch dynamically imported module/i.test(
-        piperErrorMessage(err),
-      )
-    )
-      piperFailed = true;
-    setTtsStatus("Piper TTS помилка: " + piperErrorMessage(err));
-    console.warn("Piper Ukrainian TTS failed", err);
-    return false;
-  }
-}
-
-// Оновлена функція для чистого та плавного відтворення аудіо з Piper
-async function playPiperWav(wav, onDone) {
-  // Зупиняємо попереднє відтворення
-  if (piperAudio) {
-    piperAudio.pause();
-    piperAudio.onended = null;
-    piperAudio.onerror = null;
-    try {
-      URL.revokeObjectURL(piperAudio.src);
-    } catch (e) {}
-    piperAudio = null;
-  }
-  if (piperSource) {
-    try {
-      piperSource.stop();
-    } catch (e) {}
-    piperSource = null;
-  }
-
-  // *** КЛЮЧОВЕ ВИПРАВЛЕННЯ: читаємо Blob один раз ***
-  // Зберігаємо arrayBuffer до того, як створювати Object URL,
-  // щоб fallback теж мав дані навіть якщо Blob вже "витрачений".
-  let arrayBuf = null;
-  try {
-    arrayBuf = await wav.arrayBuffer();
-  } catch (e) {
-    console.warn("Piper: не вдалося прочитати WAV Blob", e);
-    if (onDone) onDone();
-    return;
-  }
-
-  // Спроба 1: HTMLAudioElement (правильна ресемплізація 22050→системна частота)
-  try {
-    const blob2 = new Blob([arrayBuf], { type: "audio/wav" });
-    const audioUrl = URL.createObjectURL(blob2);
-    piperAudio = new Audio(audioUrl);
-    piperAudio.onended = () => {
-      try {
-        URL.revokeObjectURL(audioUrl);
-      } catch (e) {}
-      piperAudio = null;
-      if (onDone) onDone();
-    };
-    piperAudio.onerror = () => {
-      try {
-        URL.revokeObjectURL(audioUrl);
-      } catch (e) {}
-      piperAudio = null;
-      // Не викликаємо onDone тут — передаємо у fallback нижче
-    };
-    await piperAudio.play();
-    return; // успіх
-  } catch (err) {
-    console.warn(
-      "HTMLAudioElement play failed, fallback to Web Audio API",
-      err,
-    );
-  }
-
-  // Спроба 2: Web Audio API fallback
-  const c = getSfxCtx();
-  if (!c) {
-    if (onDone) onDone();
-    return;
-  }
-  if (c.state === "suspended") await c.resume();
-  try {
-    const buffer = await c.decodeAudioData(arrayBuf.slice(0));
-    const source = c.createBufferSource();
-    source.buffer = buffer;
-    source.connect(c.destination);
-    source.onended = () => {
-      piperSource = null;
-      if (onDone) onDone();
-    };
-    piperSource = source;
-    source.start();
-  } catch (e) {
-    console.warn("Web Audio decodeAudioData failed", e);
-    if (onDone) onDone();
-  }
-}
-
 function speakAndriiForce(lines) {
   andriiCooldown = 300;
   cancelSpeech();
@@ -3350,7 +3122,7 @@ function typeNextChar() {
       iTypedText + (iCharIdx < full.length ? "▋" : "");
     setTimeout(typeNextChar, full[iCharIdx - 1] === " " ? 60 : 38);
   } else {
-    // фраза повністю набрана на екрані — тепер запускаємо Piper на повне речення
+    // Фраза повністю набрана на екрані, тепер чекаємо озвучку.
     const fullPhrase = STORY[iPhase];
     document.getElementById("introSubtitle").textContent = fullPhrase;
     iState = ISTATE.PAUSE;
@@ -3388,20 +3160,8 @@ function speakAndWait(text) {
 
   return new Promise((resolve) => {
     if (playRecordedVoice(cleanText, resolve)) return;
-    if (isPiperEnabled()) {
-      speakWithPiper(cleanText, resolve).then((usedPiper) => {
-        if (usedPiper) return; // Piper успішно все озвучив і сам викличе resolve наприкінці аудіофайлу
-        // Якщо завантаження Piper зафейлилося, падаємо на стандартний синтезатор
-        speakAndWaitWithSystemVoice(cleanText, resolve);
-      });
-      return;
-    }
-    speakAndWaitWithSystemVoice(cleanText, resolve);
+    setTimeout(resolve, Math.max(900, cleanText.length * 60));
   });
-}
-
-function speakAndWaitWithSystemVoice(text, onDone) {
-  speakChunksWithSystemVoice(text, onDone, { rate: 0.92, pitch: 0.45 });
 }
 
 function iTick() {
