@@ -8,6 +8,7 @@
 - `src/App.tsx` - основна React-збірка екранів і підключення ігрової логіки після монтування.
 - `src/components/` - окремі React-компоненти екранів гри.
 - `src/data/gameData.js` - тексти інтерфейсу, скіни та назви локацій.
+- `src/levels/levelFactory.js` - генерація рівнів, палітр трас і наборів перешкод.
 - `src/main.tsx` - запуск React.
 - `src/styles/global.css` - стилі гри.
 - `src/legacy/game.js` - поточна JavaScript-логіка гри без переписування.
