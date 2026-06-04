@@ -87,8 +87,8 @@ canvas{display:block}
   <h2 class="sr-only">Kyiv Runner</h2>
 <div id="sIntro" class="screen active">
     <canvas id="introCanvas" width="340" height="220"></canvas>
-    <div id="introSubtitle">?</div>
-    <button id="introSkip">? ??????????</button>
+    <div id="introSubtitle">…</div>
+    <button id="introSkip">▶ Пропустити</button>
   </div>
   <div id="sMenu" class="screen">
     <button class="gear-btn" id="btnSettingsOpen" title="Налаштування">⚙</button>
@@ -730,7 +730,12 @@ function focusApp(){
   if(app)app.focus({preventScroll:true});
 }
 window.addEventListener('load',()=>setTimeout(focusApp,100));
-document.getElementById('app').addEventListener('pointerdown',focusApp);
+function unlockGameAudio(){
+  const c=getSfxCtx();
+  if(c&&c.state==='suspended')c.resume().catch(()=>{});
+  loadPiperModule();
+}
+document.getElementById('app').addEventListener('pointerdown',()=>{focusApp();unlockGameAudio();});
 function buildLevelBar(){
   const bar=document.getElementById('lvlBar');
   bar.innerHTML='';
@@ -2173,7 +2178,7 @@ const PIPER_UK_VOICES=[
   'uk_UA-tetiana-high',
   'uk_UA-ukrainian_tts-medium'
 ];
-let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false;
+let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false,piperSource=null;
 function loadPiperModule(){
   if(piperModulePromise)return piperModulePromise;
   piperModulePromise=import(PIPER_TTS_URL).catch(err=>{
@@ -2211,19 +2216,39 @@ async function speakWithPiper(text,onDone){
         console.log('Piper TTS',Math.round(progress.loaded*100/progress.total)+'%');
       }
     });
-    if(piperAudio){
-      piperAudio.pause();
-      URL.revokeObjectURL(piperAudio.src);
-    }
-    piperAudio=new Audio(URL.createObjectURL(wav));
-    piperAudio.onended=()=>{if(onDone)onDone();};
-    piperAudio.onerror=()=>{if(onDone)onDone();};
-    await piperAudio.play();
+    await playPiperWav(wav,onDone);
     return true;
   }catch(err){
     console.warn('Piper Ukrainian TTS failed',err);
     return false;
   }
+}
+async function playPiperWav(wav,onDone){
+  const c=getSfxCtx();
+  if(c){
+    if(c.state==='suspended')await c.resume();
+    const audioData=await wav.arrayBuffer();
+    const buffer=await c.decodeAudioData(audioData.slice(0));
+    if(piperSource){
+      try{piperSource.stop();}catch(e){}
+      piperSource=null;
+    }
+    const source=c.createBufferSource();
+    source.buffer=buffer;
+    source.connect(c.destination);
+    source.onended=()=>{piperSource=null;if(onDone)onDone();};
+    piperSource=source;
+    source.start();
+    return;
+  }
+  if(piperAudio){
+    piperAudio.pause();
+    URL.revokeObjectURL(piperAudio.src);
+  }
+  piperAudio=new Audio(URL.createObjectURL(wav));
+  piperAudio.onended=()=>{if(onDone)onDone();};
+  piperAudio.onerror=()=>{if(onDone)onDone();};
+  await piperAudio.play();
 }
 function speakAndriiForce(lines){
   andriiCooldown=300;
@@ -2487,24 +2512,13 @@ function typeNextChar(){
     iCharIdx++;
     iTypedText=full.slice(0,iCharIdx);
     document.getElementById('introSubtitle').textContent=iTypedText+(iCharIdx<full.length?'▋':'');
-    // звук кожного символу
-    const c=getSfxCtx();
-    if(c&&iCharIdx%2===0){
-      const now=c.currentTime;
-      const osc=c.createOscillator(),g=c.createGain();
-      osc.type='square';osc.frequency.value=300+Math.random()*100;
-      g.gain.setValueAtTime(0.06,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.03);
-      osc.connect(g);g.connect(c.destination);osc.start(now);osc.stop(now+0.03);
-    }
     setTimeout(typeNextChar, full[iCharIdx-1]===' '?60:38);
   } else {
     // фраза надрукована — говоримо голосом і чекаємо
     const full=STORY[iPhase];
     document.getElementById('introSubtitle').textContent=full;
     iState=ISTATE.PAUSE;
-    robotBeep(true);
     speakAndWait(full, ()=>{
-      robotBeep(false);
       // мінімальна пауза після мовлення
       setTimeout(()=>{
         if(iRaf) advancePhase();
