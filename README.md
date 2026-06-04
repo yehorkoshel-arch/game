@@ -10,6 +10,8 @@
 - `src/data/gameData.js` - тексти інтерфейсу, скіни та назви локацій.
 - `src/levels/levelFactory.js` - генерація рівнів, палітр трас і наборів перешкод.
 - `src/audio/tts.js` - українська системна озвучка і прапорець експериментального Piper TTS.
+- `src/audio/voiceManifest.js` - manifest готових аудіофайлів для реплік.
+- `public/audio/voice/` - місце для `.mp3`/`.wav` озвучки.
 - `src/state/saveState.js` - читання та запис прогресу гри в браузері.
 - `src/ui/dom.js` - невеликі DOM-helper-и для фокуса, екранів і тексту.
 - `src/main.tsx` - запуск React.

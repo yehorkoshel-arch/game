@@ -1,4 +1,8 @@
+import { VOICE_CLIPS } from "./voiceManifest.js";
+
 export const PIPER_TTS_ENABLED = false;
+
+let recordedAudio = null;
 
 export function setTtsStatus(text) {
   const element = document.getElementById("ttsStatus");
@@ -39,6 +43,11 @@ export function showMissingUkrainianVoice() {
 
 export function cancelSpeech() {
   if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (recordedAudio) {
+    recordedAudio.pause();
+    recordedAudio.currentTime = 0;
+    recordedAudio = null;
+  }
 }
 
 export function normalizeSpeechText(text) {
@@ -177,4 +186,28 @@ export function speakChunksWithSystemVoice(text, onDone, options = {}) {
     showMissingUkrainianVoice();
     setTimeout(onDone, Math.max(1200, text.length * 72));
   });
+}
+
+export function playRecordedVoice(text, onDone) {
+  const key = normalizeSpeechText(text);
+  const src = VOICE_CLIPS[key];
+  if (!src) return false;
+
+  cancelSpeech();
+  recordedAudio = new Audio(src);
+  recordedAudio.onended = () => {
+    recordedAudio = null;
+    onDone();
+  };
+  recordedAudio.onerror = () => {
+    console.warn("Recorded voice file unavailable", src);
+    recordedAudio = null;
+    onDone();
+  };
+  recordedAudio.play().catch((err) => {
+    console.warn("Recorded voice playback failed", err);
+    recordedAudio = null;
+    onDone();
+  });
+  return true;
 }

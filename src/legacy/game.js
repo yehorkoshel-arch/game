@@ -10,6 +10,7 @@ import {
   cancelSpeech,
   normalizeSpeechText,
   PIPER_TTS_ENABLED,
+  playRecordedVoice,
   setTtsStatus,
   speakChunksWithSystemVoice,
 } from "../audio/tts.js";
@@ -3386,6 +3387,7 @@ function speakAndWait(text) {
   );
 
   return new Promise((resolve) => {
+    if (playRecordedVoice(cleanText, resolve)) return;
     if (isPiperEnabled()) {
       speakWithPiper(cleanText, resolve).then((usedPiper) => {
         if (usedPiper) return; // Piper успішно все озвучив і сам викличе resolve наприкінці аудіофайлу
