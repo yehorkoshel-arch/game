@@ -1766,8 +1766,7 @@ function pickVoice(){
   const voices=window.speechSynthesis.getVoices();
   return voices.find(v=>{
     const lang=(v.lang||'').toLowerCase().replace('_','-');
-    const name=(v.name||'').toLowerCase();
-    return lang.startsWith('uk')||name.includes('ukrain')||name.includes('україн')||name.includes('украин');
+    return lang==='uk'||lang.startsWith('uk-');
   })||null;
 }
 function waitForUkrainianVoice(onReady,onMissing){
@@ -1785,6 +1784,9 @@ function waitForUkrainianVoice(onReady,onMissing){
   };
   window.speechSynthesis.onvoiceschanged=()=>finish(pickVoice());
   setTimeout(()=>finish(pickVoice()),700);
+}
+function showMissingUkrainianVoice(){
+  setTtsStatus('Український системний голос не знайдено. Не вмикаю російський fallback.');
 }
 function normalizeSpeechText(text){
   return String(text||'')
@@ -1945,12 +1947,12 @@ function speakAndriiForce(lines){
   waitForUkrainianVoice((voice)=>{
     const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
     u.voice=voice;
-    u.lang=voice.lang;
+    u.lang='uk-UA';
     u.rate=0.98;
     u.pitch=1.55;
     u.volume=1;
     window.speechSynthesis.speak(u);
-  });
+  },showMissingUkrainianVoice);
 }
 function speakSceneLine(line){
   if(window.speechSynthesis)window.speechSynthesis.cancel();
@@ -1960,12 +1962,12 @@ function speakSceneLine(line){
   waitForUkrainianVoice((voice)=>{
     const u=new SpeechSynthesisUtterance(normalizeSpeechText(line.text));
     u.voice=voice;
-    u.lang=voice.lang;
+    u.lang='uk-UA';
     u.rate=line.rate||0.96;
     u.pitch=line.pitch||1.25;
     u.volume=1;
     window.speechSynthesis.speak(u);
-  });
+  },showMissingUkrainianVoice);
 }
 function _doSpeakAndrii(lines){
   const text=lines[Math.floor(Math.random()*lines.length)];
@@ -1974,12 +1976,12 @@ function _doSpeakAndrii(lines){
   waitForUkrainianVoice((voice)=>{
     const u=new SpeechSynthesisUtterance(normalizeSpeechText(text));
     u.voice=voice;
-    u.lang=voice.lang;
+    u.lang='uk-UA';
     u.rate=0.98;
     u.pitch=1.55;
     u.volume=1;
     window.speechSynthesis.speak(u);
-  });
+  },showMissingUkrainianVoice);
 }
 
 // Bubble над гравцем
@@ -2240,7 +2242,7 @@ function speakAndWaitWithSystemVoice(text, onDone){
     }
     const u=new SpeechSynthesisUtterance(chunks[ci]);
     u.voice=voice;
-    u.lang=voice.lang;
+    u.lang='uk-UA';
     u.rate=0.92;
     u.pitch=0.45;
     u.volume=1;
@@ -2253,7 +2255,10 @@ function speakAndWaitWithSystemVoice(text, onDone){
     window.speechSynthesis.speak(u);
   }
 
-  waitForUkrainianVoice(()=>speakChunk(),()=>setTimeout(onDone, Math.max(1200,text.length*72)));
+  waitForUkrainianVoice(()=>speakChunk(),()=>{
+    showMissingUkrainianVoice();
+    setTimeout(onDone, Math.max(1200,text.length*72));
+  });
 }
 
 function iTick(){
