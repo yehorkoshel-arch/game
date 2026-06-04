@@ -2179,10 +2179,10 @@ const PIPER_WASM_PATHS={
   piperWasm:'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize.wasm'
 };
 const PIPER_UK_VOICES=[
-  'uk_UA-lada-x_low',
-  'uk_UA-ukrainian_tts-medium'
+  'uk_UA-ukrainian_tts-medium',
+  'uk_UA-lada-x_low'
 ];
-let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false,piperSource=null,piperSessionPromise=null;
+let piperModulePromise=null,piperVoiceId=null,piperAudio=null,piperFailed=false,piperSource=null,piperSessionPromise=null,piperSessionVoiceId=null;
 function setTtsStatus(text){
   const el=document.getElementById('ttsStatus');
   if(el)el.textContent=text||'';
@@ -2218,39 +2218,64 @@ async function pickPiperUkrainianVoice(tts){
   piperVoiceId=piperVoiceId||PIPER_UK_VOICES[0];
   return piperVoiceId;
 }
+function piperErrorMessage(err){
+  return String((err&&err.message)||err||'невідома помилка')
+    .replace(/\s+/g,' ')
+    .slice(0,180);
+}
+function createPiperSession(tts,voiceId){
+  tts.TtsSession._instance=null;
+  piperSessionVoiceId=voiceId;
+  return tts.TtsSession.create({
+    voiceId,
+    wasmPaths:PIPER_WASM_PATHS,
+    progress:(progress)=>{
+      if(progress&&progress.total){
+        const pct=Math.round(progress.loaded*100/progress.total);
+        setTtsStatus('Завантаження голосу: '+pct+'%');
+        console.log('Piper TTS',pct+'%');
+      }
+    },
+    logger:(message)=>console.log('Piper TTS',message)
+  });
+}
 async function speakWithPiper(text,onDone){
   if(piperFailed){return false;}
   const tts=await loadPiperModule();
   if(!tts||!tts.TtsSession){piperFailed=true;return false;}
+  const attempted=[];
   try{
-    const voiceId=await pickPiperUkrainianVoice(tts);
     const clean=normalizeSpeechText(text);
     if(!clean)return false;
-    setTtsStatus('Генерується українська озвучка…');
-    if(!piperSessionPromise){
-      tts.TtsSession._instance=null;
-      piperSessionPromise=tts.TtsSession.create({
-        voiceId,
-        wasmPaths:PIPER_WASM_PATHS,
-        progress:(progress)=>{
-          if(progress&&progress.total){
-            const pct=Math.round(progress.loaded*100/progress.total);
-            setTtsStatus('Завантаження голосу: '+pct+'%');
-            console.log('Piper TTS',pct+'%');
-          }
-        },
-        logger:(message)=>console.log('Piper TTS',message)
-      });
+    const preferred=await pickPiperUkrainianVoice(tts);
+    const voiceIds=[preferred,...PIPER_UK_VOICES].filter((id,i,arr)=>id&&arr.indexOf(id)===i);
+    let lastErr=null;
+    for(const voiceId of voiceIds){
+      attempted.push(voiceId);
+      try{
+        setTtsStatus('Генерується українська озвучка: '+voiceId);
+        if(!piperSessionPromise||piperSessionVoiceId!==voiceId){
+          piperSessionPromise=createPiperSession(tts,voiceId);
+        }
+        const session=await piperSessionPromise;
+        const wav=await session.predict(clean);
+        await playPiperWav(wav,onDone);
+        setTtsStatus('');
+        piperVoiceId=voiceId;
+        return true;
+      }catch(err){
+        lastErr=err;
+        piperSessionPromise=null;
+        piperSessionVoiceId=null;
+        tts.TtsSession._instance=null;
+        console.warn('Piper Ukrainian TTS voice failed',voiceId,err);
+      }
     }
-    const session=await piperSessionPromise;
-    const wav=await session.predict(clean);
-    await playPiperWav(wav,onDone);
-    setTtsStatus('');
-    return true;
+    throw lastErr||new Error('No Ukrainian Piper voice worked: '+attempted.join(', '));
   }catch(err){
     piperSessionPromise=null;
     if(tts&&tts.TtsSession)tts.TtsSession._instance=null;
-    setTtsStatus('Piper TTS не спрацював. Дивись консоль браузера.');
+    setTtsStatus('Piper TTS помилка: '+piperErrorMessage(err));
     console.warn('Piper Ukrainian TTS failed',err);
     return false;
   }
