@@ -1788,6 +1788,9 @@ function waitForUkrainianVoice(onReady,onMissing){
 function showMissingUkrainianVoice(){
   setTtsStatus('Український системний голос не знайдено. Не вмикаю російський fallback.');
 }
+function isPiperEnabled(){
+  return false;
+}
 function normalizeSpeechText(text){
   return String(text||'')
     .replace(/Роботрон-9000/g,'Роботрон девять тисяч')
@@ -2209,10 +2212,14 @@ function speakAndWait(text, onDone){
     .replace(/Слава Україні/g,'Слава Україні!')
     .replace(/Андрій/g,'Андрій'));
 
-  speakWithPiper(text,onDone).then(usedPiper=>{
-    if(usedPiper)return;
-    speakAndWaitWithSystemVoice(text,onDone);
-  });
+  if(isPiperEnabled()){
+    speakWithPiper(text,onDone).then(usedPiper=>{
+      if(usedPiper)return;
+      speakAndWaitWithSystemVoice(text,onDone);
+    });
+    return;
+  }
+  speakAndWaitWithSystemVoice(text,onDone);
 }
 
 function speakAndWaitWithSystemVoice(text, onDone){
