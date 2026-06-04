@@ -416,7 +416,7 @@ function sfxShot() {
   // хлопок
   const buf = c.createBuffer(1, Math.floor(c.sampleRate * 0.08), c.sampleRate);
   const d = buf.getChannelData(0);
-  for (let i = 0; i < i; i++)
+  for (let i = 0; i < d.length; i++)
     d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 0.8) * 0.9;
   const src = c.createBufferSource(),
     g = c.createGain();
@@ -2976,42 +2976,80 @@ async function speakWithPiper(text, onDone) {
     return false;
   }
 }
+
+// Функція для чистого відтворення згенерованого аудіофайлу
 async function playPiperWav(wav, onDone) {
-  const c = getSfxCtx();
-  if (c) {
-    if (c.state === "suspended") await c.resume();
-    const audioData = await wav.arrayBuffer();
-    const buffer = await c.decodeAudioData(audioData.slice(0));
-    if (piperSource) {
-      try {
-        piperSource.stop();
-      } catch (e) {}
-      piperSource = null;
-    }
-    const source = c.createBufferSource();
-    source.buffer = buffer;
-    source.connect(c.destination);
-    source.onended = () => {
-      piperSource = null;
-      if (onDone) onDone();
-    };
-    piperSource = source;
-    source.start();
-    return;
-  }
+  // Очищаємо попереднє асинхронне відтворення
   if (piperAudio) {
     piperAudio.pause();
-    URL.revokeObjectURL(piperAudio.src);
+    piperAudio.onended = null;
+    piperAudio.onerror = null;
+    try {
+      URL.revokeObjectURL(piperAudio.src);
+    } catch (e) {}
+    piperAudio = null;
   }
-  piperAudio = new Audio(URL.createObjectURL(wav));
-  piperAudio.onended = () => {
-    if (onDone) onDone();
-  };
-  piperAudio.onerror = () => {
-    if (onDone) onDone();
-  };
-  await piperAudio.play();
+  if (piperSource) {
+    try {
+      piperSource.stop();
+    } catch (e) {}
+    piperSource = null;
+  }
+
+  // Для Piper НАЙКРАЩИЙ варіант — відтворювати через нативний тег Audio.
+  // Браузер сам автоматично робить апаратний ресемплінг з 22050 Гц у системні 44100/48000 Гц.
+  // Це повністю прибирає ефект «писклявої мови інопланетян» чи «незрозумілого шипіння».
+  try {
+    const audioUrl = URL.createObjectURL(wav);
+    piperAudio = new Audio(audioUrl);
+
+    // Синхронізуємо завершення
+    piperAudio.onended = () => {
+      try {
+        URL.revokeObjectURL(audioUrl);
+      } catch (e) {}
+      piperAudio = null;
+      if (onDone) onDone();
+    };
+
+    piperAudio.onerror = () => {
+      try {
+        URL.revokeObjectURL(audioUrl);
+      } catch (e) {}
+      piperAudio = null;
+      if (onDone) onDone();
+    };
+
+    await piperAudio.play();
+  } catch (err) {
+    console.warn(
+      "Play via HTMLAudioElement failed, falling back to Web Audio API...",
+      err,
+    );
+
+    // Резервний варіант (Fallback) на випадок, якщо тег Audio заблоковано в iframe
+    const c = getSfxCtx();
+    if (c) {
+      if (c.state === "suspended") await c.resume();
+      const audioData = await wav.arrayBuffer();
+
+      // Декодуємо аудіодані. Браузер спробує ресемплювати самостійно в AudioContext
+      const buffer = await c.decodeAudioData(audioData.slice(0));
+      const source = c.createBufferSource();
+      source.buffer = buffer;
+      source.connect(c.destination);
+      source.onended = () => {
+        piperSource = null;
+        if (onDone) onDone();
+      };
+      piperSource = source;
+      source.start();
+    } else {
+      if (onDone) onDone();
+    }
+  }
 }
+
 function speakAndriiForce(lines) {
   andriiCooldown = 300;
   if (window.speechSynthesis) window.speechSynthesis.cancel();
