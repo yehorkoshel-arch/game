@@ -14,6 +14,9 @@ export function GameScreen() {
         </div>
       </div>
       <div id="ctrlbar">
+        <button className="cbtn" id="cMenu" style={{ borderColor: '#554', color: '#aa9' }} type="button">
+          {"\u2630"} Меню
+        </button>
         <button className="cbtn" id="cLeft" type="button">
           {"\u25c0"} Ліво
         </button>
@@ -28,9 +31,6 @@ export function GameScreen() {
         </button>
         <button className="cbtn" id="cFire" style={{ borderColor: '#665522', color: '#ffd76a' }} type="button">
           Вогонь
-        </button>
-        <button className="cbtn" id="cMenu" style={{ borderColor: '#554', color: '#aa9' }} type="button">
-          {"\u2630"} Меню
         </button>
       </div>
     </div>
