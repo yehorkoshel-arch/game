@@ -453,28 +453,6 @@ function sfxShot() {
 function sfxMachineGunBurst() {
   [0, 0.055, 0.11].forEach((delay) => setTimeout(sfxShot, delay * 1000));
 }
-function sfxBlaster() {
-  const c = getSfxCtx();
-  if (!c) return;
-  const now = c.currentTime;
-  const osc = c.createOscillator(),
-    g = c.createGain(),
-    filt = c.createBiquadFilter();
-  osc.type = "sawtooth";
-  osc.frequency.setValueAtTime(980, now);
-  osc.frequency.exponentialRampToValueAtTime(220, now + 0.22);
-  filt.type = "bandpass";
-  filt.frequency.setValueAtTime(1800, now);
-  filt.frequency.exponentialRampToValueAtTime(620, now + 0.2);
-  filt.Q.value = 7;
-  g.gain.setValueAtTime(0.28, now);
-  g.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-  osc.connect(filt);
-  filt.connect(g);
-  g.connect(c.destination);
-  osc.start(now);
-  osc.stop(now + 0.24);
-}
 function sfxCoin() {
   const c = getSfxCtx();
   if (!c) return;
@@ -634,7 +612,7 @@ const W = 680,
 
 function getAndriiWeapon() {
   if (currentLocation !== 1) return null;
-  return currentLevel >= 2 ? "blaster" : "machinegun";
+  return currentLevel >= 2 ? "minigun" : "machinegun";
 }
 
 function t() {
@@ -703,7 +681,7 @@ function applyLang() {
   document.getElementById("cRight").textContent = L.right;
   const weapon = getAndriiWeapon();
   document.getElementById("cMenu").textContent =
-    weapon === "blaster" ? "Бластер" : weapon ? "Вогонь" : L.menu;
+    weapon === "minigun" ? "\u041c\u0456\u043d\u0456\u0433\u0430\u043d" : weapon ? "\u0412\u043e\u0433\u043e\u043d\u044c" : L.menu;
   document
     .querySelectorAll(".lbtn")
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
@@ -1051,17 +1029,20 @@ function fireAndriiWeapon() {
   if (gameState !== "run" || !weapon || fireCooldown > 0) return;
   const x = LANES[pLane] + 24;
   const y = pSlide ? pY - 12 : pY - 34;
-  if (weapon === "blaster") {
-    fireCooldown = 24;
-    playerBullets.push({
-      x: x + 4,
-      y: y - 1,
-      lane: pLane,
-      vx: 16,
-      life: 42,
-      type: "blaster",
-    });
-    sfxBlaster();
+  if (weapon === "minigun") {
+    fireCooldown = 12;
+    for (let i = 0; i < 6; i++) {
+      playerBullets.push({
+        x: x + i * 10,
+        y: y - 4 + (i % 3) * 3,
+        lane: pLane,
+        vx: 13.5 + i * 0.7,
+        life: 50,
+        type: "minigun",
+      });
+    }
+    sfxMachineGunBurst();
+    setTimeout(sfxShot, 170);
     return;
   }
 
@@ -1242,32 +1223,6 @@ function drawBullets() {
   });
   playerBullets.forEach((b) => {
     const alpha = Math.min(1, b.life / 12);
-    if (b.type === "blaster") {
-      ctx.globalAlpha = alpha * 0.6;
-      ctx.strokeStyle = "#31dfff";
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(b.x - 36, b.y);
-      ctx.lineTo(b.x + 18, b.y - 2);
-      ctx.stroke();
-      ctx.globalAlpha = alpha;
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(b.x - 28, b.y);
-      ctx.lineTo(b.x + 14, b.y - 2);
-      ctx.stroke();
-      const g = ctx.createRadialGradient(b.x + 18, b.y - 2, 0, b.x + 18, b.y - 2, 12);
-      g.addColorStop(0, "#ffffff");
-      g.addColorStop(0.45, "#55e7ff");
-      g.addColorStop(1, "rgba(85,80,255,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(b.x + 18, b.y - 2, 12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      return;
-    }
     ctx.globalAlpha = alpha * 0.35;
     ctx.fillStyle = "#3aa7ff";
     ctx.fillRect(b.x - 20, b.y - 2, 22, 4);
@@ -1403,50 +1358,49 @@ function drawAndriiWeapon(x, y, slide = false) {
   ctx.translate(baseX, baseY);
   ctx.rotate(slide ? -0.08 : -0.12);
 
-  if (weapon === "blaster") {
-    const glow = 0.55 + Math.sin(fr * 0.18) * 0.18;
-    ctx.shadowColor = "#51d6ff";
-    ctx.shadowBlur = 12;
-    ctx.fillStyle = "#1b275a";
+  if (weapon === "minigun") {
+    const spin = fr * 0.45;
+    ctx.fillStyle = "#15181d";
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(-9, -10, 34, 20, 6);
-    else ctx.fillRect(-9, -10, 34, 20);
+    if (ctx.roundRect) ctx.roundRect(-10, -11, 36, 22, 5);
+    else ctx.fillRect(-10, -11, 36, 22);
     ctx.fill();
 
-    ctx.fillStyle = "#5c37d8";
-    ctx.fillRect(-3, -7, 20, 14);
-    ctx.fillStyle = "#7ee8ff";
-    ctx.fillRect(4, -4, 12, 8);
+    ctx.fillStyle = "#303842";
+    ctx.fillRect(-5, -7, 24, 14);
+    ctx.fillStyle = "#6b5a2e";
+    ctx.fillRect(4, 8, 18, 16);
+    ctx.fillStyle = "#d7b94a";
+    for (let i = 0; i < 6; i++) ctx.fillRect(6 + i * 3, 10, 2, 12);
 
-    ctx.strokeStyle = "#1df1ff";
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    ctx.moveTo(19 + recoil, 0);
-    ctx.lineTo(62 + recoil, -2);
-    ctx.stroke();
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(24 + recoil, 0);
-    ctx.lineTo(58 + recoil, -1);
-    ctx.stroke();
-
-    ctx.fillStyle = `rgba(81,214,255,${glow})`;
-    ctx.beginPath();
-    ctx.arc(66 + recoil, -2, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    if (fireCooldown > 16) {
-      ctx.strokeStyle = "rgba(120,235,255,0.9)";
-      ctx.lineWidth = 5;
+    for (let i = 0; i < 5; i++) {
+      const off = Math.sin(spin + i * 1.26) * 5;
+      ctx.strokeStyle = i % 2 === 0 ? "#08090b" : "#424b55";
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(70 + recoil, -2);
-      ctx.lineTo(116 + recoil, -4);
+      ctx.moveTo(18 + recoil, off);
+      ctx.lineTo(70 + recoil, off - 2);
       ctx.stroke();
-      ctx.fillStyle = "rgba(255,255,255,0.75)";
+    }
+
+    ctx.fillStyle = "#222832";
+    ctx.beginPath();
+    ctx.arc(18, 0, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#59636f";
+    ctx.beginPath();
+    ctx.arc(18, 0, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (fireCooldown > 7) {
+      ctx.fillStyle = "rgba(255,210,70,0.95)";
       ctx.beginPath();
-      ctx.arc(116 + recoil, -4, 8, 0, Math.PI * 2);
+      ctx.moveTo(74 + recoil, -2);
+      ctx.lineTo(112 + recoil, -17);
+      ctx.lineTo(101 + recoil, -2);
+      ctx.lineTo(118 + recoil, 9);
+      ctx.lineTo(75 + recoil, 7);
+      ctx.closePath();
       ctx.fill();
     }
 
@@ -2879,12 +2833,12 @@ function update() {
     obs = obs.filter((o) => {
       if (hitEnemy || b.lane !== o.lane || (o.type !== "tck" && o.type !== "cop")) return true;
       const br =
-        b.type === "blaster"
-          ? { x: b.x - 24, y: b.y - 10, w: 52, h: 20 }
+        b.type === "minigun"
+          ? { x: b.x - 8, y: b.y - 5, w: 16, h: 10 }
           : { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
       if (!hit(br, oRect(o))) return true;
       hitEnemy = true;
-      addParts(o.x, GND - 36, b.type === "blaster" ? "#55e7ff" : "#ffd700");
+      addParts(o.x, GND - 36, "#ffd700");
       return false;
     });
     return !hitEnemy;
