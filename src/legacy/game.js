@@ -1321,6 +1321,76 @@ function getSkin() {
   return SKINS_BASE.find((s) => s.id === selectedSkin) || SKINS_BASE[0];
 }
 
+function drawAndriiMachineGun(x, y, slide = false) {
+  if (currentLocation !== 1) return;
+  const recoil = fireCooldown > 10 ? Math.sin(fr * 0.9) * 3 : 0;
+  const baseX = slide ? x - 2 : x + 9;
+  const baseY = slide ? y - 19 : y - 31;
+
+  ctx.save();
+  ctx.translate(baseX, baseY);
+  ctx.rotate(slide ? -0.08 : -0.12);
+
+  ctx.fillStyle = "#1b1f25";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(-8, -8, 30, 16, 4);
+  else ctx.fillRect(-8, -8, 30, 16);
+  ctx.fill();
+
+  ctx.fillStyle = "#39424c";
+  ctx.fillRect(-4, -5, 22, 4);
+  ctx.fillStyle = "#0b0d10";
+  ctx.fillRect(-18, -5, 14, 10);
+
+  ctx.strokeStyle = "#08090b";
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(18 + recoil, -1);
+  ctx.lineTo(62 + recoil, -4);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#4f5964";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(20 + recoil, 3);
+  ctx.lineTo(58 + recoil, 0);
+  ctx.stroke();
+
+  ctx.fillStyle = "#6b5a2e";
+  ctx.fillRect(6, 7, 16, 15);
+  ctx.fillStyle = "#d7b94a";
+  for (let i = 0; i < 5; i++) ctx.fillRect(8 + i * 3, 9, 2, 11);
+
+  ctx.strokeStyle = "#d7b94a";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < 7; i++) {
+    const bx = -8 - i * 4;
+    const by = 12 + Math.sin(i + fr * 0.2) * 2;
+    if (i === 0) ctx.moveTo(bx, by);
+    else ctx.lineTo(bx, by);
+  }
+  ctx.stroke();
+
+  if (fireCooldown > 10) {
+    ctx.fillStyle = "rgba(255,210,70,0.95)";
+    ctx.beginPath();
+    ctx.moveTo(65 + recoil, -4);
+    ctx.lineTo(92 + recoil, -17);
+    ctx.lineTo(84 + recoil, -3);
+    ctx.lineTo(98 + recoil, 8);
+    ctx.lineTo(66 + recoil, 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,180,0.65)";
+    ctx.beginPath();
+    ctx.arc(68 + recoil, 0, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
 function drawPlayer() {
   const sk = getSkin();
   const x = LANES[pLane],
@@ -1378,6 +1448,7 @@ function drawPlayer() {
       ctx.arc(x - 18, y - 18, 12, Math.PI, 0);
       ctx.fill();
     }
+    drawAndriiMachineGun(x, y, true);
   } else {
     // ── NORMAL / JUMP pose ───────────────────────────────────
     // legs
@@ -1424,36 +1495,6 @@ function drawPlayer() {
     ctx.moveTo(x + 12, y - 34);
     ctx.lineTo(x + 18, y - 20 - run * 0.2);
     ctx.stroke();
-
-    if (currentLocation === 1) {
-      ctx.strokeStyle = "#17191d";
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(x + 12, y - 31);
-      ctx.lineTo(x + 42, y - 35);
-      ctx.stroke();
-      ctx.strokeStyle = "#4b5560";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(x + 16, y - 28);
-      ctx.lineTo(x + 38, y - 31);
-      ctx.stroke();
-      ctx.fillStyle = "#2c3036";
-      ctx.fillRect(x + 18, y - 28, 9, 11);
-      ctx.fillStyle = "#d7b94a";
-      ctx.fillRect(x + 25, y - 29, 4, 9);
-      if (fireCooldown > 10) {
-        ctx.fillStyle = "rgba(255,210,70,0.9)";
-        ctx.beginPath();
-        ctx.moveTo(x + 44, y - 35);
-        ctx.lineTo(x + 58, y - 42);
-        ctx.lineTo(x + 54, y - 34);
-        ctx.lineTo(x + 61, y - 29);
-        ctx.lineTo(x + 45, y - 31);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
 
     // head
     ctx.fillStyle = sk.mask || sk.skin;
@@ -1508,6 +1549,7 @@ function drawPlayer() {
       ctx.arc(x, y - 58, 12, Math.PI, 0);
       ctx.fill();
     }
+    drawAndriiMachineGun(x, y, false);
   }
 
   ctx.globalAlpha = 1;
