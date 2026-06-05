@@ -70,8 +70,8 @@ canvas{display:block}
 #hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:8px 14px;pointer-events:none}
 .hud-l{font-size:13px;color:#fff;font-weight:500}
 .hud-coin{color:#ffd700;font-size:13px;font-weight:500}
-#ctrlbar{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:6px;padding:8px;background:rgba(0,0,0,0.5)}
-.cbtn{padding:7px 14px;font-size:12px;border-radius:6px;border:1px solid #334;background:rgba(255,255,255,0.07);color:#cde;cursor:pointer}
+#ctrlbar{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;flex-wrap:wrap;gap:6px;padding:8px;background:rgba(0,0,0,0.5)}
+.cbtn{min-width:74px;padding:7px 12px;font-size:12px;border-radius:6px;border:1px solid #334;background:rgba(255,255,255,0.07);color:#cde;cursor:pointer}
 .cbtn:hover{background:rgba(255,255,255,0.15)}
 .cbtn:active{transform:scale(0.96)}
 #sIntro{background:#0a0a1a;align-items:center;justify-content:center;flex-direction:column}

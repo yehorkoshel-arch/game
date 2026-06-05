@@ -682,8 +682,10 @@ function applyLang() {
   document.getElementById("cSlide").textContent = L.slide;
   document.getElementById("cRight").textContent = L.right;
   const weapon = getAndriiWeapon(currentLevel, currentLocation);
-  document.getElementById("cMenu").textContent =
+  document.getElementById("cMenu").textContent = L.menu;
+  document.getElementById("cFire").textContent =
     weapon === "minigun" ? "\u041c\u0456\u043d\u0456\u0433\u0430\u043d" : weapon ? "\u0412\u043e\u0433\u043e\u043d\u044c" : L.menu;
+  document.getElementById("cFire").style.display = weapon ? "" : "none";
   document
     .querySelectorAll(".lbtn")
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
@@ -923,10 +925,6 @@ document.getElementById("btnBackSettings").onclick = () => {
   showScreen("sMenu");
 };
 document.getElementById("cMenu").onclick = () => {
-  if (gameState === "run" && getAndriiWeapon(currentLevel, currentLocation)) {
-    fireAndriiWeapon();
-    return;
-  }
   stopGame();
   showScreen("sMenu");
   syncCoins();
@@ -967,6 +965,7 @@ document.getElementById("cLeft").onclick = () => act("ArrowLeft");
 document.getElementById("cRight").onclick = () => act("ArrowRight");
 document.getElementById("cJump").onclick = () => act("ArrowUp");
 document.getElementById("cSlide").onclick = () => act("ArrowDown");
+document.getElementById("cFire").onclick = () => fireAndriiWeapon();
 
 const keys = {};
 document.addEventListener("keydown", (e) => {
