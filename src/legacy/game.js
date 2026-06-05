@@ -2435,33 +2435,68 @@ const TCK_SCENE_LINES = [
   {
     at: 50,
     who: "Андрій",
-    text: "От лишенько, вони вже близько... Що робити?",
+    text: "От лишенько, чорна машина... Вони вже близько. Що робити?",
     rate: 0.92,
     pitch: 1.55,
   },
   {
-    at: 330,
+    at: 320,
     who: "ТЦК",
     text: "Підпиши документи, хлопче.",
     rate: 0.82,
     pitch: 0.7,
   },
   {
-    at: 620,
+    at: 610,
     who: "Андрій",
-    text: "Я не буду підписувати ваші документи!",
+    text: "Я не буду підписувати ваші документи.",
     rate: 0.95,
     pitch: 1.55,
   },
   {
-    at: 930,
+    at: 900,
     who: "ТЦК",
-    text: "А ну, ти, хлопче, зараз підеш до нас. А ну іди сюди!",
+    text: "А ну, ти, хлопче, зараз підеш до нас. Іди сюди.",
     rate: 0.82,
     pitch: 0.7,
   },
+  {
+    at: 1190,
+    who: "Андрій",
+    text: "Ні. Я маю добігти до фінішу.",
+    rate: 0.95,
+    pitch: 1.55,
+  },
+  {
+    at: 1460,
+    who: "ТЦК",
+    text: "Не сперечайся, хлопче. Ми все одно наздоженемо.",
+    rate: 0.82,
+    pitch: 0.7,
+  },
+  {
+    at: 1760,
+    who: "Андрій",
+    text: "Спробуйте наздогнати. Я не здаюся.",
+    rate: 0.95,
+    pitch: 1.55,
+  },
+  {
+    at: 2040,
+    who: "ТЦК",
+    text: "Тримайте його.",
+    rate: 0.82,
+    pitch: 0.7,
+  },
+  {
+    at: 2280,
+    who: "Андрій",
+    text: "Роботроне, допоможи. Я побіг.",
+    rate: 0.95,
+    pitch: 1.55,
+  },
 ];
-const TCK_SCENE_END_FRAME = 1500;
+const TCK_SCENE_END_FRAME = 2700;
 
 function beginTckScene(sceneKey) {
   gameState = "story";
@@ -3012,7 +3047,7 @@ function speakAndriiForce(lines) {
 function speakSceneLine(line) {
   cancelSpeech();
   bubbleText = line.text;
-  bubbleTimer = 520;
+  bubbleTimer = 640;
   speakAndWait(line.text, () => {});
 }
 function _doSpeakAndrii(lines) {
