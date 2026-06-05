@@ -1028,6 +1028,8 @@ function act(c) {
 function fireAndriiWeapon() {
   const weapon = getAndriiWeapon(currentLevel, currentLocation);
   if (gameState !== "run" || !weapon || fireCooldown > 0) return;
+  pSlide = true;
+  slideT = Math.max(slideT, 18);
   const x = LANES[pLane] + 24;
   const y = pSlide ? pY - 12 : pY - 34;
   if (weapon === "minigun") {
