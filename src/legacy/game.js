@@ -2440,28 +2440,28 @@ const TCK_SCENE_LINES = [
     pitch: 1.55,
   },
   {
-    at: 250,
+    at: 330,
     who: "ТЦК",
     text: "Підпиши документи, хлопче.",
     rate: 0.82,
     pitch: 0.7,
   },
   {
-    at: 430,
+    at: 620,
     who: "Андрій",
     text: "Я не буду підписувати ваші документи!",
     rate: 0.95,
     pitch: 1.55,
   },
   {
-    at: 640,
+    at: 930,
     who: "ТЦК",
     text: "А ну, ти, хлопче, зараз підеш до нас. А ну іди сюди!",
     rate: 0.82,
     pitch: 0.7,
   },
 ];
-const TCK_SCENE_END_FRAME = 1120;
+const TCK_SCENE_END_FRAME = 1500;
 
 function beginTckScene(sceneKey) {
   gameState = "story";
@@ -3012,7 +3012,7 @@ function speakAndriiForce(lines) {
 function speakSceneLine(line) {
   cancelSpeech();
   bubbleText = line.text;
-  bubbleTimer = 360;
+  bubbleTimer = 520;
   speakAndWait(line.text, () => {});
 }
 function _doSpeakAndrii(lines) {
