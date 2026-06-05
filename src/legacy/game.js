@@ -2513,7 +2513,7 @@ function beginTckScene(sceneKey) {
   confetti = [];
   bubbleText = "";
   bubbleTimer = 0;
-  tckScene = { frame: 0, line: null, sceneKey, spoken: false };
+  tckScene = { frame: 0, line: null, lineIndex: -1, sceneKey, spoken: false, waitUntil: 50 };
   if (raf) cancelAnimationFrame(raf);
   loop();
 }
@@ -2529,16 +2529,15 @@ function updateTckScene() {
   tckScene.frame++;
   fr++;
   bgOff += 1.2;
-  const nextLine = TCK_SCENE_LINES.filter((l) => l.at <= tckScene.frame).pop();
-  if (nextLine && nextLine !== tckScene.line) {
-    tckScene.line = nextLine;
-    tckScene.spoken = false;
+  if (!tckScene.spoken && tckScene.frame >= tckScene.waitUntil) {
+    tckScene.lineIndex++;
+    tckScene.line = TCK_SCENE_LINES[tckScene.lineIndex] || null;
+    if (tckScene.line) {
+      tckScene.spoken = true;
+      speakSceneLine(tckScene.line);
+    }
   }
-  if (tckScene.line && !tckScene.spoken) {
-    tckScene.spoken = true;
-    speakSceneLine(tckScene.line);
-  }
-  if (tckScene.frame > TCK_SCENE_END_FRAME) finishTckScene();
+  if (!tckScene.line && tckScene.lineIndex >= TCK_SCENE_LINES.length) finishTckScene();
 }
 
 function drawSpeechBox(who, text, x, y, align = "left") {
@@ -3048,7 +3047,11 @@ function speakSceneLine(line) {
   cancelSpeech();
   bubbleText = line.text;
   bubbleTimer = 640;
-  speakAndWait(line.text, () => {});
+  speakAndWait(line.text).then(() => {
+    if (!tckScene || tckScene.line !== line) return;
+    tckScene.spoken = false;
+    tckScene.waitUntil = tckScene.frame + 90;
+  });
 }
 function _doSpeakAndrii(lines) {
   const text = lines[Math.floor(Math.random() * lines.length)];
