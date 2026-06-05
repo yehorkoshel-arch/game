@@ -611,8 +611,8 @@ const W = 680,
   LANES = [150, 340, 530];
 
 function getAndriiWeapon() {
-  if (currentLocation !== 1) return null;
-  return currentLevel >= 2 ? "minigun" : "machinegun";
+  if (currentLevel >= 2) return "minigun";
+  return currentLocation === 1 ? "machinegun" : null;
 }
 
 function t() {
