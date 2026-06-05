@@ -610,9 +610,11 @@ const W = 680,
   GND = 270,
   LANES = [150, 340, 530];
 
-function getAndriiWeapon() {
-  if (currentLevel >= 2) return "minigun";
-  return currentLocation === 1 ? "machinegun" : null;
+function getAndriiWeapon(level = currentLevel, location = currentLocation) {
+  const levelIndex = Number(level);
+  const locationIndex = Number(location);
+  if (levelIndex >= 2) return "minigun";
+  return locationIndex === 1 ? "machinegun" : null;
 }
 
 function t() {
@@ -679,7 +681,7 @@ function applyLang() {
   document.getElementById("cJump").textContent = L.jump;
   document.getElementById("cSlide").textContent = L.slide;
   document.getElementById("cRight").textContent = L.right;
-  const weapon = getAndriiWeapon();
+  const weapon = getAndriiWeapon(currentLevel, currentLocation);
   document.getElementById("cMenu").textContent =
     weapon === "minigun" ? "\u041c\u0456\u043d\u0456\u0433\u0430\u043d" : weapon ? "\u0412\u043e\u0433\u043e\u043d\u044c" : L.menu;
   document
@@ -921,7 +923,7 @@ document.getElementById("btnBackSettings").onclick = () => {
   showScreen("sMenu");
 };
 document.getElementById("cMenu").onclick = () => {
-  if (gameState === "run" && currentLocation === 1) {
+  if (gameState === "run" && getAndriiWeapon(currentLevel, currentLocation)) {
     fireAndriiWeapon();
     return;
   }
@@ -1025,7 +1027,7 @@ function act(c) {
 }
 
 function fireAndriiWeapon() {
-  const weapon = getAndriiWeapon();
+  const weapon = getAndriiWeapon(currentLevel, currentLocation);
   if (gameState !== "run" || !weapon || fireCooldown > 0) return;
   const x = LANES[pLane] + 24;
   const y = pSlide ? pY - 12 : pY - 34;
@@ -1348,7 +1350,7 @@ function getSkin() {
 }
 
 function drawAndriiWeapon(x, y, slide = false) {
-  const weapon = getAndriiWeapon();
+  const weapon = getAndriiWeapon(currentLevel, currentLocation);
   if (!weapon) return;
   const recoil = fireCooldown > 10 ? Math.sin(fr * 0.9) * 3 : 0;
   const baseX = slide ? x - 2 : x + 9;
