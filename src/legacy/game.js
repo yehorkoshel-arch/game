@@ -1034,11 +1034,11 @@ function fireAndriiWeapon() {
   const y = pSlide ? pY - 12 : pY - 34;
   if (weapon === "minigun") {
     fireCooldown = 12;
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 9; i++) {
       playerBullets.push({
-        x: x + i * 10,
+        x: x + i * 8,
         y: y - 4 + (i % 3) * 3,
-        lane: pLane,
+        lane: i % 3,
         vx: 13.5 + i * 0.7,
         life: 50,
         type: "minigun",
