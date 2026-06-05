@@ -453,6 +453,28 @@ function sfxShot() {
 function sfxMachineGunBurst() {
   [0, 0.055, 0.11].forEach((delay) => setTimeout(sfxShot, delay * 1000));
 }
+function sfxBlaster() {
+  const c = getSfxCtx();
+  if (!c) return;
+  const now = c.currentTime;
+  const osc = c.createOscillator(),
+    g = c.createGain(),
+    filt = c.createBiquadFilter();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(980, now);
+  osc.frequency.exponentialRampToValueAtTime(220, now + 0.22);
+  filt.type = "bandpass";
+  filt.frequency.setValueAtTime(1800, now);
+  filt.frequency.exponentialRampToValueAtTime(620, now + 0.2);
+  filt.Q.value = 7;
+  g.gain.setValueAtTime(0.28, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+  osc.connect(filt);
+  filt.connect(g);
+  g.connect(c.destination);
+  osc.start(now);
+  osc.stop(now + 0.24);
+}
 function sfxCoin() {
   const c = getSfxCtx();
   if (!c) return;
@@ -610,6 +632,11 @@ const W = 680,
   GND = 270,
   LANES = [150, 340, 530];
 
+function getAndriiWeapon() {
+  if (currentLocation !== 1) return null;
+  return currentLevel >= 2 ? "blaster" : "machinegun";
+}
+
 function t() {
   return LANGS[lang];
 }
@@ -674,7 +701,9 @@ function applyLang() {
   document.getElementById("cJump").textContent = L.jump;
   document.getElementById("cSlide").textContent = L.slide;
   document.getElementById("cRight").textContent = L.right;
-  document.getElementById("cMenu").textContent = currentLocation === 1 ? "Вогонь" : L.menu;
+  const weapon = getAndriiWeapon();
+  document.getElementById("cMenu").textContent =
+    weapon === "blaster" ? "Бластер" : weapon ? "Вогонь" : L.menu;
   document
     .querySelectorAll(".lbtn")
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
@@ -915,7 +944,7 @@ document.getElementById("btnBackSettings").onclick = () => {
 };
 document.getElementById("cMenu").onclick = () => {
   if (gameState === "run" && currentLocation === 1) {
-    fireAndriiMachineGun();
+    fireAndriiWeapon();
     return;
   }
   stopGame();
@@ -1014,14 +1043,29 @@ function act(c) {
     pLane++;
     sfxStep(1);
   }
-  if (c === "KeyF") fireAndriiMachineGun();
+  if (c === "KeyF") fireAndriiWeapon();
 }
 
-function fireAndriiMachineGun() {
-  if (gameState !== "run" || currentLocation !== 1 || fireCooldown > 0) return;
-  fireCooldown = 16;
+function fireAndriiWeapon() {
+  const weapon = getAndriiWeapon();
+  if (gameState !== "run" || !weapon || fireCooldown > 0) return;
   const x = LANES[pLane] + 24;
   const y = pSlide ? pY - 12 : pY - 34;
+  if (weapon === "blaster") {
+    fireCooldown = 24;
+    playerBullets.push({
+      x: x + 4,
+      y: y - 1,
+      lane: pLane,
+      vx: 16,
+      life: 42,
+      type: "blaster",
+    });
+    sfxBlaster();
+    return;
+  }
+
+  fireCooldown = 16;
   for (let i = 0; i < 3; i++) {
     playerBullets.push({
       x: x + i * 12,
@@ -1029,6 +1073,7 @@ function fireAndriiMachineGun() {
       lane: pLane,
       vx: 11 + i * 0.9,
       life: 46,
+      type: "machinegun",
     });
   }
   sfxMachineGunBurst();
@@ -1197,6 +1242,32 @@ function drawBullets() {
   });
   playerBullets.forEach((b) => {
     const alpha = Math.min(1, b.life / 12);
+    if (b.type === "blaster") {
+      ctx.globalAlpha = alpha * 0.6;
+      ctx.strokeStyle = "#31dfff";
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(b.x - 36, b.y);
+      ctx.lineTo(b.x + 18, b.y - 2);
+      ctx.stroke();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(b.x - 28, b.y);
+      ctx.lineTo(b.x + 14, b.y - 2);
+      ctx.stroke();
+      const g = ctx.createRadialGradient(b.x + 18, b.y - 2, 0, b.x + 18, b.y - 2, 12);
+      g.addColorStop(0, "#ffffff");
+      g.addColorStop(0.45, "#55e7ff");
+      g.addColorStop(1, "rgba(85,80,255,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(b.x + 18, b.y - 2, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      return;
+    }
     ctx.globalAlpha = alpha * 0.35;
     ctx.fillStyle = "#3aa7ff";
     ctx.fillRect(b.x - 20, b.y - 2, 22, 4);
@@ -1321,8 +1392,9 @@ function getSkin() {
   return SKINS_BASE.find((s) => s.id === selectedSkin) || SKINS_BASE[0];
 }
 
-function drawAndriiMachineGun(x, y, slide = false) {
-  if (currentLocation !== 1) return;
+function drawAndriiWeapon(x, y, slide = false) {
+  const weapon = getAndriiWeapon();
+  if (!weapon) return;
   const recoil = fireCooldown > 10 ? Math.sin(fr * 0.9) * 3 : 0;
   const baseX = slide ? x - 2 : x + 9;
   const baseY = slide ? y - 19 : y - 31;
@@ -1330,6 +1402,57 @@ function drawAndriiMachineGun(x, y, slide = false) {
   ctx.save();
   ctx.translate(baseX, baseY);
   ctx.rotate(slide ? -0.08 : -0.12);
+
+  if (weapon === "blaster") {
+    const glow = 0.55 + Math.sin(fr * 0.18) * 0.18;
+    ctx.shadowColor = "#51d6ff";
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = "#1b275a";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-9, -10, 34, 20, 6);
+    else ctx.fillRect(-9, -10, 34, 20);
+    ctx.fill();
+
+    ctx.fillStyle = "#5c37d8";
+    ctx.fillRect(-3, -7, 20, 14);
+    ctx.fillStyle = "#7ee8ff";
+    ctx.fillRect(4, -4, 12, 8);
+
+    ctx.strokeStyle = "#1df1ff";
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(19 + recoil, 0);
+    ctx.lineTo(62 + recoil, -2);
+    ctx.stroke();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(24 + recoil, 0);
+    ctx.lineTo(58 + recoil, -1);
+    ctx.stroke();
+
+    ctx.fillStyle = `rgba(81,214,255,${glow})`;
+    ctx.beginPath();
+    ctx.arc(66 + recoil, -2, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    if (fireCooldown > 16) {
+      ctx.strokeStyle = "rgba(120,235,255,0.9)";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(70 + recoil, -2);
+      ctx.lineTo(116 + recoil, -4);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      ctx.beginPath();
+      ctx.arc(116 + recoil, -4, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+    return;
+  }
 
   ctx.fillStyle = "#1b1f25";
   ctx.beginPath();
@@ -1448,7 +1571,7 @@ function drawPlayer() {
       ctx.arc(x - 18, y - 18, 12, Math.PI, 0);
       ctx.fill();
     }
-    drawAndriiMachineGun(x, y, true);
+    drawAndriiWeapon(x, y, true);
   } else {
     // ── NORMAL / JUMP pose ───────────────────────────────────
     // legs
@@ -1549,7 +1672,7 @@ function drawPlayer() {
       ctx.arc(x, y - 58, 12, Math.PI, 0);
       ctx.fill();
     }
-    drawAndriiMachineGun(x, y, false);
+    drawAndriiWeapon(x, y, false);
   }
 
   ctx.globalAlpha = 1;
@@ -2755,10 +2878,13 @@ function update() {
     let hitEnemy = false;
     obs = obs.filter((o) => {
       if (hitEnemy || b.lane !== o.lane || (o.type !== "tck" && o.type !== "cop")) return true;
-      const br = { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
+      const br =
+        b.type === "blaster"
+          ? { x: b.x - 24, y: b.y - 10, w: 52, h: 20 }
+          : { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
       if (!hit(br, oRect(o))) return true;
       hitEnemy = true;
-      addParts(o.x, GND - 36, "#ffd700");
+      addParts(o.x, GND - 36, b.type === "blaster" ? "#55e7ff" : "#ffd700");
       return false;
     });
     return !hitEnemy;
