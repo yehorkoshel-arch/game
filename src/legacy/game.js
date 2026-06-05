@@ -984,10 +984,7 @@ document.addEventListener("keyup", (e) => {
   keys[e.code] = false;
 });
 function act(c) {
-  if (gameState === "story") {
-    finishTckScene();
-    return;
-  }
+  if (gameState === "story") return;
   if (gameState === "over") {
     restartLevel();
     return;
@@ -1094,7 +1091,7 @@ function getLvl() {
 function startLevel() {
   focusApp();
   const tckSceneKey = currentLocation + ":" + currentLevel;
-  if (currentLevel === 1 && !tckSceneSeenLevels[tckSceneKey]) {
+  if (currentLocation === 1 && currentLevel === 1 && !tckSceneSeenLevels[tckSceneKey]) {
     beginTckScene(tckSceneKey);
     return;
   }
@@ -1148,6 +1145,7 @@ function startGame() {
 }
 function stopGame() {
   gameState = "stopped";
+  tckScene = null;
   if (raf) {
     cancelAnimationFrame(raf);
     raf = null;
@@ -2463,9 +2461,9 @@ const TCK_SCENE_LINES = [
     pitch: 0.7,
   },
 ];
+const TCK_SCENE_END_FRAME = 1120;
 
 function beginTckScene(sceneKey) {
-  tckSceneSeenLevels[sceneKey] = true;
   gameState = "story";
   fr = 0;
   bgOff = 0;
@@ -2480,12 +2478,13 @@ function beginTckScene(sceneKey) {
   confetti = [];
   bubbleText = "";
   bubbleTimer = 0;
-  tckScene = { frame: 0, line: null, spoken: false };
+  tckScene = { frame: 0, line: null, sceneKey, spoken: false };
   if (raf) cancelAnimationFrame(raf);
   loop();
 }
 
 function finishTckScene() {
+  if (tckScene && tckScene.sceneKey) tckSceneSeenLevels[tckScene.sceneKey] = true;
   tckScene = null;
   startLevel();
 }
@@ -2504,7 +2503,7 @@ function updateTckScene() {
     tckScene.spoken = true;
     speakSceneLine(tckScene.line);
   }
-  if (tckScene.frame > 840) finishTckScene();
+  if (tckScene.frame > TCK_SCENE_END_FRAME) finishTckScene();
 }
 
 function drawSpeechBox(who, text, x, y, align = "left") {
