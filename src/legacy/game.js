@@ -599,6 +599,8 @@ let bgOff = 0,
   chaserX = -100,
   raf = null;
 let fireCooldown = 0;
+const LEVEL_CLEAR_INPUT_DELAY = 150;
+const LEVEL_CLEAR_AUTO_DELAY = 360;
 let finishX = 9999,
   finishActive = false,
   winTimer = 0,
@@ -996,7 +998,7 @@ function act(c) {
     return;
   }
   if (gameState === "levelClear") {
-    if (levelClearTimer > 60) {
+    if (levelClearTimer > LEVEL_CLEAR_INPUT_DELAY) {
       nextLevel();
       return;
     }
@@ -2276,8 +2278,11 @@ function drawLevelClearOverlay() {
     H / 2 + 40,
   );
   // press to continue
-  if (levelClearTimer > 50) {
-    const remaining = Math.ceil((180 - levelClearTimer) / 60);
+  if (levelClearTimer > LEVEL_CLEAR_INPUT_DELAY) {
+    const remaining = Math.max(
+      0,
+      Math.ceil((LEVEL_CLEAR_AUTO_DELAY - levelClearTimer) / 60),
+    );
     ctx.fillStyle = "#8899aa";
     ctx.font = "12px sans-serif";
     ctx.fillText(
@@ -2737,8 +2742,9 @@ function update() {
     if (levelClearTimer === 1) {
       addConfetti();
     }
-    if (levelClearTimer % 60 === 0 && levelClearTimer < 180) addConfetti();
-    if (levelClearTimer >= 180) {
+    if (levelClearTimer % 60 === 0 && levelClearTimer < LEVEL_CLEAR_AUTO_DELAY)
+      addConfetti();
+    if (levelClearTimer >= LEVEL_CLEAR_AUTO_DELAY) {
       nextLevel();
     }
     return;
