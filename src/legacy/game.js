@@ -112,6 +112,18 @@ const MELODY_NOTES = [
   [9, 1],
   [7, 4],
 ];
+const MARCH_NOTES = [
+  [0, 1], [0, 1], [3, 1], [5, 1],
+  [7, 2], [5, 1], [3, 1],
+  [0, 1], [3, 1], [5, 1], [7, 1],
+  [10, 2], [7, 2],
+  [8, 1], [8, 1], [7, 1], [5, 1],
+  [3, 2], [5, 1], [7, 1],
+  [5, 1], [3, 1], [0, 1], [-2, 1],
+  [0, 4],
+];
+const MUSIC_TRACKS = [MELODY_NOTES, MARCH_NOTES];
+const MARCH_LYRIC = "Шалійте, шалійте, скажені кати";
 // Bass/chord root notes (one per bar roughly): simple alternating I-V
 const BASS_PATTERN = [0, 7, 0, 5, 0, 7, 0, 5, 0, 4, 0, 5, 0, 7, 0, 5];
 
@@ -119,7 +131,8 @@ let audioCtx = null,
   musicPlaying = false;
 let musicNodes = []; // keep refs to stop them
 let melodyIdx = 0,
-  bassIdx = 0;
+  bassIdx = 0,
+  musicTrackIdx = 0;
 let nextNoteTime = 0,
   scheduleAhead = 0.08,
   schedulerTimer = null;
@@ -213,7 +226,8 @@ function scheduleDrums(barStart) {
   drumStep = (drumStep + 4) % 16;
 }
 function scheduleChord(root, startTime, dur) {
-  const notes = [root, root + 4, root + 7, root + 12];
+  const third = musicTrackIdx === 1 ? 3 : 4;
+  const notes = [root, root + third, root + 7, root + 12];
   notes.forEach((semi, i) => {
     const t = startTime + i * (dur / 5);
     playNote(noteToHz(semi), t, dur * 0.55, "sawtooth", 0.035, -8 + i * 5);
@@ -224,7 +238,8 @@ function scheduleChord(root, startTime, dur) {
 function scheduleMusic() {
   if (!musicPlaying || !audioCtx) return;
   while (nextNoteTime < audioCtx.currentTime + scheduleAhead) {
-    const [semi, beats] = MELODY_NOTES[melodyIdx % MELODY_NOTES.length];
+    const melody = MUSIC_TRACKS[musicTrackIdx];
+    const [semi, beats] = melody[melodyIdx % melody.length];
     const dur = beats * BEAT;
     const freq = noteToHz(semi);
     const accent = melodyIdx % 4 === 0 ? 1.15 : 1;
@@ -260,7 +275,11 @@ function scheduleMusic() {
     nextNoteTime += dur;
     melodyIdx++;
     // Loop
-    if (melodyIdx >= MELODY_NOTES.length) melodyIdx = 0;
+    if (melodyIdx >= melody.length) {
+      melodyIdx = 0;
+      musicTrackIdx = (musicTrackIdx + 1) % MUSIC_TRACKS.length;
+      lyricIdx = 0;
+    }
   }
   schedulerTimer = setTimeout(scheduleMusic, 25);
 }
@@ -279,6 +298,7 @@ function startMusic() {
   musicPlaying = true;
   melodyIdx = 0;
   bassIdx = 0;
+  musicTrackIdx = currentLocation === 1 ? 1 : 0;
   drumStep = 0;
   chordIdx = 0;
   nextNoteTime = audioCtx.currentTime + 0.1;
@@ -314,7 +334,7 @@ function stopLyrics() {
 }
 function showLyric() {
   if (!musicPlaying) return;
-  const lines = t().lyrics || [];
+  const lines = musicTrackIdx === 1 ? [MARCH_LYRIC] : t().lyrics || [];
   if (!lines.length) return;
   const line = lines[lyricIdx % lines.length];
   LYRIC_DIV.textContent = line;
@@ -947,6 +967,10 @@ document.querySelectorAll(".loc-tab").forEach((b) => {
   b.onclick = () => {
     currentLocation = Number(b.dataset.loc);
     currentLevel = currentLocation === 0 ? progressKyiv : progressLviv;
+    if (musicPlaying) {
+      stopMusic();
+      startMusic();
+    }
     saveGame();
     applyLang();
   };
