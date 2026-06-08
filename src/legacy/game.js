@@ -598,6 +598,7 @@ let obs = [],
 let bgOff = 0,
   chaserX = -100,
   raf = null;
+let loopActive = false;
 let fireCooldown = 0;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
@@ -1131,8 +1132,10 @@ function startLevel() {
   bubbleTimer = 0;
   gameState = "run";
   hudUp();
-  if (raf) cancelAnimationFrame(raf);
-  loop();
+  if (!loopActive) {
+    if (raf) cancelAnimationFrame(raf);
+    loop();
+  }
   // Андрій кричить на старті з затримкою
   setTimeout(() => speakAndrii(ANDRII_START), 800);
 }
@@ -2520,8 +2523,10 @@ function beginTckScene(sceneKey) {
   bubbleText = "";
   bubbleTimer = 0;
   tckScene = { frame: 0, line: null, lineIndex: -1, sceneKey, spoken: false, waitUntil: 50 };
-  if (raf) cancelAnimationFrame(raf);
-  loop();
+  if (!loopActive) {
+    if (raf) cancelAnimationFrame(raf);
+    loop();
+  }
 }
 
 function finishTckScene() {
@@ -2967,10 +2972,12 @@ function update() {
 
 function loop() {
   if (gameState === "stopped") return;
+  loopActive = true;
   ctx.clearRect(0, 0, W, H);
   if (gameState === "story") {
     drawTckScene();
     update();
+    loopActive = false;
     if (gameState === "story") raf = requestAnimationFrame(loop);
     return;
   }
@@ -2997,6 +3004,7 @@ function loop() {
   }
   if (gameState === "idle" || gameState === "over") drawOverlay();
   update();
+  loopActive = false;
   raf = requestAnimationFrame(loop);
 }
 
