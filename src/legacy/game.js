@@ -150,6 +150,7 @@ const BEAT = 60 / BPM;
 // Lyric display
 let lyricIdx = 0,
   lyricTimer = null;
+let marchVocalAudio = null;
 const LYRIC_DIV = (() => {
   const d = document.createElement("div");
   d.id = "lyricBanner";
@@ -359,7 +360,39 @@ function stopLyrics() {
     clearTimeout(lyricTimer);
     lyricTimer = null;
   }
+  if (marchVocalAudio) {
+    marchVocalAudio.pause();
+    marchVocalAudio.currentTime = 0;
+    marchVocalAudio = null;
+  }
   LYRIC_DIV.style.opacity = "0";
+}
+function playMarchVocal(index) {
+  if (!musicPlaying || musicTrackIdx !== 1) return;
+  if (marchVocalAudio) {
+    marchVocalAudio.pause();
+    marchVocalAudio = null;
+  }
+  const vocalId = String((index % MARCH_LYRICS.length) + 1).padStart(2, "0");
+  marchVocalAudio = new Audio(`/game/audio/voice/march_vocal_${vocalId}.mp3`);
+  marchVocalAudio.volume = 0.82;
+  marchVocalAudio.playbackRate = 1.06;
+  marchVocalAudio.onerror = () => {
+    marchVocalAudio = null;
+  };
+  marchVocalAudio.onended = () => {
+    marchVocalAudio = null;
+  };
+  marchVocalAudio.play().catch(() => {
+    marchVocalAudio = null;
+  });
+
+  if (audioCtx) {
+    const now = audioCtx.currentTime;
+    const root = index % 2 === 0 ? 0 : -2;
+    playNote(noteToHz(root), now, 1.8, "triangle", 0.045);
+    playNote(noteToHz(root + 7), now, 1.8, "sine", 0.03);
+  }
 }
 function showLyric() {
   if (!musicPlaying) return;
@@ -368,6 +401,7 @@ function showLyric() {
   const line = lines[lyricIdx % lines.length];
   LYRIC_DIV.textContent = line;
   LYRIC_DIV.style.opacity = "1";
+  if (musicTrackIdx === 1) playMarchVocal(lyricIdx);
   lyricTimer = setTimeout(() => {
     LYRIC_DIV.style.opacity = "0";
     lyricIdx++;

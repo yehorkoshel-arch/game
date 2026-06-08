@@ -207,5 +207,17 @@
     "group": "story_tck",
     "speaker": "Андрій",
     "text": "Роботроне, допоможи. Я побіг."
+  },
+  {
+    "id": "march_vocal_01",
+    "group": "march_vocal",
+    "speaker": "Хор",
+    "text": "Шалійте шалійте скажені кати"
+  },
+  {
+    "id": "march_vocal_02",
+    "group": "march_vocal",
+    "speaker": "Хор",
+    "text": "Годуйте шпіонів будуйте тюрми"
   }
 ]
