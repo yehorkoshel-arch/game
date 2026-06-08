@@ -601,6 +601,7 @@ let bgOff = 0,
 let fireCooldown = 0;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
+const LEVEL_START_SPEED_CAP = 2.54;
 let finishX = 9999,
   finishActive = false,
   winTimer = 0,
@@ -1101,7 +1102,7 @@ function startLevel() {
   score = 0;
   runCoins = 0;
   lives = settingLives;
-  spd = lv.baseSpd;
+  spd = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP);
   fr = 0;
   totalDist = 0;
   pLane = 1;
@@ -2754,7 +2755,7 @@ function update() {
   const lv = getLvl();
   const FDIST = lv.dist;
   const diffMult = { easy: 0.75, normal: 1.0, hard: 1.4 }[settingDiff] || 1.0;
-  const base = lv.baseSpd * diffMult;
+  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult;
   const maxS = lv.maxSpd * diffMult;
   const accel = 0.0012 * diffMult * (1 + currentLevel * 0.15);
   const pct = Math.min(totalDist / FDIST, 1);
