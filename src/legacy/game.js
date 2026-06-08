@@ -125,7 +125,10 @@ const MARCH_NOTES = [
   [0, 4],
 ];
 const MUSIC_TRACKS = [MELODY_NOTES, MARCH_NOTES];
-const MARCH_LYRIC = "Шалійте, шалійте, скажені кати";
+const MARCH_LYRICS = [
+  "Шалійте, шалійте, скажені кати",
+  "Годуйте шпіонів, будуйте тюрми",
+];
 // Bass/chord root notes (one per bar roughly): simple alternating I-V
 const BASS_PATTERN = [0, 7, 0, 5, 0, 7, 0, 5, 0, 4, 0, 5, 0, 7, 0, 5];
 
@@ -360,7 +363,7 @@ function stopLyrics() {
 }
 function showLyric() {
   if (!musicPlaying) return;
-  const lines = musicTrackIdx === 1 ? [MARCH_LYRIC] : t().lyrics || [];
+  const lines = musicTrackIdx === 1 ? MARCH_LYRICS : t().lyrics || [];
   if (!lines.length) return;
   const line = lines[lyricIdx % lines.length];
   LYRIC_DIV.textContent = line;
@@ -755,7 +758,7 @@ function buildSettings() {
   document.getElementById("sDescDist").textContent = L.descDist;
   document.getElementById("sLblSound").textContent = L.lblSound;
   document.getElementById("sDescSound").textContent =
-    settingMusicTrack === "march" ? MARCH_LYRIC : L.descSound;
+    settingMusicTrack === "march" ? MARCH_LYRICS[0] : L.descSound;
   document.getElementById("sLblVib").textContent = L.lblVib;
   document.getElementById("sDescVib").textContent = L.descVib;
 
