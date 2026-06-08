@@ -125,32 +125,141 @@ const MARCH_NOTES = [
   [0, 4],
 ];
 const MUSIC_TRACKS = [MELODY_NOTES, MARCH_NOTES];
-const MARCH_LYRICS = [
-  "Шалійте, шалійте, скажені кати!",
-  "Годуйте шпіонів, будуйте тюрми!",
-  "До бою сто тисяч поборників стане,",
-  "Пірвем, пірвем, пірвем ті кайдани!",
-  "За правду, за волю ми станемо враз,",
-  "Ланці, ні багнети не пострах для нас!",
-  "Бо вольного духа не скути в кайдани.",
-  "Біда, біда, біда вам, тирани!",
-  "Робітники духа! Робітникам всім",
-  "Ми руки подаймо, на бій їх ведім!",
-  "Бо спільна усіх нас злучила недоля:",
-  "І труд, і піт, і кров, — кнут, неволя!",
-  "Від краю до краю не громи гудуть —",
-  "Українські полки на ворога йдуть,",
-  "І поклик рокоче: «Вставайте, народи!",
-  "Прийшла пора, пора — день свободи!»",
-  "Підвалини світу валяться старі,",
-  "Поблідли деспоти, дрожать опирі,",
-  "Бо зоря свободи вже сходить яскрава!",
-  "Для всіх, для всіх, для всіх рівні права!",
-  "І вольні народи, як добрі брати,",
-  "Полинуть до сонця, до щастя мети,",
-  "Розкуєсь, двигнеться і наша родина:",
-  "Одна, сильна, вільна Україна!",
-];
+const MARCH_LYRICS_BY_LANG = {
+  uk: [
+    "Шалійте, шалійте, скажені кати!",
+    "Годуйте шпіонів, будуйте тюрми!",
+    "До бою сто тисяч поборників стане,",
+    "Пірвем, пірвем, пірвем ті кайдани!",
+    "За правду, за волю ми станемо враз,",
+    "Ланці, ні багнети не пострах для нас!",
+    "Бо вольного духа не скути в кайдани.",
+    "Біда, біда, біда вам, тирани!",
+    "Робітники духа! Робітникам всім",
+    "Ми руки подаймо, на бій їх ведім!",
+    "Бо спільна усіх нас злучила недоля:",
+    "І труд, і піт, і кров, — кнут, неволя!",
+    "Від краю до краю не громи гудуть —",
+    "Українські полки на ворога йдуть,",
+    "І поклик рокоче: «Вставайте, народи!",
+    "Прийшла пора, пора — день свободи!»",
+    "Підвалини світу валяться старі,",
+    "Поблідли деспоти, дрожать опирі,",
+    "Бо зоря свободи вже сходить яскрава!",
+    "Для всіх, для всіх, для всіх рівні права!",
+    "І вольні народи, як добрі брати,",
+    "Полинуть до сонця, до щастя мети,",
+    "Розкуєсь, двигнеться і наша родина:",
+    "Одна, сильна, вільна Україна!",
+  ],
+  en: [
+    "Rage on, rage on, you frenzied executioners!",
+    "Feed your spies and build your prisons!",
+    "A hundred thousand defenders will rise for battle,",
+    "We shall break, break, break those chains!",
+    "For truth and freedom we shall rise as one,",
+    "Neither chains nor bayonets can frighten us!",
+    "For a free spirit cannot be bound in chains.",
+    "Woe, woe, woe to you, tyrants!",
+    "Workers of the spirit! To all working people",
+    "Let us give our hands and lead them into battle!",
+    "For one shared hardship has united us all:",
+    "Labor, sweat and blood — the whip and bondage!",
+    "From end to end, it is not thunder that roars —",
+    "Ukrainian regiments are marching on the foe,",
+    "And the call resounds: “Rise up, nations!",
+    "The time has come — the day of freedom!”",
+    "The old foundations of the world are falling,",
+    "The despots pale and the oppressors tremble,",
+    "For freedom's dawn is already shining bright!",
+    "Equal rights for all, for all, for all!",
+    "And free nations, like faithful brothers,",
+    "Will soar toward the sun and the goal of happiness,",
+    "Our own family will break free and rise:",
+    "One strong and free Ukraine!",
+  ],
+  de: [
+    "Rast nur, rast nur, ihr rasenden Henker!",
+    "Füttert die Spione und baut eure Kerker!",
+    "Hunderttausend Streiter erheben sich zum Kampf,",
+    "Wir brechen, brechen, brechen diese Ketten!",
+    "Für Wahrheit und Freiheit stehen wir vereint,",
+    "Weder Ketten noch Bajonette schrecken uns!",
+    "Denn einen freien Geist kann man nicht fesseln.",
+    "Wehe, wehe, wehe euch, Tyrannen!",
+    "Arbeiter des Geistes! Allen Werktätigen",
+    "Reichen wir die Hände und führen sie zum Kampf!",
+    "Denn gemeinsames Leid hat uns alle vereint:",
+    "Arbeit, Schweiß und Blut — Peitsche und Knechtschaft!",
+    "Von Land zu Land ist es kein Donner, der dröhnt —",
+    "Ukrainische Regimenter ziehen gegen den Feind,",
+    "Und der Ruf erschallt: „Erhebt euch, Völker!",
+    "Die Zeit ist gekommen — der Tag der Freiheit!“",
+    "Die alten Fundamente der Welt stürzen ein,",
+    "Despoten erbleichen, Unterdrücker erbeben,",
+    "Denn hell steigt schon der Morgen der Freiheit auf!",
+    "Gleiche Rechte für alle, für alle, für alle!",
+    "Und freie Völker, wie gute Brüder,",
+    "Streben zur Sonne, zum Ziel des Glücks,",
+    "Auch unsere Familie befreit sich und erhebt sich:",
+    "Eine starke und freie Ukraine!",
+  ],
+  fr: [
+    "Déchaînez-vous, bourreaux enragés !",
+    "Nourrissez vos espions, bâtissez vos prisons !",
+    "Cent mille défenseurs se lèveront pour combattre,",
+    "Nous briserons, briserons, briserons ces chaînes !",
+    "Pour la vérité, pour la liberté, levons-nous unis,",
+    "Ni les chaînes ni les baïonnettes ne nous font peur !",
+    "Car nul ne peut enchaîner un esprit libre.",
+    "Malheur, malheur, malheur à vous, tyrans !",
+    "Travailleurs de l'esprit ! À tous les travailleurs",
+    "Tendons les mains et menons-les au combat !",
+    "Car un malheur commun nous a tous unis :",
+    "Travail, sueur et sang — fouet et servitude !",
+    "D'un bout à l'autre, ce n'est pas le tonnerre qui gronde —",
+    "Les régiments ukrainiens marchent contre l'ennemi,",
+    "Et l'appel retentit : « Levez-vous, peuples !",
+    "L'heure est venue — voici le jour de la liberté ! »",
+    "Les vieux fondements du monde s'effondrent,",
+    "Les despotes pâlissent, les oppresseurs tremblent,",
+    "Car l'aube de la liberté brille déjà !",
+    "Les mêmes droits pour tous, pour tous, pour tous !",
+    "Et les peuples libres, tels de bons frères,",
+    "S'élanceront vers le soleil, vers le bonheur,",
+    "Notre famille aussi brisera ses chaînes et se lèvera :",
+    "Une Ukraine unie, forte et libre !",
+  ],
+  es: [
+    "¡Enloquezcan, enloquezcan, verdugos furiosos!",
+    "¡Alimenten a sus espías, construyan sus prisiones!",
+    "Cien mil defensores se alzarán para luchar,",
+    "¡Romperemos, romperemos, romperemos esas cadenas!",
+    "Por la verdad y la libertad nos alzaremos unidos,",
+    "¡Ni cadenas ni bayonetas nos dan miedo!",
+    "Porque un espíritu libre no puede ser encadenado.",
+    "¡Ay, ay, ay de ustedes, tiranos!",
+    "¡Trabajadores del espíritu! A todos los trabajadores",
+    "Tendamos las manos y llevémoslos a la lucha.",
+    "Porque una desgracia común nos ha unido:",
+    "Trabajo, sudor y sangre — látigo y esclavitud.",
+    "De un extremo al otro no es el trueno el que retumba —",
+    "Los regimientos ucranianos marchan contra el enemigo,",
+    "Y el llamado resuena: «¡Levántense, pueblos!",
+    "Ha llegado la hora — el día de la libertad!»",
+    "Los viejos cimientos del mundo se derrumban,",
+    "Los déspotas palidecen, los opresores tiemblan,",
+    "¡Porque el alba de la libertad ya brilla!",
+    "¡Iguales derechos para todos, para todos, para todos!",
+    "Y los pueblos libres, como buenos hermanos,",
+    "Volarán hacia el sol y la meta de la felicidad,",
+    "Nuestra familia romperá sus cadenas y se alzará:",
+    "¡Una Ucrania unida, fuerte y libre!",
+  ],
+};
+function getMarchLyrics() {
+  return MARCH_LYRICS_BY_LANG[lang] || MARCH_LYRICS_BY_LANG.uk;
+}
 // Bass/chord root notes (one per bar roughly): simple alternating I-V
 const BASS_PATTERN = [0, 7, 0, 5, 0, 7, 0, 5, 0, 4, 0, 5, 0, 7, 0, 5];
 
@@ -395,7 +504,7 @@ function playMarchVocal(index) {
     marchVocalAudio.pause();
     marchVocalAudio = null;
   }
-  const vocalId = String((index % MARCH_LYRICS.length) + 1).padStart(2, "0");
+  const vocalId = String((index % MARCH_LYRICS_BY_LANG.uk.length) + 1).padStart(2, "0");
   marchVocalAudio = new Audio(`/game/audio/voice/march_vocal_${vocalId}.mp3`);
   marchVocalAudio.volume = 0.82;
   marchVocalAudio.playbackRate = 1.06;
@@ -418,7 +527,7 @@ function playMarchVocal(index) {
 }
 function showLyric() {
   if (!musicPlaying) return;
-  const lines = musicTrackIdx === 1 ? MARCH_LYRICS : t().lyrics || [];
+  const lines = musicTrackIdx === 1 ? getMarchLyrics() : t().lyrics || [];
   if (!lines.length) return;
   const line = lines[lyricIdx % lines.length];
   LYRIC_DIV.textContent = line;
@@ -816,7 +925,7 @@ function buildSettings() {
   document.getElementById("sDescDist").textContent = L.descDist;
   document.getElementById("sLblSound").textContent = L.lblSound;
   document.getElementById("sDescSound").textContent =
-    settingMusicTrack === "march" ? MARCH_LYRICS[0] : L.descSound;
+    settingMusicTrack === "march" ? getMarchLyrics()[0] : L.descSound;
   document.getElementById("sLblVib").textContent = L.lblVib;
   document.getElementById("sDescVib").textContent = L.descVib;
 
