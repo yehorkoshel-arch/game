@@ -57,6 +57,19 @@ export function SettingsScreen() {
             </div>
           </div>
         </div>
+        <div className="srow robot-voice-settings-row">
+          <div>
+            <div className="srow-label" id="sLblRobotVoice">Голос Роботрона</div>
+            <div className="srow-desc" id="sDescRobotVoice">Оберіть мову озвучення</div>
+          </div>
+          <div className="seg robot-voice-picker" id="segRobotVoice">
+            <button className="seg-btn" data-val="uk" type="button">UA</button>
+            <button className="seg-btn" data-val="en" type="button">EN</button>
+            <button className="seg-btn" data-val="de" type="button">DE</button>
+            <button className="seg-btn" data-val="fr" type="button">FR</button>
+            <button className="seg-btn" data-val="es" type="button">ES</button>
+          </div>
+        </div>
         <div className="srow">
           <div>
             <div className="srow-label" id="sLblVib">Вібрація</div>

@@ -8,6 +8,39 @@ export function cancelSpeech() {
     recordedAudio.currentTime = 0;
     recordedAudio = null;
   }
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+}
+
+const SPEECH_LOCALES = {
+  en: "en-US",
+  de: "de-DE",
+  fr: "fr-FR",
+  es: "es-ES",
+};
+
+export function playSystemVoice(text, language, onDone) {
+  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+    return false;
+  }
+
+  const locale = SPEECH_LOCALES[language];
+  if (!locale) return false;
+
+  const voices = window.speechSynthesis.getVoices();
+  const languageCode = locale.slice(0, 2).toLowerCase();
+  const voice = voices.find((item) => item.lang.toLowerCase() === locale.toLowerCase())
+    || voices.find((item) => item.lang.toLowerCase().startsWith(languageCode));
+
+  cancelSpeech();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = locale;
+  if (voice) utterance.voice = voice;
+  utterance.rate = 0.94;
+  utterance.pitch = 0.82;
+  utterance.onend = onDone;
+  utterance.onerror = onDone;
+  window.speechSynthesis.speak(utterance);
+  return true;
 }
 
 export function normalizeSpeechText(text) {

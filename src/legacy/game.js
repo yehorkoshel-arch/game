@@ -10,6 +10,7 @@ import {
   cancelSpeech,
   normalizeSpeechText,
   playRecordedVoice,
+  playSystemVoice,
 } from "../audio/tts.js";
 
 function getLevels() {
@@ -31,6 +32,7 @@ let settingDiff = save.settingDiff || "normal",
   settingDist = save.settingDist || 800,
   settingSound = save.settingSound || false,
   settingMusicTrack = save.settingMusicTrack || "kyiv",
+  settingRobotVoiceLang = save.settingRobotVoiceLang || "uk",
   settingVib = save.settingVib || false;
 function saveGame() {
   saveGameSave({
@@ -42,6 +44,7 @@ function saveGame() {
     settingDist,
     settingSound,
     settingMusicTrack,
+    settingRobotVoiceLang,
     settingVib,
     currentLevel,
     currentLocation,
@@ -840,6 +843,13 @@ function getAndriiWeapon(level = currentLevel, location = currentLocation) {
 function t() {
   return LANGS[lang];
 }
+const ROBOT_VOICE_UI = {
+  uk: ["Голос Роботрона", "Оберіть мову озвучення"],
+  en: ["Robotron voice", "Choose the spoken language"],
+  de: ["Robotron-Stimme", "Sprache der Sprachausgabe wählen"],
+  fr: ["Voix de Robotron", "Choisissez la langue parlée"],
+  es: ["Voz de Robotron", "Elige el idioma de la voz"],
+};
 window.addEventListener("load", () => setTimeout(focusApp, 100));
 function unlockGameAudio() {
   const c = getSfxCtx();
@@ -928,6 +938,9 @@ function buildSettings() {
     settingMusicTrack === "march" ? getMarchLyrics()[0] : L.descSound;
   document.getElementById("sLblVib").textContent = L.lblVib;
   document.getElementById("sDescVib").textContent = L.descVib;
+  const robotVoiceUi = ROBOT_VOICE_UI[lang] || ROBOT_VOICE_UI.uk;
+  document.getElementById("sLblRobotVoice").textContent = robotVoiceUi[0];
+  document.getElementById("sDescRobotVoice").textContent = robotVoiceUi[1];
 
   // Difficulty labels
   const diffLabels = [L.diffEasy, L.diffNorm, L.diffHard];
@@ -943,6 +956,9 @@ function buildSettings() {
   });
   document.querySelectorAll("#segMusic .seg-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.val === settingMusicTrack);
+  });
+  document.querySelectorAll("#segRobotVoice .seg-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.val === settingRobotVoiceLang);
   });
 
   const ts = document.getElementById("togSound");
@@ -1278,6 +1294,15 @@ document.querySelectorAll("#segMusic .seg-btn").forEach((b) => {
     }
     saveGame();
     buildSettings();
+  };
+});
+document.querySelectorAll("#segRobotVoice .seg-btn").forEach((b) => {
+  b.onclick = () => {
+    settingRobotVoiceLang = b.dataset.val;
+    saveGame();
+    buildSettings();
+    const preview = getRobotStory()[0];
+    speakAndWait(preview, settingRobotVoiceLang);
   };
 });
 document.getElementById("togSound").onclick = () => {
@@ -3609,19 +3634,76 @@ function drawAndriiBubble() {
   ctx.globalAlpha = 1;
 }
 
-const STORY = [
-  "Привіт! Я Роботрон-9000.",
-  "Хочу розповісти тобі одну важливу історію...",
-  "Жив собі хлопець на ім'я Андрій.",
-  "Звичайний київський школяр — добрий і веселий.",
-  "Кожного ранку він біг на уроки вулицями міста.",
-  "Але сьогодні щось пішло не так...",
-  "Охоронці вирішили його зупинити!",
-  "Андрій не злякався.",
-  "Він побіг — швидко, спритно, хоробро!",
-  "Допоможи йому добігти до фінішу.",
-  "Слава Україні! 🇺🇦",
-];
+const ROBOT_STORY_BY_LANG = {
+  uk: [
+    "Привіт! Я Роботрон-9000.",
+    "Хочу розповісти тобі одну важливу історію...",
+    "Жив собі хлопець на ім'я Андрій.",
+    "Звичайний київський школяр — добрий і веселий.",
+    "Кожного ранку він біг на уроки вулицями міста.",
+    "Але сьогодні щось пішло не так...",
+    "Охоронці вирішили його зупинити!",
+    "Андрій не злякався.",
+    "Він побіг — швидко, спритно, хоробро!",
+    "Допоможи йому добігти до фінішу.",
+    "Слава Україні! 🇺🇦",
+  ],
+  en: [
+    "Hello! I am Robotron nine thousand.",
+    "I want to tell you an important story.",
+    "There once was a boy named Andrii.",
+    "He was an ordinary Kyiv schoolboy, kind and cheerful.",
+    "Every morning he ran through the city streets to his lessons.",
+    "But today something went wrong.",
+    "The guards decided to stop him!",
+    "Andrii was not afraid.",
+    "He ran fast, skillfully and bravely!",
+    "Help him reach the finish line.",
+    "Glory to Ukraine!",
+  ],
+  de: [
+    "Hallo! Ich bin Robotron neuntausend.",
+    "Ich möchte dir eine wichtige Geschichte erzählen.",
+    "Es lebte einmal ein Junge namens Andrii.",
+    "Er war ein gewöhnlicher Kyiver Schüler, freundlich und fröhlich.",
+    "Jeden Morgen lief er durch die Straßen der Stadt zum Unterricht.",
+    "Doch heute ging etwas schief.",
+    "Die Wächter beschlossen, ihn aufzuhalten!",
+    "Andrii hatte keine Angst.",
+    "Er lief schnell, geschickt und mutig!",
+    "Hilf ihm, die Ziellinie zu erreichen.",
+    "Ruhm der Ukraine!",
+  ],
+  fr: [
+    "Bonjour ! Je suis Robotron neuf mille.",
+    "Je veux te raconter une histoire importante.",
+    "Il était une fois un garçon nommé Andrii.",
+    "C'était un écolier ordinaire de Kyiv, gentil et joyeux.",
+    "Chaque matin, il courait dans les rues de la ville pour aller en classe.",
+    "Mais aujourd'hui, quelque chose a mal tourné.",
+    "Les gardes ont décidé de l'arrêter !",
+    "Andrii n'a pas eu peur.",
+    "Il s'est mis à courir, vite, habilement et courageusement !",
+    "Aide-le à atteindre la ligne d'arrivée.",
+    "Gloire à l'Ukraine !",
+  ],
+  es: [
+    "¡Hola! Soy Robotron nueve mil.",
+    "Quiero contarte una historia importante.",
+    "Había una vez un chico llamado Andrii.",
+    "Era un estudiante de Kyiv, amable y alegre.",
+    "Cada mañana corría por las calles de la ciudad para ir a clase.",
+    "Pero hoy algo salió mal.",
+    "¡Los guardias decidieron detenerlo!",
+    "Andrii no tuvo miedo.",
+    "¡Corrió rápido, con habilidad y valentía!",
+    "Ayúdalo a llegar a la meta.",
+    "¡Gloria a Ucrania!",
+  ],
+};
+function getRobotStory() {
+  return ROBOT_STORY_BY_LANG[settingRobotVoiceLang] || ROBOT_STORY_BY_LANG.uk;
+}
 
 const ic = document.getElementById("introCanvas");
 const ix = ic.getContext("2d");
@@ -3881,7 +3963,8 @@ function drawBot(f, talking) {
 // Друкарська машинка по символах
 function typeNextChar() {
   if (iState !== ISTATE.TYPING) return;
-  const full = STORY[iPhase];
+  const story = getRobotStory();
+  const full = story[iPhase];
   if (iCharIdx < full.length) {
     iCharIdx++;
     iTypedText = full.slice(0, iCharIdx);
@@ -3890,11 +3973,11 @@ function typeNextChar() {
     setTimeout(typeNextChar, full[iCharIdx - 1] === " " ? 60 : 38);
   } else {
     // Фраза повністю набрана на екрані, тепер чекаємо озвучку.
-    const fullPhrase = STORY[iPhase];
+    const fullPhrase = story[iPhase];
     document.getElementById("introSubtitle").textContent = fullPhrase;
     iState = ISTATE.PAUSE;
 
-    speakAndWait(fullPhrase).then(() => {
+    speakAndWait(fullPhrase, settingRobotVoiceLang).then(() => {
       // невеличка затримка після того, як голос закінчив говорити перед зміною слайду
       setTimeout(() => {
         if (iRaf) advancePhase();
@@ -3905,7 +3988,7 @@ function typeNextChar() {
 
 function advancePhase() {
   iPhase++;
-  if (iPhase >= STORY.length) {
+  if (iPhase >= getRobotStory().length) {
     finishIntro();
     return;
   }
@@ -3917,7 +4000,7 @@ function advancePhase() {
 }
 
 // Говоримо фразу голосом — повертає Promise, що резолвиться лише по закінченню мовлення
-function speakAndWait(text) {
+function speakAndWait(text, voiceLanguage = "uk") {
   const cleanText = normalizeSpeechText(
     text
       .replace(/Роботрон-9000/g, "Роботрон девʼять тисяч")
@@ -3926,7 +4009,8 @@ function speakAndWait(text) {
   );
 
   return new Promise((resolve) => {
-    if (playRecordedVoice(cleanText, resolve)) return;
+    if (voiceLanguage === "uk" && playRecordedVoice(cleanText, resolve)) return;
+    if (voiceLanguage !== "uk" && playSystemVoice(text, voiceLanguage, resolve)) return;
     setTimeout(resolve, Math.max(900, cleanText.length * 60));
   });
 }
