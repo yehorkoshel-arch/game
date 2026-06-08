@@ -879,6 +879,20 @@ function drawSkinPreview(canvas, sk) {
   c.fillRect(cx - 10, by - 14, 8, 14);
   c.fillRect(cx + 2, by - 14, 8, 14);
 
+  if (sk.id === "hetman_gold") {
+    c.fillStyle = sk.cape;
+    c.beginPath();
+    c.moveTo(cx - 17, by - 45);
+    c.lineTo(cx + 17, by - 45);
+    c.lineTo(cx + 21, by - 8);
+    c.lineTo(cx - 21, by - 8);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = sk.trim;
+    c.lineWidth = 2;
+    c.stroke();
+  }
+
   // shorts
   c.fillStyle = sk.shorts || "#222";
   c.fillRect(cx - 12, by - 24, 24, 12);
@@ -892,6 +906,29 @@ function drawSkinPreview(canvas, sk) {
     c.rect(cx - 13, by - 46, 26, 24);
   }
   c.fill();
+
+  if (sk.id === "hetman_gold") {
+    c.fillStyle = sk.armor;
+    c.fillRect(cx - 10, by - 43, 20, 17);
+    c.strokeStyle = sk.trim;
+    c.lineWidth = 1.5;
+    c.strokeRect(cx - 10, by - 43, 20, 17);
+    c.fillStyle = sk.trim;
+    c.fillRect(cx - 2, by - 40, 4, 10);
+    c.fillRect(cx - 7, by - 36, 14, 2);
+    c.strokeStyle = "#c79b45";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(cx + 13, by - 28);
+    c.lineTo(cx + 20, by - 7);
+    c.stroke();
+    c.strokeStyle = sk.trim;
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(cx + 20, by - 7);
+    c.lineTo(cx + 22, by - 2);
+    c.stroke();
+  }
 
   // scarf / belt accent
   if (sk.scarf) {
@@ -956,13 +993,25 @@ function drawSkinPreview(canvas, sk) {
     c.fillStyle = sk.id === "robotron_neon" ? "#ff3df2" : "#00e5ff";
     c.fillRect(cx - 8, by - 58, 16, 3);
   } else if (sk.id === "hetman_gold") {
-    c.fillStyle = sk.hat;
+    c.fillStyle = "#4b3018";
     c.beginPath();
-    c.moveTo(cx - 11, by - 65);
-    c.lineTo(cx - 7, by - 75);
-    c.lineTo(cx, by - 67);
-    c.lineTo(cx + 7, by - 75);
-    c.lineTo(cx + 11, by - 65);
+    c.ellipse(cx, by - 67, 13, 7, 0, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = sk.trim;
+    c.fillRect(cx - 12, by - 67, 24, 3);
+    c.strokeStyle = sk.trim;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(cx + 3, by - 72);
+    c.quadraticCurveTo(cx + 9, by - 83, cx + 13, by - 75);
+    c.moveTo(cx + 6, by - 72);
+    c.quadraticCurveTo(cx + 14, by - 80, cx + 16, by - 72);
+    c.stroke();
+    c.fillStyle = "#5b351d";
+    c.beginPath();
+    c.moveTo(cx - 6, by - 54);
+    c.lineTo(cx, by - 47);
+    c.lineTo(cx + 6, by - 54);
     c.closePath();
     c.fill();
   } else if (sk.id === "shadow_agent") {
@@ -1658,6 +1707,19 @@ function drawPlayer() {
 
   if (pSlide) {
     // ── SLIDE pose ──────────────────────────────────────────
+    if (sk.id === "hetman_gold") {
+      ctx.fillStyle = sk.cape;
+      ctx.beginPath();
+      ctx.moveTo(x - 34, y - 18);
+      ctx.lineTo(x + 12, y - 18);
+      ctx.lineTo(x + 31, y + 1);
+      ctx.lineTo(x - 26, y + 3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = sk.trim;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
     // body horizontal
     ctx.fillStyle = sk.shirt;
     ctx.beginPath();
@@ -1667,6 +1729,21 @@ function drawPlayer() {
       ctx.fillRect(x - 22, y - 14, 44, 16);
     }
     ctx.fill();
+    if (sk.id === "hetman_gold") {
+      ctx.fillStyle = sk.armor;
+      ctx.fillRect(x - 17, y - 12, 30, 11);
+      ctx.strokeStyle = sk.trim;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x - 17, y - 12, 30, 11);
+      ctx.fillStyle = sk.trim;
+      ctx.fillRect(x - 3, y - 11, 4, 9);
+      ctx.strokeStyle = "#d1a33f";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 10, y - 2);
+      ctx.lineTo(x + 38, y - 13);
+      ctx.stroke();
+    }
     // legs
     ctx.fillStyle = sk.shorts || "#222";
     ctx.fillRect(x + 4, y - 8, 26, 12);
@@ -1702,13 +1779,25 @@ function drawPlayer() {
       ctx.fillStyle = sk.id === "robotron_neon" ? "#ff3df2" : "#00e5ff";
       ctx.fillRect(x - 26, y - 18, 16, 3);
     } else if (sk.id === "hetman_gold") {
-      ctx.fillStyle = sk.hat;
+      ctx.fillStyle = "#4b3018";
       ctx.beginPath();
-      ctx.moveTo(x - 29, y - 21);
-      ctx.lineTo(x - 25, y - 32);
-      ctx.lineTo(x - 18, y - 24);
-      ctx.lineTo(x - 11, y - 32);
-      ctx.lineTo(x - 7, y - 21);
+      ctx.ellipse(x - 18, y - 23, 13, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = sk.trim;
+      ctx.fillRect(x - 30, y - 24, 24, 3);
+      ctx.strokeStyle = sk.trim;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 16, y - 29);
+      ctx.quadraticCurveTo(x - 10, y - 39, x - 5, y - 31);
+      ctx.moveTo(x - 13, y - 29);
+      ctx.quadraticCurveTo(x - 5, y - 36, x - 2, y - 28);
+      ctx.stroke();
+      ctx.fillStyle = "#5b351d";
+      ctx.beginPath();
+      ctx.moveTo(x - 24, y - 12);
+      ctx.lineTo(x - 18, y - 5);
+      ctx.lineTo(x - 12, y - 12);
       ctx.closePath();
       ctx.fill();
     } else if (sk.id === "shadow_agent") {
@@ -1733,6 +1822,21 @@ function drawPlayer() {
     ctx.fillStyle = sk.shorts || "#222";
     ctx.fillRect(x - 13, y - 18, 26, 16);
 
+    if (sk.id === "hetman_gold") {
+      const capeSwing = Math.sin(fr * 0.18) * 4;
+      ctx.fillStyle = sk.cape;
+      ctx.beginPath();
+      ctx.moveTo(x - 18, y - 44);
+      ctx.lineTo(x + 18, y - 44);
+      ctx.lineTo(x + 23 + capeSwing, y - 5);
+      ctx.lineTo(x - 23 + capeSwing, y - 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = sk.trim;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
     // shirt
     ctx.fillStyle = sk.shirt;
     ctx.beginPath();
@@ -1742,6 +1846,35 @@ function drawPlayer() {
       ctx.fillRect(x - 15, y - 42, 30, 26);
     }
     ctx.fill();
+    if (sk.id === "hetman_gold") {
+      ctx.fillStyle = sk.armor;
+      ctx.fillRect(x - 12, y - 40, 24, 20);
+      ctx.strokeStyle = sk.trim;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x - 12, y - 40, 24, 20);
+      ctx.fillStyle = sk.trim;
+      ctx.fillRect(x - 2, y - 37, 4, 13);
+      ctx.fillRect(x - 8, y - 33, 16, 3);
+      ctx.beginPath();
+      ctx.moveTo(x, y - 38);
+      ctx.lineTo(x - 5, y - 30);
+      ctx.lineTo(x, y - 27);
+      ctx.lineTo(x + 5, y - 30);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#d1a33f";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 12, y - 18);
+      ctx.lineTo(x + 27, y + 3);
+      ctx.stroke();
+      ctx.strokeStyle = sk.trim;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x + 27, y + 3);
+      ctx.lineTo(x + 30, y + 8);
+      ctx.stroke();
+    }
 
     // scarf / belt
     if (sk.scarf) {
@@ -1843,17 +1976,29 @@ function drawPlayer() {
       ctx.fillRect(x - 12, y - 31, 24, 3);
       ctx.shadowBlur = 0;
     } else if (sk.id === "hetman_gold") {
-      ctx.fillStyle = sk.hat;
+      ctx.fillStyle = "#4b3018";
       ctx.beginPath();
-      ctx.moveTo(x - 12, y - 64);
-      ctx.lineTo(x - 8, y - 76);
-      ctx.lineTo(x, y - 67);
-      ctx.lineTo(x + 8, y - 76);
-      ctx.lineTo(x + 12, y - 64);
+      ctx.ellipse(x, y - 65, 14, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = sk.trim;
+      ctx.fillRect(x - 13, y - 66, 26, 3);
+      ctx.strokeStyle = sk.trim;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(x + 3, y - 72);
+      ctx.quadraticCurveTo(x + 10, y - 85, x + 15, y - 76);
+      ctx.moveTo(x + 6, y - 72);
+      ctx.quadraticCurveTo(x + 16, y - 82, x + 19, y - 72);
+      ctx.stroke();
+      ctx.fillStyle = "#5b351d";
+      ctx.beginPath();
+      ctx.moveTo(x - 7, y - 52);
+      ctx.lineTo(x, y - 43);
+      ctx.lineTo(x + 7, y - 52);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#ffd54f";
-      ctx.fillRect(x - 10, y - 40, 20, 4);
+      ctx.fillRect(x - 8, y - 55, 6, 2);
+      ctx.fillRect(x + 2, y - 55, 6, 2);
     } else if (sk.id === "shadow_agent") {
       ctx.fillStyle = sk.hair;
       ctx.beginPath();

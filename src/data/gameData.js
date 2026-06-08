@@ -72,9 +72,10 @@ export const SKINS_BASE=[
   },
   {
     id:'hetman_gold', name:'Золотий гетьман', price:850, exclusive:true,
-    shirt:'#7a1622', shorts:'#20150d', skin:'#f0c89b', hair:'#5d351a',
-    shoes:'#c99a24', scarf:'#d4af37', mask:null, hat:'#ffd54f',
-    body:'#7a1622', head:'#f0c89b', scarfCol:'#d4af37'
+    shirt:'#8b641e', shorts:'#3a2613', skin:'#b98755', hair:'#4a2b17',
+    shoes:'#5a3517', scarf:'#d8ad43', mask:null, hat:'#6b451d',
+    cape:'#573317', armor:'#b9892f', trim:'#f2cf67',
+    body:'#8b641e', head:'#b98755', scarfCol:'#d8ad43'
   },
   {
     id:'robotron_neon', name:'Неоновий Роботрон', price:1100, exclusive:true,
