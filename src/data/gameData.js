@@ -52,6 +52,42 @@ export const SKINS_BASE=[
     shoes:'#222', scarf:null, mask:null, hat:'#111111',
     body:'#c0392b', head:'#f0c080', scarfCol:'#1abc9c'
   },
+  {
+    id:'courier', name:'Кур’єр', price:240,
+    shirt:'#ff8f00', shorts:'#263238', skin:'#f0d0a8', hair:'#4e342e',
+    shoes:'#212121', scarf:'#1565c0', mask:null, hat:'#ffb300',
+    body:'#ff8f00', head:'#f0d0a8', scarfCol:'#1565c0'
+  },
+  {
+    id:'football', name:'Футболіст', price:320,
+    shirt:'#f5f5f5', shorts:'#1565c0', skin:'#d7ad84', hair:'#24160f',
+    shoes:'#e53935', scarf:'#ffd700', mask:null, hat:null,
+    body:'#f5f5f5', head:'#d7ad84', scarfCol:'#ffd700'
+  },
+  {
+    id:'cyber', name:'Кіберраннер', price:480,
+    shirt:'#26334a', shorts:'#111827', skin:'#c7d2dc', hair:null,
+    shoes:'#00e5ff', scarf:'#7c4dff', mask:'#202938', hat:'#00e5ff',
+    body:'#26334a', head:'#c7d2dc', scarfCol:'#7c4dff'
+  },
+  {
+    id:'hetman_gold', name:'Золотий гетьман', price:850, exclusive:true,
+    shirt:'#7a1622', shorts:'#20150d', skin:'#f0c89b', hair:'#5d351a',
+    shoes:'#c99a24', scarf:'#d4af37', mask:null, hat:'#ffd54f',
+    body:'#7a1622', head:'#f0c89b', scarfCol:'#d4af37'
+  },
+  {
+    id:'robotron_neon', name:'Неоновий Роботрон', price:1100, exclusive:true,
+    shirt:'#102a3a', shorts:'#07141d', skin:'#88dcea', hair:null,
+    shoes:'#20f0d0', scarf:'#ff3df2', mask:'#163745', hat:'#20f0d0',
+    body:'#102a3a', head:'#88dcea', scarfCol:'#ff3df2'
+  },
+  {
+    id:'shadow_agent', name:'Тіньовий агент', price:1400, exclusive:true,
+    shirt:'#151515', shorts:'#080808', skin:'#c8a780', hair:'#090909',
+    shoes:'#050505', scarf:'#8b0000', mask:null, hat:'#202020',
+    body:'#151515', head:'#c8a780', scarfCol:'#8b0000'
+  },
 ];
 
 // ── ЛОКАЦІЇ ───────────────────────────────────────────────────────────────────

@@ -829,6 +829,40 @@ function drawSkinPreview(canvas, sk) {
     // шапка (смужка)
     c.fillStyle = sk.hat || "#111";
     c.fillRect(cx - 12, by - 68, 24, 5);
+  } else if (sk.id === "courier") {
+    c.fillStyle = sk.hat;
+    c.fillRect(cx - 12, by - 68, 24, 7);
+    c.fillRect(cx + 5, by - 63, 12, 3);
+  } else if (sk.id === "football") {
+    c.fillStyle = sk.hair;
+    c.beginPath();
+    c.arc(cx, by - 61, 12, Math.PI, 0);
+    c.fill();
+    c.fillStyle = "#1565c0";
+    c.fillRect(cx - 3, by - 43, 6, 13);
+  } else if (sk.id === "cyber" || sk.id === "robotron_neon") {
+    c.fillStyle = sk.hat;
+    c.fillRect(cx - 11, by - 62, 22, 5);
+    c.fillStyle = sk.id === "robotron_neon" ? "#ff3df2" : "#00e5ff";
+    c.fillRect(cx - 8, by - 58, 16, 3);
+  } else if (sk.id === "hetman_gold") {
+    c.fillStyle = sk.hat;
+    c.beginPath();
+    c.moveTo(cx - 11, by - 65);
+    c.lineTo(cx - 7, by - 75);
+    c.lineTo(cx, by - 67);
+    c.lineTo(cx + 7, by - 75);
+    c.lineTo(cx + 11, by - 65);
+    c.closePath();
+    c.fill();
+  } else if (sk.id === "shadow_agent") {
+    c.fillStyle = sk.hair;
+    c.beginPath();
+    c.arc(cx, by - 61, 12, Math.PI, 0);
+    c.fill();
+    c.fillStyle = "#050505";
+    c.fillRect(cx - 9, by - 59, 8, 4);
+    c.fillRect(cx + 1, by - 59, 8, 4);
   } else {
     // blond hair
     c.fillStyle = sk.hair || "#e8c45c";
@@ -855,6 +889,7 @@ function buildShop() {
     const div = document.createElement("div");
     div.className =
       "sitem" +
+      (sk.exclusive ? " exclusive" : "") +
       (owned.includes(sk.id) ? " owned" : "") +
       (selectedSkin === sk.id ? " selected" : "");
     const cv2 = document.createElement("canvas");
@@ -863,7 +898,13 @@ function buildShop() {
     drawSkinPreview(cv2, sk);
     const nm = document.createElement("div");
     nm.className = "sitem-name";
-    nm.textContent = L.skins[i] ? L.skins[i].name : sk.id;
+    nm.textContent = L.skins[i] ? L.skins[i].name : sk.name || sk.id;
+    if (sk.exclusive) {
+      const badge = document.createElement("div");
+      badge.className = "sitem-exclusive";
+      badge.textContent = "ЕКСКЛЮЗИВ";
+      div.appendChild(badge);
+    }
     const pr = document.createElement("div");
     if (selectedSkin === sk.id) {
       pr.className = "sitem-owned";
@@ -1526,6 +1567,29 @@ function drawPlayer() {
       ctx.fillStyle = "#5d3a1a";
       ctx.fillRect(x - 26, y - 16, 7, 2);
       ctx.fillRect(x - 19, y - 16, 7, 2);
+    } else if (sk.id === "courier") {
+      ctx.fillStyle = sk.hat;
+      ctx.fillRect(x - 29, y - 27, 24, 7);
+      ctx.fillRect(x - 8, y - 22, 11, 3);
+    } else if (sk.id === "cyber" || sk.id === "robotron_neon") {
+      ctx.fillStyle = sk.hat;
+      ctx.fillRect(x - 29, y - 22, 22, 5);
+      ctx.fillStyle = sk.id === "robotron_neon" ? "#ff3df2" : "#00e5ff";
+      ctx.fillRect(x - 26, y - 18, 16, 3);
+    } else if (sk.id === "hetman_gold") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.moveTo(x - 29, y - 21);
+      ctx.lineTo(x - 25, y - 32);
+      ctx.lineTo(x - 18, y - 24);
+      ctx.lineTo(x - 11, y - 32);
+      ctx.lineTo(x - 7, y - 21);
+      ctx.closePath();
+      ctx.fill();
+    } else if (sk.id === "shadow_agent") {
+      ctx.fillStyle = "#050505";
+      ctx.fillRect(x - 27, y - 17, 8, 4);
+      ctx.fillRect(x - 17, y - 17, 8, 4);
     } else {
       ctx.fillStyle = sk.hair;
       ctx.beginPath();
@@ -1626,6 +1690,54 @@ function drawPlayer() {
       // вишивка на сорочці
       ctx.fillStyle = "rgba(255,255,255,0.3)";
       ctx.fillRect(x - 3, y - 40, 6, 10);
+    } else if (sk.id === "courier") {
+      ctx.fillStyle = sk.hat;
+      ctx.fillRect(x - 13, y - 68, 26, 7);
+      ctx.fillRect(x + 7, y - 63, 13, 3);
+      ctx.strokeStyle = "#263238";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(x - 11, y - 40);
+      ctx.lineTo(x + 12, y - 16);
+      ctx.stroke();
+    } else if (sk.id === "football") {
+      ctx.fillStyle = sk.hair;
+      ctx.beginPath();
+      ctx.arc(x, y - 58, 12, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "#1565c0";
+      ctx.fillRect(x - 4, y - 40, 8, 16);
+    } else if (sk.id === "cyber" || sk.id === "robotron_neon") {
+      const glow = sk.id === "robotron_neon" ? "#ff3df2" : "#00e5ff";
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = sk.hat;
+      ctx.fillRect(x - 12, y - 62, 24, 6);
+      ctx.fillStyle = glow;
+      ctx.fillRect(x - 9, y - 58, 18, 4);
+      ctx.fillRect(x - 12, y - 31, 24, 3);
+      ctx.shadowBlur = 0;
+    } else if (sk.id === "hetman_gold") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.moveTo(x - 12, y - 64);
+      ctx.lineTo(x - 8, y - 76);
+      ctx.lineTo(x, y - 67);
+      ctx.lineTo(x + 8, y - 76);
+      ctx.lineTo(x + 12, y - 64);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#ffd54f";
+      ctx.fillRect(x - 10, y - 40, 20, 4);
+    } else if (sk.id === "shadow_agent") {
+      ctx.fillStyle = sk.hair;
+      ctx.beginPath();
+      ctx.arc(x, y - 58, 12, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "#050505";
+      ctx.fillRect(x - 10, y - 58, 9, 4);
+      ctx.fillRect(x + 1, y - 58, 9, 4);
+      ctx.fillRect(x - 1, y - 57, 2, 2);
     } else {
       // blond hair
       ctx.fillStyle = sk.hair || "#e8c45c";
