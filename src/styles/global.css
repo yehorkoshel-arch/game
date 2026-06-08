@@ -47,6 +47,11 @@ canvas{display:block}
 .srow:last-child{border-bottom:none}
 .srow-label{font-size:14px;color:#aabbcc}
 .srow-desc{font-size:11px;color:#556677;margin-top:2px}
+.music-settings-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 14px}
+.music-settings-copy{min-width:0}
+.music-track-picker{grid-column:1/-1}
+.music-track-picker .seg{display:grid;grid-template-columns:1fr 1fr;width:100%}
+.music-track-picker .seg-btn{min-height:38px;padding:6px 10px;white-space:normal;line-height:1.25}
 .seg{display:flex;border:1px solid #2a3a5a;border-radius:7px;overflow:hidden}
 .seg-btn{padding:6px 14px;font-size:12px;background:transparent;color:#7788aa;border:none;cursor:pointer;transition:background 0.15s,color 0.15s}
 .seg-btn:hover{color:#ccd}
