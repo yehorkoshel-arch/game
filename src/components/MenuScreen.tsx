@@ -1,6 +1,9 @@
+import { DancingAndrii } from './DancingAndrii';
+
 export function MenuScreen() {
   return (
     <div id="sMenu" className="screen">
+      <DancingAndrii />
       <button className="gear-btn" id="btnSettingsOpen" title="Налаштування" type="button">
         ⚙
       </button>
