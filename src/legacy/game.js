@@ -3260,19 +3260,23 @@ function update() {
   playerBullets = playerBullets.filter((b) => b.life > 0 && b.x < W + 40);
 
   playerBullets = playerBullets.filter((b) => {
-    let hitEnemy = false;
+    let hitTarget = false;
     obs = obs.filter((o) => {
-      if (hitEnemy || b.lane !== o.lane || (o.type !== "tck" && o.type !== "cop")) return true;
+      const isEnemy = o.type === "tck" || o.type === "cop";
+      const isLvivBarrier =
+        currentLocation === 1 && (o.type === "kiosk" || o.type === "bollard");
+      if (hitTarget || b.lane !== o.lane || (!isEnemy && !isLvivBarrier)) return true;
       const br =
         b.type === "minigun"
           ? { x: b.x - 8, y: b.y - 5, w: 16, h: 10 }
           : { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
       if (!hit(br, oRect(o))) return true;
-      hitEnemy = true;
-      addParts(o.x, GND - 36, "#ffd700");
+      hitTarget = true;
+      addParts(o.x, GND - 30, isLvivBarrier ? "#c8860a" : "#ffd700");
+      if (isLvivBarrier) sfxHit();
       return false;
     });
-    return !hitEnemy;
+    return !hitTarget;
   });
 
   obs = obs.filter((o) => o.x > -80);
