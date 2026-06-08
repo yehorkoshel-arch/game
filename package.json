@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "voice:generate": "node scripts/generate-voice.mjs",
+    "voice:generate:march": "node scripts/generate-voice.mjs --group march_vocal --force",
     "voice:generate:female": "node scripts/generate-voice.mjs --voice uk-UA-PolinaNeural"
   },
   "dependencies": {
