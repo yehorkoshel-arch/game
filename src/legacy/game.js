@@ -723,8 +723,9 @@ const W = 680,
 function getAndriiWeapon(level = currentLevel, location = currentLocation) {
   const levelIndex = Number(level);
   const locationIndex = Number(location);
+  if (locationIndex !== 1) return null;
   if (levelIndex >= 2) return "minigun";
-  return locationIndex === 1 ? "machinegun" : null;
+  return "machinegun";
 }
 
 function t() {
