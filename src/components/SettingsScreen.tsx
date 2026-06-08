@@ -83,6 +83,20 @@ export function SettingsScreen() {
         </div>
         <div className="srow">
           <div>
+            <div className="srow-label">Мелодія</div>
+            <div className="srow-desc">Вибір фонової музики</div>
+          </div>
+          <div className="seg" id="segMusic">
+            <button className="seg-btn active" data-val="kyiv" type="button">
+              Київ
+            </button>
+            <button className="seg-btn" data-val="march" type="button">
+              Шалійте
+            </button>
+          </div>
+        </div>
+        <div className="srow">
+          <div>
             <div className="srow-label" id="sLblVib">
               Вібрація
             </div>

@@ -30,6 +30,7 @@ let settingDiff = save.settingDiff || "normal",
   settingLives = save.settingLives || 3,
   settingDist = save.settingDist || 800,
   settingSound = save.settingSound || false,
+  settingMusicTrack = save.settingMusicTrack || "kyiv",
   settingVib = save.settingVib || false;
 function saveGame() {
   saveGameSave({
@@ -40,6 +41,7 @@ function saveGame() {
     settingLives,
     settingDist,
     settingSound,
+    settingMusicTrack,
     settingVib,
     currentLevel,
     currentLocation,
@@ -277,7 +279,7 @@ function scheduleMusic() {
     // Loop
     if (melodyIdx >= melody.length) {
       melodyIdx = 0;
-      musicTrackIdx = (musicTrackIdx + 1) % MUSIC_TRACKS.length;
+      musicTrackIdx = settingMusicTrack === "march" ? 1 : 0;
       lyricIdx = 0;
     }
   }
@@ -298,7 +300,7 @@ function startMusic() {
   musicPlaying = true;
   melodyIdx = 0;
   bassIdx = 0;
-  musicTrackIdx = currentLocation === 1 ? 1 : 0;
+  musicTrackIdx = settingMusicTrack === "march" ? 1 : 0;
   drumStep = 0;
   chordIdx = 0;
   nextNoteTime = audioCtx.currentTime + 0.1;
@@ -728,7 +730,8 @@ function buildSettings() {
   document.getElementById("sLblDist").textContent = L.lblDist;
   document.getElementById("sDescDist").textContent = L.descDist;
   document.getElementById("sLblSound").textContent = L.lblSound;
-  document.getElementById("sDescSound").textContent = L.descSound;
+  document.getElementById("sDescSound").textContent =
+    settingMusicTrack === "march" ? MARCH_LYRIC : L.descSound;
   document.getElementById("sLblVib").textContent = L.lblVib;
   document.getElementById("sDescVib").textContent = L.descVib;
 
@@ -743,6 +746,9 @@ function buildSettings() {
   });
   document.querySelectorAll("#segDist .seg-btn").forEach((b) => {
     b.classList.toggle("active", Number(b.dataset.val) === settingDist);
+  });
+  document.querySelectorAll("#segMusic .seg-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.val === settingMusicTrack);
   });
 
   const ts = document.getElementById("togSound");
@@ -1017,6 +1023,17 @@ document.querySelectorAll("#segLives .seg-btn").forEach((b) => {
 document.querySelectorAll("#segDist .seg-btn").forEach((b) => {
   b.onclick = () => {
     settingDist = Number(b.dataset.val);
+    buildSettings();
+  };
+});
+document.querySelectorAll("#segMusic .seg-btn").forEach((b) => {
+  b.onclick = () => {
+    settingMusicTrack = b.dataset.val;
+    if (musicPlaying) {
+      stopMusic();
+      startMusic();
+    }
+    saveGame();
     buildSettings();
   };
 });
