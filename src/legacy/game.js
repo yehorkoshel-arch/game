@@ -214,16 +214,20 @@ function playNoise(
   src.stop(startTime + duration);
   musicNodes.push(src);
 }
-function scheduleDrums(barStart) {
-  const stepDur = BEAT / 2;
+function scheduleDrums(barStart, beatDuration = BEAT, intense = false) {
+  const stepDur = beatDuration / 2;
   for (let s = 0; s < 4; s++) {
     const t = barStart + s * stepDur;
     if ((drumStep + s) % 4 === 0) {
-      playNote(55, t, 0.12, "sine", 0.16);
-      playNoise(t, 0.08, 0.05, 150, "lowpass");
+      playNote(intense ? 62 : 55, t, 0.12, "sine", intense ? 0.22 : 0.16);
+      playNoise(t, 0.08, intense ? 0.075 : 0.05, 150, "lowpass");
     }
-    if ((drumStep + s) % 4 === 2) playNoise(t, 0.1, 0.07, 420, "bandpass");
-    playNoise(t, 0.035, s % 2 ? 0.025 : 0.04, 5200, "highpass");
+    if ((drumStep + s) % 4 === 2)
+      playNoise(t, 0.1, intense ? 0.11 : 0.07, 420, "bandpass");
+    playNoise(t, 0.035, intense ? 0.055 : s % 2 ? 0.025 : 0.04, 5200, "highpass");
+    if (intense && s % 2 === 1) {
+      playNoise(t + stepDur * 0.5, 0.025, 0.035, 6800, "highpass");
+    }
   }
   drumStep = (drumStep + 4) % 16;
 }
@@ -241,36 +245,56 @@ function scheduleMusic() {
   if (!musicPlaying || !audioCtx) return;
   while (nextNoteTime < audioCtx.currentTime + scheduleAhead) {
     const melody = MUSIC_TRACKS[musicTrackIdx];
+    const isMarch = musicTrackIdx === 1;
     const [semi, beats] = melody[melodyIdx % melody.length];
-    const dur = beats * BEAT;
+    const trackBeat = BEAT * (isMarch ? 0.76 : 1);
+    const dur = beats * trackBeat;
     const freq = noteToHz(semi);
-    const accent = melodyIdx % 4 === 0 ? 1.15 : 1;
-    playNote(freq, nextNoteTime, dur * 0.94, "triangle", 0.18 * accent);
+    const accent = melodyIdx % 4 === 0 ? (isMarch ? 1.35 : 1.15) : 1;
+    playNote(
+      freq,
+      nextNoteTime,
+      dur * (isMarch ? 0.78 : 0.94),
+      isMarch ? "sawtooth" : "triangle",
+      (isMarch ? 0.16 : 0.18) * accent,
+    );
     playNote(
       noteToHz(semi + 12),
       nextNoteTime + dur * 0.04,
-      dur * 0.45,
-      "sine",
-      0.035,
+      dur * (isMarch ? 0.28 : 0.45),
+      isMarch ? "square" : "sine",
+      isMarch ? 0.055 : 0.035,
     );
-    playNote(noteToHz(semi + 4), nextNoteTime, dur * 0.8, "sine", 0.055);
+    playNote(
+      noteToHz(semi + (isMarch ? 3 : 4)),
+      nextNoteTime,
+      dur * (isMarch ? 0.58 : 0.8),
+      "sine",
+      isMarch ? 0.07 : 0.055,
+    );
 
     if (melodyIdx % 2 === 0) {
       const bassSemi = BASS_PATTERN[bassIdx % BASS_PATTERN.length] - 12;
-      playNote(noteToHz(bassSemi), nextNoteTime, dur * 1.65, "triangle", 0.13);
+      playNote(
+        noteToHz(bassSemi),
+        nextNoteTime,
+        dur * (isMarch ? 1.1 : 1.65),
+        isMarch ? "square" : "triangle",
+        isMarch ? 0.18 : 0.13,
+      );
       playNote(
         noteToHz(bassSemi + 12),
         nextNoteTime + dur * 0.48,
         dur * 0.35,
         "square",
-        0.035,
+        isMarch ? 0.06 : 0.035,
       );
       bassIdx++;
     }
     if (melodyIdx % 4 === 0) {
       const root = CHORD_PATTERN[chordIdx % CHORD_PATTERN.length];
-      scheduleChord(root, nextNoteTime, dur * 2.2);
-      scheduleDrums(nextNoteTime);
+      scheduleChord(root, nextNoteTime, dur * (isMarch ? 1.55 : 2.2));
+      scheduleDrums(nextNoteTime, trackBeat, isMarch);
       chordIdx++;
     }
 
