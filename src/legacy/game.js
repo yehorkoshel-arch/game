@@ -874,6 +874,7 @@ const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
 let finishX = 9999,
   finishActive = false,
+  schoolEnterTimer = 0,
   winTimer = 0,
   levelClearTimer = 0;
 let tckSceneSeenLevels = {},
@@ -1760,6 +1761,7 @@ function startLevel() {
   flash = 0;
   finishX = 9999;
   finishActive = false;
+  schoolEnterTimer = 0;
   bossActive = false;
   bossDefeated = false;
   bossTransform = 0;
@@ -2372,11 +2374,23 @@ function drawFinishSchool(x) {
     }
   }
 
+  const doorX = x + schoolW / 2;
+  const doorOpen =
+    gameState === "schoolEnter"
+      ? Math.min(Math.max((schoolEnterTimer - 8) / 34, 0), 1)
+      : 0;
+  ctx.fillStyle = "#101419";
+  ctx.fillRect(doorX - 20, GND - 45, 40, 45);
   ctx.fillStyle = isLviv ? "#40251f" : "#315778";
-  ctx.fillRect(x + schoolW / 2 - 18, GND - 42, 36, 42);
+  ctx.fillRect(doorX - 20 - doorOpen * 16, GND - 45, 19, 45);
+  ctx.fillRect(doorX + 1 + doorOpen * 16, GND - 45, 19, 45);
+  ctx.strokeStyle = "rgba(255,255,255,0.28)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(doorX - 20 - doorOpen * 16, GND - 45, 19, 45);
+  ctx.strokeRect(doorX + 1 + doorOpen * 16, GND - 45, 19, 45);
   ctx.fillStyle = "#f3c84d";
   ctx.beginPath();
-  ctx.arc(x + schoolW / 2 + 10, GND - 21, 2, 0, Math.PI * 2);
+  ctx.arc(doorX + 11 + doorOpen * 16, GND - 22, 2, 0, Math.PI * 2);
   ctx.fill();
 
   const flagX = x + schoolW - 32;
@@ -2687,7 +2701,7 @@ function drawAndriiWeapon(x, y, slide = false) {
 
 function drawPlayer() {
   const sk = getSkin();
-  const x = LANES[pLane],
+  let x = LANES[pLane],
     y = pY;
   ctx.save();
   if (secretRoute && secretRoute.entering) {
@@ -2697,8 +2711,21 @@ function drawPlayer() {
     ctx.scale(scale, scale);
     ctx.translate(-x, -y);
   }
+  if (gameState === "schoolEnter") {
+    const progress = Math.min(schoolEnterTimer / 105, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const doorX = finishX + 249;
+    const startX = LANES[pLane];
+    x = startX + (doorX - startX) * ease;
+    y = GND - Math.sin(Math.min(progress, 0.8) * Math.PI * 5) * 3;
+    const scale = 1 - Math.max(0, progress - 0.48) * 0.68;
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    ctx.translate(-x, -y);
+    ctx.globalAlpha = progress > 0.78 ? Math.max(0, (1 - progress) / 0.22) : 1;
+  }
   const al = inv > 0 ? (Math.sin(fr * 0.5) > 0 ? 0.3 : 1) : 1;
-  ctx.globalAlpha = al;
+  ctx.globalAlpha *= al;
   if (sk.id === "robotron_neon") {
     drawNeonRobotron(x, y);
     ctx.restore();
@@ -4507,6 +4534,28 @@ function drawTckScene() {
   ctx.textAlign = "left";
 }
 
+function completeLevelAfterSchool() {
+  const lv = getLvl();
+  addQuestProgress("levels");
+  addQuestProgress("finishes");
+  runCoins += lv.bonusCoins;
+  totalCoins += runCoins;
+  syncCoins();
+  saveGame();
+  hudUp();
+  sfxWin();
+  speakAndriiForce(ANDRII_WIN);
+  addConfetti();
+
+  if (currentLevel >= getLevels().length - 1) {
+    gameState = "win";
+    winTimer = 0;
+  } else {
+    gameState = "levelClear";
+    levelClearTimer = 0;
+  }
+}
+
 function update() {
   if (gameState === "story") {
     updateTckScene();
@@ -4531,6 +4580,15 @@ function update() {
     if (levelClearTimer >= LEVEL_CLEAR_AUTO_DELAY) {
       nextLevel();
     }
+    return;
+  }
+  if (gameState === "schoolEnter") {
+    schoolEnterTimer++;
+    fr++;
+    pY = GND;
+    pVY = 0;
+    pSlide = false;
+    if (schoolEnterTimer >= 112) completeLevelAfterSchool();
     return;
   }
   if (gameState !== "run") return;
@@ -4688,27 +4746,14 @@ function update() {
   if (finishActive) {
     finishX -= spd;
     if (finishX < W / 2 && totalDist >= FDIST) {
-      const bonus = lv.bonusCoins;
-      addQuestProgress("levels");
-      addQuestProgress("finishes");
-      runCoins += bonus;
-      totalCoins += runCoins;
-      syncCoins();
-      saveGame();
-      hudUp();
-      // last level?
-      if (currentLevel >= getLevels().length - 1) {
-        gameState = "win";
-        sfxWin();
-        winTimer = 0;
-        speakAndriiForce(ANDRII_WIN);
-      } else {
-        gameState = "levelClear";
-        sfxWin();
-        levelClearTimer = 0;
-        speakAndriiForce(ANDRII_WIN);
-      }
-      addConfetti();
+      gameState = "schoolEnter";
+      schoolEnterTimer = 0;
+      spd = 0;
+      obs = [];
+      bullets = [];
+      playerBullets = [];
+      chaserX = -220;
+      showAndriiBubble("\u0423\u0440\u0430! \u042f \u0434\u0456\u0441\u0442\u0430\u0432\u0441\u044f \u0434\u043e \u0448\u043a\u043e\u043b\u0438!");
       return;
     }
   }
