@@ -929,10 +929,12 @@ function createSecretRoute() {
     ...type,
     offered: false,
     active: false,
+    entering: false,
     completed: false,
     missed: false,
     entranceX: W + 100,
     timer: 0,
+    transitionTimer: 0,
     attempts: 0,
     nextOfferPct: 0.18,
   };
@@ -951,14 +953,14 @@ function tryEnterSecretRoute() {
     return false;
 
   secretRoute.active = true;
+  secretRoute.entering = true;
   secretRoute.timer = 0;
+  secretRoute.transitionTimer = 0;
+  secretRoute.entranceX = LANES[pLane];
   obs = [];
   bullets = [];
   coins = [];
   chaserX = -220;
-  showAndriiBubble(
-    `\u0421\u0435\u043a\u0440\u0435\u0442\u043d\u0438\u0439 \u043c\u0430\u0440\u0448\u0440\u0443\u0442: ${secretRoute.name}!`,
-  );
   return true;
 }
 
@@ -1607,6 +1609,7 @@ function act(c) {
     return;
   }
   if (gameState !== "run") return;
+  if (secretRoute && secretRoute.entering) return;
   if ((c === "ArrowUp" || c === "Space") && pY >= GND - 2) {
     pVY = -16;
     sfxJump();
@@ -1957,7 +1960,7 @@ function addConfetti() {
 }
 
 function drawBG() {
-  if (secretRoute && secretRoute.active) {
+  if (secretRoute && secretRoute.active && !secretRoute.entering) {
     drawSecretRouteBackground();
     return;
   }
@@ -2069,13 +2072,15 @@ function drawSecretRouteEntrance() {
   if (
     !secretRoute ||
     !secretRoute.offered ||
-    secretRoute.active ||
+    (secretRoute.active && !secretRoute.entering) ||
     secretRoute.completed ||
     secretRoute.missed
   )
     return;
 
-  const x = secretRoute.entranceX;
+  const x = secretRoute.entering
+    ? LANES[secretRoute.lane]
+    : secretRoute.entranceX;
   const y = GND;
   const near =
     pLane === secretRoute.lane && Math.abs(x - LANES[pLane]) <= 72;
@@ -2083,11 +2088,47 @@ function drawSecretRouteEntrance() {
   ctx.globalAlpha = Math.max(0.25, Math.min(1, (x + 80) / 150));
   ctx.shadowColor = secretRoute.color;
   ctx.shadowBlur = near ? 22 : 10;
+  ctx.fillStyle = "#343a40";
+  ctx.beginPath();
+  ctx.moveTo(x - 52, y);
+  ctx.lineTo(x - 52, y - 72);
+  ctx.arc(x, y - 72, 52, Math.PI, 0);
+  ctx.lineTo(x + 52, y);
+  ctx.closePath();
+  ctx.fill();
   ctx.strokeStyle = near ? "#ffffff" : secretRoute.color;
-  ctx.lineWidth = near ? 5 : 3;
-  ctx.strokeRect(x - 38, y - 112, 76, 112);
-  ctx.fillStyle = "rgba(8,12,20,0.88)";
-  ctx.fillRect(x - 34, y - 108, 68, 108);
+  ctx.lineWidth = near ? 6 : 4;
+  ctx.stroke();
+  const tunnelGlow = ctx.createRadialGradient(
+    x,
+    y - 58,
+    4,
+    x,
+    y - 58,
+    45,
+  );
+  tunnelGlow.addColorStop(0, "rgba(20,26,35,1)");
+  tunnelGlow.addColorStop(0.65, "rgba(5,8,13,0.98)");
+  tunnelGlow.addColorStop(1, "rgba(0,0,0,1)");
+  ctx.fillStyle = tunnelGlow;
+  ctx.beginPath();
+  ctx.moveTo(x - 42, y);
+  ctx.lineTo(x - 42, y - 69);
+  ctx.arc(x, y - 69, 42, Math.PI, 0);
+  ctx.lineTo(x + 42, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.16)";
+  ctx.lineWidth = 2;
+  for (let ring = 0; ring < 3; ring++) {
+    const inset = 9 + ring * 10;
+    ctx.beginPath();
+    ctx.arc(x, y - 65, 45 - inset, Math.PI, 0);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#1e252c";
+  for (let step = 0; step < 5; step++)
+    ctx.fillRect(x - 34 + step * 4, y - 12 + step * 3, 68 - step * 8, 3);
   ctx.fillStyle = secretRoute.color;
   ctx.beginPath();
   ctx.moveTo(x - 18, y - 70);
@@ -2100,7 +2141,9 @@ function drawSecretRouteEntrance() {
   ctx.font = "bold 10px sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(
-    near
+    secretRoute.entering
+      ? "\u0422\u0423\u041d\u0415\u041b\u042c"
+      : near
       ? "\u25bc \u0423\u0412\u0406\u0419\u0422\u0418"
       : secretRoute.name.toUpperCase(),
     x,
@@ -2110,8 +2153,33 @@ function drawSecretRouteEntrance() {
   ctx.restore();
 }
 
+function drawSecretTunnelForeground() {
+  if (!secretRoute || !secretRoute.entering) return;
+  const x = LANES[secretRoute.lane];
+  const progress = Math.min(secretRoute.transitionTimer / 48, 1);
+  ctx.save();
+  const opening = 150 * (1 - progress * 0.82);
+  const vignette = ctx.createRadialGradient(
+    x,
+    GND - 62,
+    Math.max(8, opening * 0.22),
+    x,
+    GND - 62,
+    Math.max(34, opening),
+  );
+  vignette.addColorStop(0, `rgba(0,0,0,${progress * 0.12})`);
+  vignette.addColorStop(0.62, `rgba(0,0,0,${0.32 + progress * 0.38})`);
+  vignette.addColorStop(1, `rgba(0,0,0,${0.82 + progress * 0.18})`);
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+
+  ctx.fillStyle = `rgba(0,0,0,${Math.max(0, (progress - 0.72) / 0.28)})`;
+  ctx.fillRect(0, 0, W, H);
+}
+
 function drawSecretRouteHUD() {
-  if (!secretRoute || !secretRoute.active) return;
+  if (!secretRoute || !secretRoute.active || secretRoute.entering) return;
   const progress = Math.min(secretRoute.timer / SECRET_ROUTE_DURATION, 1);
   ctx.fillStyle = "rgba(5,8,15,0.76)";
   ctx.fillRect(W / 2 - 132, 30, 264, 36);
@@ -2543,6 +2611,14 @@ function drawPlayer() {
   const sk = getSkin();
   const x = LANES[pLane],
     y = pY;
+  ctx.save();
+  if (secretRoute && secretRoute.entering) {
+    const progress = Math.min(secretRoute.transitionTimer / 48, 1);
+    const scale = 1 - progress * 0.72;
+    ctx.translate(x, y - progress * 70);
+    ctx.scale(scale, scale);
+    ctx.translate(-x, -y);
+  }
   const al = inv > 0 ? (Math.sin(fr * 0.5) > 0 ? 0.3 : 1) : 1;
   ctx.globalAlpha = al;
 
@@ -2952,6 +3028,7 @@ function drawPlayer() {
     drawAndriiWeapon(x, y, false);
   }
 
+  ctx.restore();
   ctx.globalAlpha = 1;
 }
 function drawChaser() {
@@ -4205,18 +4282,32 @@ function update() {
     }
   }
   if (secretRoute && secretRoute.active) {
-    secretRoute.timer++;
-    spd = Math.min(spd, 3.15);
-    if (secretRoute.timer % 56 === 8) {
-      const lane = Math.floor(secretRoute.timer / 56) % 3;
-      coins.push({
-        x: W + 25,
-        lane,
-        y: secretRoute.id === "roofs" && lane === 1 ? GND - 70 : GND,
-        done: false,
-      });
+    if (secretRoute.entering) {
+      secretRoute.transitionTimer++;
+      spd = 0;
+      pVY = 0;
+      pY = GND;
+      if (secretRoute.transitionTimer >= 48) {
+        secretRoute.entering = false;
+        bgOff = 0;
+        showAndriiBubble(
+          `\u0421\u0435\u043a\u0440\u0435\u0442\u043d\u0438\u0439 \u043c\u0430\u0440\u0448\u0440\u0443\u0442: ${secretRoute.name}!`,
+        );
+      }
+    } else {
+      secretRoute.timer++;
+      spd = Math.min(spd, 3.15);
+      if (secretRoute.timer % 56 === 8) {
+        const lane = Math.floor(secretRoute.timer / 56) % 3;
+        coins.push({
+          x: W + 25,
+          lane,
+          y: secretRoute.id === "roofs" && lane === 1 ? GND - 70 : GND,
+          done: false,
+        });
+      }
+      if (secretRoute.timer >= SECRET_ROUTE_DURATION) completeSecretRoute();
     }
-    if (secretRoute.timer >= SECRET_ROUTE_DURATION) completeSecretRoute();
   }
 
   const isKyivFinalBoss =
@@ -4572,6 +4663,7 @@ function loop() {
   drawKyivBoss();
   drawChaser();
   drawPlayer();
+  drawSecretTunnelForeground();
   drawParts();
   drawBullets();
   drawAndriiBubble();
