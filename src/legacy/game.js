@@ -2419,7 +2419,7 @@ function drawFinishSchool(x) {
   const doorX = x + schoolW / 2;
   const doorOpen =
     gameState === "schoolEnter"
-      ? Math.min(Math.max((schoolEnterTimer - 8) / 34, 0), 1)
+      ? Math.min(Math.max((schoolEnterTimer - 88) / 30, 0), 1)
       : 0;
   ctx.fillStyle = "#101419";
   ctx.fillRect(doorX - 20, GND - 45, 40, 45);
@@ -2754,7 +2754,7 @@ function drawPlayer() {
     ctx.translate(-x, -y);
   }
   if (gameState === "schoolEnter") {
-    const progress = Math.min(schoolEnterTimer / 105, 1);
+    const progress = Math.min(Math.max((schoolEnterTimer - 76) / 94, 0), 1);
     const ease = 1 - Math.pow(1 - progress, 3);
     const doorX = finishX + 249;
     const startX = LANES[pLane];
@@ -3413,7 +3413,7 @@ function drawRobotronHead(x, y, pulse, sideways) {
 }
 
 function drawChaser() {
-  if (gameState === "win") return;
+  if (gameState === "win" || gameState === "schoolEnter") return;
   const cx = chaserX,
     cy = GND;
   const lp = Math.sin(fr * 0.32) * 10;
@@ -4793,6 +4793,53 @@ function drawMarichkaProjectScene() {
   ctx.textAlign = "left";
 }
 
+function drawSchoolMarichkaScene() {
+  if (gameState !== "schoolEnter") return;
+  const doorX = finishX + 249;
+  const catchProgress = Math.min(schoolEnterTimer / 52, 1);
+  const catchEase = 1 - Math.pow(1 - catchProgress, 3);
+  const waitX = doorX - 58;
+  let x = -50 + (waitX + 50) * catchEase;
+  let holdingProject = schoolEnterTimer < 72;
+
+  if (schoolEnterTimer >= 76) {
+    const enterProgress = Math.min((schoolEnterTimer - 76) / 94, 1);
+    const enterEase = 1 - Math.pow(1 - enterProgress, 3);
+    x = waitX + (doorX - waitX) * enterEase;
+    const scale = 1 - Math.max(0, enterProgress - 0.46) * 0.7;
+    ctx.save();
+    ctx.translate(x, GND);
+    ctx.scale(scale, scale);
+    ctx.translate(-x, -GND);
+    ctx.globalAlpha =
+      enterProgress > 0.78
+        ? Math.max(0, (1 - enterProgress) / 0.22)
+        : 1;
+    drawStoryMarichka(x, GND, false);
+    ctx.restore();
+  } else {
+    drawStoryMarichka(x, GND, holdingProject);
+  }
+
+  if (schoolEnterTimer >= 22 && schoolEnterTimer < 52) {
+    drawSpeechBox(
+      "Марічка",
+      "Андрію, зачекай! Ти забув свій проєкт.",
+      650,
+      48,
+      "right",
+    );
+  } else if (schoolEnterTimer >= 54 && schoolEnterTimer < 78) {
+    drawSpeechBox(
+      "Андрій",
+      "Дякую, Марічко! Ти мене врятувала.",
+      28,
+      48,
+      "left",
+    );
+  }
+}
+
 function drawTckScene() {
   if (!tckScene) return;
   const f = tckScene.frame;
@@ -4897,7 +4944,11 @@ function update() {
     pY = GND;
     pVY = 0;
     pSlide = false;
-    if (schoolEnterTimer >= 112) completeLevelAfterSchool();
+    if (schoolEnterTimer === 22)
+      speakAndWait("Андрію зачекай ти забув свій проєкт");
+    if (schoolEnterTimer === 54)
+      speakAndWait("Дякую Марічко ти мене врятувала");
+    if (schoolEnterTimer >= 176) completeLevelAfterSchool();
     return;
   }
   if (gameState !== "run") return;
@@ -5325,6 +5376,7 @@ function loop() {
   obs.forEach(drawObs);
   drawKyivBoss();
   drawChaser();
+  drawSchoolMarichkaScene();
   drawPlayer();
   drawSecretTunnelForeground();
   drawParts();
