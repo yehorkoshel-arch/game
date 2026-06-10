@@ -105,7 +105,7 @@ function makeLevels(locIdx){
     sky:palettes[i][0],road:palettes[i][1],
     bldA:palettes[i][2],bldB:palettes[i][3],bldC:palettes[i][4],
     bonusCoins:20+i*15,
-    obsTypes:obs[i],
+    obsTypes:[...obs[i],'scooter'],
   }));
 }
 

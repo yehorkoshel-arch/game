@@ -1831,10 +1831,13 @@ const cv = document.getElementById("gc"),
 function spawnObs() {
   const lv = getLvl();
   const types = lv.obsTypes;
+  const type = types[Math.floor(Math.random() * types.length)];
   obs.push({
     x: W + 30,
     lane: Math.floor(Math.random() * 3),
-    type: types[Math.floor(Math.random() * types.length)],
+    type,
+    vx: type === "scooter" ? 1.8 : 0,
+    wheelPhase: Math.random() * Math.PI * 2,
   });
 }
 function spawnCoin() {
@@ -3426,7 +3429,9 @@ function drawChaser() {
 
 function drawObs(o) {
   const x = o.x;
-  if (o.type === "boss_dancer") {
+  if (o.type === "scooter") {
+    drawScooterRider(o);
+  } else if (o.type === "boss_dancer") {
     const gx = x;
     const gy = GND;
     const phase = fr * 0.18 + (o.dancePhase || 0);
@@ -3876,6 +3881,86 @@ function drawObs(o) {
   }
 }
 
+function drawScooterRider(o) {
+  const x = o.x;
+  const y = GND;
+  const phase = fr * 0.32 + (o.wheelPhase || 0);
+  const bob = Math.sin(phase) * 2;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.24)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 5, 33, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#111820";
+  ctx.lineWidth = 5;
+  for (const wheelX of [x - 21, x + 22]) {
+    ctx.beginPath();
+    ctx.arc(wheelX, y, 9, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = "#8fd7e8";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(wheelX - Math.cos(phase) * 7, y - Math.sin(phase) * 7);
+    ctx.lineTo(wheelX + Math.cos(phase) * 7, y + Math.sin(phase) * 7);
+    ctx.moveTo(wheelX + Math.sin(phase) * 7, y - Math.cos(phase) * 7);
+    ctx.lineTo(wheelX - Math.sin(phase) * 7, y + Math.cos(phase) * 7);
+    ctx.stroke();
+    ctx.strokeStyle = "#111820";
+    ctx.lineWidth = 5;
+  }
+
+  ctx.strokeStyle = "#27c7d9";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - 24, y - 9);
+  ctx.lineTo(x + 25, y - 9);
+  ctx.moveTo(x + 18, y - 9);
+  ctx.lineTo(x + 13, y - 48 + bob);
+  ctx.lineTo(x + 27, y - 48 + bob);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#263238";
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(x - 3, y - 25 + bob);
+  ctx.lineTo(x - 8, y - 8);
+  ctx.moveTo(x + 5, y - 24 + bob);
+  ctx.lineTo(x + 18, y - 8);
+  ctx.stroke();
+
+  ctx.fillStyle = "#f5b942";
+  ctx.beginPath();
+  ctx.roundRect
+    ? ctx.roundRect(x - 12, y - 59 + bob, 25, 34, 6)
+    : ctx.fillRect(x - 12, y - 59 + bob, 25, 34);
+  ctx.fill();
+  ctx.fillStyle = "#1f5b8f";
+  ctx.fillRect(x - 12, y - 37 + bob, 25, 7);
+
+  ctx.strokeStyle = "#d7a478";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(x + 9, y - 52 + bob);
+  ctx.lineTo(x + 23, y - 48 + bob);
+  ctx.stroke();
+
+  ctx.fillStyle = "#d7a478";
+  ctx.beginPath();
+  ctx.arc(x, y - 69 + bob, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#25364a";
+  ctx.beginPath();
+  ctx.arc(x, y - 73 + bob, 12, Math.PI, 0);
+  ctx.fill();
+  ctx.fillRect(x - 13, y - 75 + bob, 26, 4);
+  ctx.fillStyle = "#68e0ff";
+  ctx.fillRect(x - 8, y - 70 + bob, 16, 3);
+  ctx.restore();
+}
+
 function drawCoin(c) {
   if (c.done) return;
   const x = LANES[c.lane],
@@ -3994,6 +4079,8 @@ function pRect() {
   return { x: x - 12, y: pY - 44, w: 24, h: 68 };
 }
 function oRect(o) {
+  if (o.type === "scooter")
+    return { x: o.x - 30, y: GND - 48, w: 60, h: 55 };
   if (o.type === "kiosk") return { x: o.x - 24, y: GND - 46, w: 48, h: 46 };
   if (o.type === "cop") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
   if (o.type === "tck") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
@@ -4675,7 +4762,7 @@ function update() {
   )
     spawnCoin();
 
-  obs.forEach((o) => (o.x -= spd));
+  obs.forEach((o) => (o.x -= spd + (o.vx || 0)));
   coins.forEach((c) => (c.x -= spd));
 
   // ТЦК стрілянина — лише Львів, рівень >= 2 (index >= 2)
@@ -4820,6 +4907,7 @@ function update() {
     if (o.lane !== pLane) return;
     if (pSlide && o.type === "bollard") return;
     if (pY < GND - 50 && o.type === "kiosk") return;
+    if (pY < GND - 48 && o.type === "scooter") return;
     if (hit(pr, oRect(o)) && inv === 0) {
       lives--;
       inv = 75;
