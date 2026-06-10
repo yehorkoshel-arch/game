@@ -29,6 +29,24 @@ let progressKyiv = save.progressKyiv || 0,
   progressLviv = save.progressLviv || 0; // скільки рівнів пройдено у кожній локації
 const DAILY_TASK_TARGET = 500;
 const DAILY_TASK_REWARD = 100;
+const QUEST_REWARD = 100;
+const QUESTS = [
+  { id: "distance", title: "Пробіжи 2 000 метрів", target: 2000, unit: "м" },
+  { id: "coins", title: "Збери 100 монет", target: 100, unit: "₴" },
+  { id: "jumps", title: "Зроби 50 стрибків", target: 50, unit: "" },
+  { id: "slides", title: "Зроби 30 слайдів", target: 30, unit: "" },
+  { id: "shots", title: "Зроби 75 пострілів", target: 75, unit: "" },
+  { id: "enemies", title: "Переможи 25 ворогів", target: 25, unit: "" },
+  { id: "levels", title: "Пройди 5 рівнів", target: 5, unit: "" },
+  { id: "routes", title: "Пройди 3 секретні тунелі", target: 3, unit: "" },
+  { id: "bosses", title: "Переможи боса", target: 1, unit: "" },
+  { id: "finishes", title: "Дістанься фінішу 10 разів", target: 10, unit: "" },
+];
+const savedQuestStats = save.questStats || {};
+let questStats = Object.fromEntries(
+  QUESTS.map((quest) => [quest.id, Number(savedQuestStats[quest.id]) || 0]),
+);
+let questClaimed = save.questClaimed || {};
 function getLocalDateKey() {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -73,6 +91,8 @@ function saveGame() {
     dailyTaskDate,
     dailyTaskProgress,
     dailyTaskClaimed,
+    questStats,
+    questClaimed,
   });
 }
 
@@ -968,6 +988,7 @@ function completeSecretRoute() {
   if (!secretRoute || !secretRoute.active) return;
   secretRoute.active = false;
   secretRoute.completed = true;
+  addQuestProgress("routes");
   runCoins += SECRET_ROUTE_REWARD;
   totalCoins += SECRET_ROUTE_REWARD;
   addParts(LANES[pLane], pY - 35, secretRoute.color);
@@ -1054,6 +1075,60 @@ function buildDailyTask() {
   const claimButton = document.getElementById("dailyTaskClaim");
   claimButton.textContent = dailyTaskClaimed ? ui.claimed : ui.claim;
   claimButton.disabled = !complete || dailyTaskClaimed;
+}
+function addQuestProgress(id, amount = 1) {
+  const quest = QUESTS.find((item) => item.id === id);
+  if (!quest || questClaimed[id]) return;
+  questStats[id] = Math.min(quest.target, (Number(questStats[id]) || 0) + amount);
+  updateQuestReadyBadge();
+}
+function getReadyQuestCount() {
+  return QUESTS.filter(
+    (quest) =>
+      !questClaimed[quest.id] &&
+      (Number(questStats[quest.id]) || 0) >= quest.target,
+  ).length;
+}
+function updateQuestReadyBadge() {
+  const badge = document.getElementById("questReadyBadge");
+  if (!badge) return;
+  const count = getReadyQuestCount();
+  badge.textContent = String(count);
+  badge.style.display = count > 0 ? "" : "none";
+}
+function buildQuests() {
+  const list = document.getElementById("questList");
+  if (!list) return;
+  list.innerHTML = "";
+  QUESTS.forEach((quest, index) => {
+    const progress = Math.min(
+      quest.target,
+      Math.floor(Number(questStats[quest.id]) || 0),
+    );
+    const complete = progress >= quest.target;
+    const claimed = Boolean(questClaimed[quest.id]);
+    const item = document.createElement("article");
+    item.className =
+      "quest-item" + (claimed ? " claimed" : complete ? " complete" : "");
+    const unit = quest.unit ? ` ${quest.unit}` : "";
+    item.innerHTML = `
+      <div class="quest-item-head">
+        <div class="quest-item-title">${index + 1}. ${quest.title}</div>
+        <div class="quest-item-count">${progress} / ${quest.target}${unit}</div>
+      </div>
+      <div class="quest-progress">
+        <div class="quest-progress-fill" style="width:${(progress / quest.target) * 100}%"></div>
+      </div>
+      <div class="quest-item-footer">
+        <span class="quest-reward">+${QUEST_REWARD} ₴</span>
+        <button class="quest-claim" data-quest-id="${quest.id}" type="button" ${!complete || claimed ? "disabled" : ""}>
+          ${claimed ? "Отримано" : "Забрати"}
+        </button>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+  updateQuestReadyBadge();
 }
 window.addEventListener("load", () => setTimeout(focusApp, 100));
 function unlockGameAudio() {
@@ -1182,7 +1257,11 @@ document.querySelectorAll(".lbtn").forEach((b) => {
 
 function showScreen(id) {
   setActiveScreen(id);
-  if (id === "sMenu") buildDailyTask();
+  if (id === "sMenu") {
+    buildDailyTask();
+    updateQuestReadyBadge();
+  }
+  if (id === "sQuests") buildQuests();
   if (settingSound) {
     if (id === "sMenu" || id === "sGame") {
       startMusic();
@@ -1482,6 +1561,32 @@ document.getElementById("btnShopOpen").onclick = () => {
   syncCoins();
   showScreen("sShop");
 };
+document.getElementById("btnQuestsOpen").onclick = () => {
+  buildQuests();
+  showScreen("sQuests");
+};
+document.getElementById("btnBackQuests").onclick = () => {
+  saveGame();
+  syncCoins();
+  showScreen("sMenu");
+};
+document.getElementById("questList").onclick = (event) => {
+  const button = event.target.closest(".quest-claim");
+  if (!button) return;
+  const quest = QUESTS.find((item) => item.id === button.dataset.questId);
+  if (
+    !quest ||
+    questClaimed[quest.id] ||
+    (Number(questStats[quest.id]) || 0) < quest.target
+  )
+    return;
+  questClaimed[quest.id] = true;
+  totalCoins += QUEST_REWARD;
+  syncCoins();
+  saveGame();
+  buildQuests();
+  sfxCoin();
+};
 document.getElementById("btnBackShop").onclick = () => {
   showScreen("sMenu");
   syncCoins();
@@ -1612,12 +1717,14 @@ function act(c) {
   if (secretRoute && secretRoute.entering) return;
   if ((c === "ArrowUp" || c === "Space") && pY >= GND - 2) {
     pVY = -16;
+    addQuestProgress("jumps");
     sfxJump();
   }
   if (c === "ArrowDown") {
     if (tryEnterSecretRoute()) return;
     pSlide = true;
     slideT = 44;
+    addQuestProgress("slides");
   }
   if (c === "ArrowLeft" && pLane > 0) {
     pLane--;
@@ -1633,6 +1740,7 @@ function act(c) {
 function fireAndriiWeapon() {
   const weapon = getAndriiWeapon(currentLevel, currentLocation);
   if (gameState !== "run" || !weapon || fireCooldown > 0) return;
+  addQuestProgress("shots");
   pSlide = true;
   slideT = Math.max(slideT, 18);
   const x = LANES[pLane] + 24;
@@ -4245,6 +4353,7 @@ function update() {
   score = Math.round((fr * spd) / 10);
   const distanceStep = spd / 60;
   totalDist += distanceStep;
+  addQuestProgress("distance", distanceStep);
   dailyTaskProgress = Math.min(
     DAILY_TASK_TARGET,
     dailyTaskProgress + distanceStep,
@@ -4387,6 +4496,8 @@ function update() {
     finishX -= spd;
     if (finishX < W / 2 && totalDist >= FDIST) {
       const bonus = lv.bonusCoins;
+      addQuestProgress("levels");
+      addQuestProgress("finishes");
       runCoins += bonus;
       totalCoins += runCoins;
       syncCoins();
@@ -4537,6 +4648,7 @@ function update() {
         bullets = [];
         addConfetti();
         addConfetti();
+        addQuestProgress("bosses");
         totalCoins += 250;
         syncCoins();
         saveGame();
@@ -4556,6 +4668,7 @@ function update() {
           : { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
       if (!hit(br, oRect(o))) return true;
       hitTarget = true;
+      if (isEnemy) addQuestProgress("enemies");
       addParts(o.x, GND - 30, isLvivBarrier ? "#c8860a" : "#ffd700");
       if (isLvivBarrier) sfxHit();
       return false;
@@ -4629,6 +4742,7 @@ function update() {
         1,
       );
       const mult = dangerPct > 0.45 ? 2 : 1;
+      addQuestProgress("coins", mult);
       runCoins += mult;
       totalCoins += mult;
       c.done = true;

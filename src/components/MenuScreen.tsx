@@ -21,6 +21,10 @@ export function MenuScreen() {
       <button className="gear-btn" id="btnSettingsOpen" title="Налаштування" type="button">
         ⚙
       </button>
+      <button className="quest-icon-btn" id="btnQuestsOpen" title="Квести" type="button">
+        ✓
+        <span id="questReadyBadge" className="quest-ready-badge">0</span>
+      </button>
       <div className="lang-bar">
         <button className="lbtn active" data-lang="uk" type="button">
           UA
