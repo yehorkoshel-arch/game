@@ -2133,6 +2133,7 @@ function drawSecretRouteHUD() {
 function drawFinishLine() {
   if (!finishActive) return;
   const fx = finishX;
+  drawFinishSchool(fx + 142);
   ctx.fillStyle = "#fff";
   ctx.fillRect(fx - 3, GND - 120, 6, 120);
   ctx.fillStyle = "#fff";
@@ -2164,6 +2165,89 @@ function drawFinishLine() {
     ctx.fillStyle = flagColors[1];
     ctx.fillRect(px + 2, py - 20, 18, 8);
   }
+}
+
+function drawFinishSchool(x) {
+  const isLviv = currentLocation === 1;
+  const schoolY = GND - 154;
+  const schoolW = 214;
+  const schoolH = 154;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.24)";
+  ctx.beginPath();
+  ctx.ellipse(x + schoolW / 2, GND + 5, 122, 13, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = isLviv ? "#8f4b36" : "#e4d8b8";
+  ctx.fillRect(x, schoolY, schoolW, schoolH);
+  ctx.fillStyle = isLviv ? "#713727" : "#c7b68c";
+  ctx.fillRect(x - 14, schoolY + 38, 34, schoolH - 38);
+  ctx.fillRect(x + schoolW - 20, schoolY + 38, 34, schoolH - 38);
+
+  ctx.fillStyle = isLviv ? "#4b2923" : "#6f785e";
+  ctx.beginPath();
+  ctx.moveTo(x - 10, schoolY + 3);
+  ctx.lineTo(x + schoolW / 2, schoolY - 42);
+  ctx.lineTo(x + schoolW + 10, schoolY + 3);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = isLviv ? "#d7b36a" : "#ffffff";
+  ctx.fillRect(x + 24, schoolY + 18, schoolW - 48, 29);
+  ctx.fillStyle = isLviv ? "#532d24" : "#234f78";
+  ctx.font = "bold 15px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(
+    isLviv
+      ? "\u041b\u042c\u0412\u0406\u0412\u0421\u042c\u041a\u0410 \u0428\u041a\u041e\u041b\u0410"
+      : "\u041a\u0418\u0407\u0412\u0421\u042c\u041a\u0410 \u0428\u041a\u041e\u041b\u0410",
+    x + schoolW / 2,
+    schoolY + 38,
+  );
+
+  const windowColor = isLviv ? "#83b8c9" : "#78acd0";
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 5; col++) {
+      const wx = x + 22 + col * 38;
+      const wy = schoolY + 58 + row * 37;
+      ctx.fillStyle = "#f1d36a";
+      ctx.fillRect(wx - 2, wy - 2, 25, 25);
+      ctx.fillStyle = windowColor;
+      ctx.fillRect(wx, wy, 21, 21);
+      ctx.strokeStyle = "rgba(255,255,255,0.72)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(wx + 10, wy);
+      ctx.lineTo(wx + 10, wy + 21);
+      ctx.moveTo(wx, wy + 10);
+      ctx.lineTo(wx + 21, wy + 10);
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = isLviv ? "#40251f" : "#315778";
+  ctx.fillRect(x + schoolW / 2 - 18, GND - 42, 36, 42);
+  ctx.fillStyle = "#f3c84d";
+  ctx.beginPath();
+  ctx.arc(x + schoolW / 2 + 10, GND - 21, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  const flagX = x + schoolW - 32;
+  ctx.fillStyle = "#777";
+  ctx.fillRect(flagX, schoolY - 38, 3, 39);
+  ctx.fillStyle = "#0057b7";
+  ctx.fillRect(flagX + 3, schoolY - 36, 30, 10);
+  ctx.fillStyle = "#ffd700";
+  ctx.fillRect(flagX + 3, schoolY - 26, 30, 10);
+
+  ctx.fillStyle = "#3d7a39";
+  ctx.beginPath();
+  ctx.arc(x + 7, GND - 14, 21, 0, Math.PI * 2);
+  ctx.arc(x + schoolW - 5, GND - 14, 21, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.textAlign = "left";
+  ctx.restore();
 }
 
 function drawKyivBoss() {
