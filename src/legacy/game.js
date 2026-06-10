@@ -3695,7 +3695,7 @@ function speakAndriiForce(lines) {
   const text = lines[Math.floor(Math.random() * lines.length)];
   bubbleText = text;
   bubbleTimer = 260;
-  speakAndWait(text, () => {});
+  speakAndWait(text);
 }
 function speakSceneLine(line) {
   cancelSpeech();
@@ -3710,7 +3710,7 @@ function speakSceneLine(line) {
 function _doSpeakAndrii(lines) {
   const text = lines[Math.floor(Math.random() * lines.length)];
   showAndriiBubble(text);
-  speakAndWait(text, () => {});
+  speakAndWait(text);
 }
 
 // Bubble над гравцем
@@ -4119,6 +4119,7 @@ function advancePhase() {
 
 // Говоримо фразу голосом — повертає Promise, що резолвиться лише по закінченню мовлення
 function speakAndWait(text, voiceLanguage = "uk") {
+  if (typeof voiceLanguage !== "string") voiceLanguage = "uk";
   const cleanText = normalizeSpeechText(
     text
       .replace(/Роботрон-9000/g, "Роботрон девʼять тисяч")
