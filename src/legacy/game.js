@@ -28,6 +28,10 @@ let currentLocation = save.currentLocation || 0; // 0=Київ, 1=Львів
 let progressKyiv = save.progressKyiv || 0,
   progressLviv = save.progressLviv || 0; // скільки рівнів пройдено у кожній локації
 let marichkaProjectSceneSeen = Boolean(save.marichkaProjectSceneSeen);
+let tckSceneSeenLevels =
+  save.tckSceneSeenLevels && typeof save.tckSceneSeenLevels === "object"
+    ? save.tckSceneSeenLevels
+    : {};
 const QUEST_REWARD = 100;
 const QUESTS = [
   { id: "distance", title: "Пробіжи 2 000 метрів", target: 2000, unit: "м" },
@@ -70,6 +74,7 @@ function saveGame() {
     progressKyiv,
     progressLviv,
     marichkaProjectSceneSeen,
+    tckSceneSeenLevels,
     questStats,
     questClaimed,
   });
@@ -882,8 +887,7 @@ let finishX = 9999,
   schoolExitTimer = 0,
   winTimer = 0,
   levelClearTimer = 0;
-let tckSceneSeenLevels = {},
-  tckScene = null;
+let tckScene = null;
 const W = 680,
   H = 420,
   GND = 270,
@@ -897,6 +901,10 @@ function getAndriiWeapon(level = currentLevel, location = currentLocation) {
   if (locationIndex !== 1) return null;
   if (levelIndex >= 2) return "minigun";
   return "machinegun";
+}
+
+function getFinishDistance() {
+  return Number(settingDist) || FINISH_DIST;
 }
 
 const SECRET_ROUTE_TYPES = [
@@ -973,7 +981,6 @@ function completeSecretRoute() {
   secretRoute.completed = true;
   addQuestProgress("routes");
   runCoins += SECRET_ROUTE_REWARD;
-  totalCoins += SECRET_ROUTE_REWARD;
   addParts(LANES[pLane], pY - 35, secretRoute.color);
   sfxCoin();
   showAndriiBubble(
@@ -1859,8 +1866,7 @@ function hudUp() {
   document.getElementById("hScore").textContent = score;
   document.getElementById("hCoins").textContent = runCoins;
   document.getElementById("hudPts").textContent = t().pts;
-  const lv = getLvl();
-  const rem = Math.max(0, Math.round(lv.dist - totalDist));
+  const rem = Math.max(0, Math.round(getFinishDistance() - totalDist));
   document.getElementById("hDist").textContent =
     rem > 0 ? rem + " " + t().dist : "";
   const lvNames = getLevelNames(currentLocation, lang);
@@ -4511,10 +4517,10 @@ function beginStoryScene(kind, sceneKey = null) {
 function finishTckScene() {
   if (tckScene?.kind === "marichka_project") {
     marichkaProjectSceneSeen = true;
-    saveGame();
   } else if (tckScene && tckScene.sceneKey) {
     tckSceneSeenLevels[tckScene.sceneKey] = true;
   }
+  saveGame();
   tckScene = null;
   startLevel();
 }
@@ -4986,7 +4992,7 @@ function update() {
   if (gameState !== "run") return;
   fr++;
   const lv = getLvl();
-  const FDIST = lv.dist;
+  const FDIST = getFinishDistance();
   const diffMult = { easy: 0.75, normal: 1.0, hard: 1.4 }[settingDiff] || 1.0;
   const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult;
   const maxS = lv.maxSpd * diffMult;
@@ -5205,8 +5211,8 @@ function update() {
   obs.forEach((o) => (o.x -= spd + (o.vx || 0)));
   coins.forEach((c) => (c.x -= spd));
 
-  // ТЦК стрілянина — лише Львів, рівень >= 2 (index >= 2)
-  if (currentLocation === 1 && currentLevel >= 1) {
+  // ТЦК стріляють у Львові з третього рівня, коли їхня зброя вже видима.
+  if (currentLocation === 1 && currentLevel >= 2) {
     obs.forEach((o) => {
       if (o.type !== "tck") return;
       if (!o.shotCooldown) o.shotCooldown = 0;
@@ -5386,7 +5392,6 @@ function update() {
       const mult = dangerPct > 0.45 ? 2 : 1;
       addQuestProgress("coins", mult);
       runCoins += mult;
-      totalCoins += mult;
       c.done = true;
       sfxCoin();
       addParts(LANES[c.lane], c.y - 14, "#ffd700");
