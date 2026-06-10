@@ -28,6 +28,7 @@ for (let i = 2; i < process.argv.length; i++) {
 const voice = String(args.get("voice") || process.env.VOICE || DEFAULT_VOICE);
 const lang = String(args.get("lang") || process.env.LANG_CODE || DEFAULT_LANG);
 const group = args.get("group") ? String(args.get("group")) : "";
+const groupPrefix = args.get("group-prefix") ? String(args.get("group-prefix")) : "";
 const ids = args.get("id")
   ? String(args.get("id"))
       .split(",")
@@ -83,6 +84,7 @@ function toManifest(lines) {
 const allLines = JSON.parse(await readFile(LINES_PATH, "utf8"));
 let lines = allLines;
 if (group) lines = lines.filter((line) => line.group === group);
+if (groupPrefix) lines = lines.filter((line) => line.group.startsWith(groupPrefix));
 if (ids.length > 0) lines = lines.filter((line) => ids.includes(line.id));
 if (limit > 0) lines = lines.slice(0, limit);
 
