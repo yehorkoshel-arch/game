@@ -32,8 +32,8 @@ export const VOICE_CLIPS = {
   "Ура Перемога Я зробив це": "/game/audio/voice/andrii_win_01.mp3",
   "Ура Дійшов до фінішу Слава Україні": "/game/audio/voice/andrii_win_02.mp3",
   "Перемога Ніхто мене не зупинить": "/game/audio/voice/andrii_win_03.mp3",
-  "От лишенько вони вже близько Що робити": "/game/audio/voice/story_tck_01.mp3",
+  "От лишенько чорна машина Вони вже близько Що робити": "/game/audio/voice/story_tck_01.mp3",
   "Підпиши документи хлопче": "/game/audio/voice/story_tck_02.mp3",
   "Я не буду підписувати ваші документи": "/game/audio/voice/story_tck_03.mp3",
-  "А ну ти хлопче зараз підеш до нас А ну іди сюди": "/game/audio/voice/story_tck_04.mp3",
+  "А ну ти хлопче зараз підеш до нас Іди сюди": "/game/audio/voice/story_tck_04.mp3",
 };
