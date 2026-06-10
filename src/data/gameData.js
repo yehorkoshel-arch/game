@@ -47,10 +47,11 @@ export const SKINS_BASE=[
   },
   {
     id:'cossack', price:180,
-    // Козак: червона вишиванка, чорні шаровари, оселедець
-    shirt:'#b71c1c', shorts:'#111111', skin:'#f0d0a8', hair:'#8b4513',
-    shoes:'#222', scarf:null, mask:null, hat:'#111111',
-    body:'#c0392b', head:'#f0c080', scarfCol:'#1abc9c'
+    // Козак: зелений жупан, червоний плащ, жовтий пояс, оселедець і шабля
+    shirt:'#244d2c', shorts:'#17261b', skin:'#c98252', hair:'#35241c',
+    shoes:'#17130f', scarf:'#d2ad35', mask:null, hat:null,
+    cape:'#a82320', trim:'#d8b34a',
+    body:'#244d2c', head:'#c98252', scarfCol:'#d2ad35'
   },
   {
     id:'courier', name:'Кур’єр', price:240,

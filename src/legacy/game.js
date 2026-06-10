@@ -1018,6 +1018,16 @@ function drawSkinPreview(canvas, sk) {
     c.lineWidth = 2;
     c.stroke();
   }
+  if (sk.id === "cossack") {
+    c.fillStyle = sk.cape;
+    c.beginPath();
+    c.moveTo(cx - 15, by - 45);
+    c.lineTo(cx + 15, by - 45);
+    c.lineTo(cx + 20, by - 9);
+    c.lineTo(cx - 20, by - 9);
+    c.closePath();
+    c.fill();
+  }
 
   // shorts
   c.fillStyle = sk.shorts || "#222";
@@ -1032,6 +1042,22 @@ function drawSkinPreview(canvas, sk) {
     c.rect(cx - 13, by - 46, 26, 24);
   }
   c.fill();
+
+  if (sk.id === "cossack") {
+    c.fillStyle = sk.trim;
+    for (let row = 0; row < 4; row++) {
+      c.fillRect(cx - 8, by - 42 + row * 5, 16, 1.5);
+    }
+    c.fillStyle = "#667264";
+    c.fillRect(cx - 13, by - 46, 3, 24);
+    c.fillRect(cx + 10, by - 46, 3, 24);
+    c.strokeStyle = "#c8d3df";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(cx - 16, by - 31);
+    c.lineTo(cx - 26, by - 12);
+    c.stroke();
+  }
 
   if (sk.id === "hetman_gold") {
     c.fillStyle = sk.armor;
@@ -1089,19 +1115,26 @@ function drawSkinPreview(canvas, sk) {
     c.fillStyle = "#ff3300";
     c.fillRect(cx - 7, by - 60, 14, 3);
   } else if (sk.id === "cossack") {
-    // оселедець (mohawk)
     c.fillStyle = sk.hair || "#8b4513";
     c.beginPath();
-    c.arc(cx, by - 68, 5, 0, Math.PI * 2);
+    c.arc(cx - 3, by - 68, 5, 0, Math.PI * 2);
     c.fill();
-    c.fillRect(cx - 3, by - 75, 6, 10);
-    // вуса
-    c.fillStyle = "#5d3a1a";
-    c.fillRect(cx - 8, by - 54, 7, 2);
-    c.fillRect(cx + 1, by - 54, 7, 2);
-    // шапка (смужка)
-    c.fillStyle = sk.hat || "#111";
-    c.fillRect(cx - 12, by - 68, 24, 5);
+    c.beginPath();
+    c.moveTo(cx - 2, by - 72);
+    c.quadraticCurveTo(cx + 9, by - 78, cx + 14, by - 70);
+    c.strokeStyle = sk.hair;
+    c.lineWidth = 4;
+    c.stroke();
+    c.fillStyle = sk.hair;
+    c.fillRect(cx - 10, by - 55, 9, 3);
+    c.fillRect(cx + 1, by - 55, 9, 3);
+    c.strokeStyle = "#704528";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(cx + 8, by - 54);
+    c.lineTo(cx + 17, by - 57);
+    c.lineTo(cx + 20, by - 55);
+    c.stroke();
   } else if (sk.id === "courier") {
     c.fillStyle = sk.hat;
     c.fillRect(cx - 12, by - 68, 24, 7);
@@ -1855,6 +1888,16 @@ function drawPlayer() {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
+    if (sk.id === "cossack") {
+      ctx.fillStyle = sk.cape;
+      ctx.beginPath();
+      ctx.moveTo(x - 32, y - 18);
+      ctx.lineTo(x + 13, y - 18);
+      ctx.lineTo(x + 28, y + 3);
+      ctx.lineTo(x - 27, y + 4);
+      ctx.closePath();
+      ctx.fill();
+    }
     // body horizontal
     ctx.fillStyle = sk.shirt;
     ctx.beginPath();
@@ -1879,6 +1922,24 @@ function drawPlayer() {
       ctx.lineTo(x + 38, y - 13);
       ctx.stroke();
     }
+    if (sk.id === "cossack") {
+      ctx.fillStyle = sk.trim;
+      for (let row = 0; row < 3; row++) {
+        ctx.fillRect(x - 13 + row * 2, y - 11 + row * 4, 22, 2);
+      }
+      ctx.strokeStyle = "#d9e4eb";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 8, y - 3);
+      ctx.lineTo(x + 38, y - 16);
+      ctx.stroke();
+      ctx.strokeStyle = "#c79a36";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 4, y - 4);
+      ctx.lineTo(x + 12, y - 1);
+      ctx.stroke();
+    }
     // legs
     ctx.fillStyle = sk.shorts || "#222";
     ctx.fillRect(x + 4, y - 8, 26, 12);
@@ -1899,11 +1960,23 @@ function drawPlayer() {
     } else if (sk.id === "cossack") {
       ctx.fillStyle = sk.hair;
       ctx.beginPath();
-      ctx.arc(x - 18, y - 25, 5, 0, Math.PI * 2);
+      ctx.arc(x - 21, y - 25, 5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#5d3a1a";
-      ctx.fillRect(x - 26, y - 16, 7, 2);
-      ctx.fillRect(x - 19, y - 16, 7, 2);
+      ctx.strokeStyle = sk.hair;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(x - 20, y - 29);
+      ctx.quadraticCurveTo(x - 8, y - 35, x - 3, y - 27);
+      ctx.stroke();
+      ctx.fillStyle = sk.hair;
+      ctx.fillRect(x - 28, y - 16, 9, 3);
+      ctx.fillRect(x - 18, y - 16, 9, 3);
+      ctx.strokeStyle = "#704528";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y - 15);
+      ctx.lineTo(x, y - 18);
+      ctx.stroke();
     } else if (sk.id === "courier") {
       ctx.fillStyle = sk.hat;
       ctx.fillRect(x - 29, y - 27, 24, 7);
@@ -1971,6 +2044,20 @@ function drawPlayer() {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
+    if (sk.id === "cossack") {
+      const capeSwing = Math.sin(fr * 0.18) * 5;
+      ctx.fillStyle = sk.cape;
+      ctx.beginPath();
+      ctx.moveTo(x - 19, y - 45);
+      ctx.lineTo(x + 19, y - 45);
+      ctx.lineTo(x + 25 + capeSwing, y - 4);
+      ctx.lineTo(x - 22 + capeSwing, y - 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#65706b";
+      ctx.fillRect(x - 17, y - 44, 4, 36);
+      ctx.fillRect(x + 13, y - 44, 4, 36);
+    }
 
     // shirt
     ctx.fillStyle = sk.shirt;
@@ -2008,6 +2095,29 @@ function drawPlayer() {
       ctx.beginPath();
       ctx.moveTo(x + 27, y + 3);
       ctx.lineTo(x + 30, y + 8);
+      ctx.stroke();
+    }
+    if (sk.id === "cossack") {
+      ctx.fillStyle = sk.trim;
+      for (let row = 0; row < 5; row++) {
+        ctx.fillRect(x - 9, y - 39 + row * 5, 18, 2);
+      }
+      ctx.fillStyle = "#b9c2c5";
+      ctx.beginPath();
+      ctx.arc(x, y - 25, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#dce8ef";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x - 14, y - 26);
+      ctx.lineTo(x - 30, y - 55);
+      ctx.lineTo(x - 42, y - 49);
+      ctx.stroke();
+      ctx.strokeStyle = "#c99b38";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x - 28, y - 53);
+      ctx.lineTo(x - 35, y - 58);
       ctx.stroke();
     }
 
@@ -2067,22 +2177,30 @@ function drawPlayer() {
       ctx.lineTo(x + 18, y - 20 - run * 0.2);
       ctx.stroke();
     } else if (sk.id === "cossack") {
-      // оселедець
       ctx.fillStyle = sk.hair;
       ctx.beginPath();
-      ctx.arc(x, y - 64, 5, 0, Math.PI * 2);
+      ctx.arc(x - 3, y - 65, 5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillRect(x - 3, y - 72, 6, 12);
-      // шапка (смужка)
-      ctx.fillStyle = sk.hat || "#111";
-      ctx.fillRect(x - 13, y - 65, 26, 5);
-      // вуса
-      ctx.fillStyle = "#5d3a1a";
-      ctx.fillRect(x - 9, y - 52, 8, 2);
-      ctx.fillRect(x + 1, y - 52, 8, 2);
-      // вишивка на сорочці
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
-      ctx.fillRect(x - 3, y - 40, 6, 10);
+      ctx.strokeStyle = sk.hair;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(x - 2, y - 69);
+      ctx.quadraticCurveTo(x + 12, y - 78, x + 19, y - 67);
+      ctx.stroke();
+      ctx.fillStyle = sk.hair;
+      ctx.fillRect(x - 11, y - 53, 10, 3);
+      ctx.fillRect(x + 1, y - 53, 10, 3);
+      ctx.strokeStyle = "#704528";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(x + 9, y - 52);
+      ctx.lineTo(x + 20, y - 56);
+      ctx.lineTo(x + 24, y - 53);
+      ctx.stroke();
+      ctx.fillStyle = "#81502e";
+      ctx.beginPath();
+      ctx.ellipse(x + 25, y - 54, 5, 3, -0.2, 0, Math.PI * 2);
+      ctx.fill();
     } else if (sk.id === "courier") {
       ctx.fillStyle = sk.hat;
       ctx.fillRect(x - 13, y - 68, 26, 7);
