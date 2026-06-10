@@ -5274,7 +5274,7 @@ function update() {
       const isLvivObject =
         currentLocation === 1 &&
         (b.type === "minigun"
-          ? o.type !== "scooter" && o.type !== "boss_dancer"
+          ? o.type !== "boss_dancer"
           : o.type === "kiosk" || o.type === "bollard");
       if (hitTarget || b.lane !== o.lane || (!isEnemy && !isLvivObject)) return true;
       const br =
