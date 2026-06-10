@@ -868,7 +868,10 @@ let bossActive = false,
   bossSummonCooldown = 0,
   bossSpecialCooldown = 0,
   bossFlash = 0;
+let secretRoute = null;
 const BOSS_MAX_HP = 18;
+const SECRET_ROUTE_DURATION = 520;
+const SECRET_ROUTE_REWARD = 30;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
@@ -891,6 +894,86 @@ function getAndriiWeapon(level = currentLevel, location = currentLocation) {
   if (locationIndex !== 1) return null;
   if (levelIndex >= 2) return "minigun";
   return "machinegun";
+}
+
+const SECRET_ROUTE_TYPES = [
+  {
+    id: "metro",
+    name: "\u041c\u0435\u0442\u0440\u043e",
+    hint: "\u0421\u0435\u043a\u0440\u0435\u0442\u043d\u0438\u0439 \u0432\u0445\u0456\u0434 \u0443 \u043c\u0435\u0442\u0440\u043e",
+    lane: 0,
+    color: "#2f9b68",
+  },
+  {
+    id: "roofs",
+    name: "\u0414\u0430\u0445\u0438",
+    hint: "\u041f\u043e\u0436\u0435\u0436\u043d\u0430 \u0434\u0440\u0430\u0431\u0438\u043d\u0430 \u043d\u0430 \u0434\u0430\u0445\u0438",
+    lane: 2,
+    color: "#e68a3a",
+  },
+  {
+    id: "underpass",
+    name: "\u041f\u0456\u0434\u0437\u0435\u043c\u043d\u0438\u0439 \u043f\u0435\u0440\u0435\u0445\u0456\u0434",
+    hint: "\u0422\u0430\u0454\u043c\u043d\u0438\u0439 \u043f\u0456\u0434\u0437\u0435\u043c\u043d\u0438\u0439 \u043f\u0435\u0440\u0435\u0445\u0456\u0434",
+    lane: 1,
+    color: "#8d72d9",
+  },
+];
+
+function createSecretRoute() {
+  const type =
+    SECRET_ROUTE_TYPES[
+      (currentLevel + currentLocation * 2) % SECRET_ROUTE_TYPES.length
+    ];
+  return {
+    ...type,
+    offered: false,
+    active: false,
+    completed: false,
+    missed: false,
+    entranceX: W + 100,
+    timer: 0,
+  };
+}
+
+function tryEnterSecretRoute() {
+  if (
+    !secretRoute ||
+    !secretRoute.offered ||
+    secretRoute.active ||
+    secretRoute.completed ||
+    secretRoute.missed ||
+    pLane !== secretRoute.lane ||
+    Math.abs(secretRoute.entranceX - LANES[pLane]) > 72
+  )
+    return false;
+
+  secretRoute.active = true;
+  secretRoute.timer = 0;
+  obs = [];
+  bullets = [];
+  coins = [];
+  chaserX = -220;
+  showAndriiBubble(
+    `\u0421\u0435\u043a\u0440\u0435\u0442\u043d\u0438\u0439 \u043c\u0430\u0440\u0448\u0440\u0443\u0442: ${secretRoute.name}!`,
+  );
+  return true;
+}
+
+function completeSecretRoute() {
+  if (!secretRoute || !secretRoute.active) return;
+  secretRoute.active = false;
+  secretRoute.completed = true;
+  runCoins += SECRET_ROUTE_REWARD;
+  totalCoins += SECRET_ROUTE_REWARD;
+  addParts(LANES[pLane], pY - 35, secretRoute.color);
+  sfxCoin();
+  showAndriiBubble(
+    `\u041c\u0430\u0440\u0448\u0440\u0443\u0442 \u043f\u0440\u043e\u0439\u0434\u0435\u043d\u043e! +${SECRET_ROUTE_REWARD} \u043c\u043e\u043d\u0435\u0442`,
+  );
+  syncCoins();
+  saveGame();
+  hudUp();
 }
 
 function t() {
@@ -1527,6 +1610,7 @@ function act(c) {
     sfxJump();
   }
   if (c === "ArrowDown") {
+    if (tryEnterSecretRoute()) return;
     pSlide = true;
     slideT = 44;
   }
@@ -1663,6 +1747,7 @@ function startLevel() {
   bossSummonCooldown = 0;
   bossSpecialCooldown = 0;
   bossFlash = 0;
+  secretRoute = createSecretRoute();
   winTimer = 0;
   levelClearTimer = 0;
   andriiFirstObs = false;
@@ -1870,6 +1955,10 @@ function addConfetti() {
 }
 
 function drawBG() {
+  if (secretRoute && secretRoute.active) {
+    drawSecretRouteBackground();
+    return;
+  }
   const lv = getLvl();
   ctx.fillStyle = lv.sky;
   ctx.fillRect(0, 0, W, H);
@@ -1894,6 +1983,149 @@ function drawBG() {
 
   ctx.fillStyle = "#22304a";
   ctx.fillRect(0, GND - 5, W, 10);
+}
+
+function drawSecretRouteBackground() {
+  const route = secretRoute;
+  if (!route) return;
+  const off = (bgOff * 0.7) % 160;
+
+  if (route.id === "metro") {
+    ctx.fillStyle = "#10171d";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#24323b";
+    ctx.fillRect(0, 60, W, 205);
+    for (let x = -160 - off; x < W + 160; x += 160) {
+      ctx.fillStyle = "#d8d0b8";
+      ctx.fillRect(x, 82, 104, 112);
+      ctx.fillStyle = "#1d5672";
+      ctx.fillRect(x + 12, 95, 80, 55);
+      ctx.fillStyle = "#f2c94c";
+      ctx.fillRect(x + 18, 207, 70, 7);
+    }
+    ctx.fillStyle = "#101419";
+    ctx.fillRect(0, GND - 8, W, H - GND + 8);
+    ctx.strokeStyle = "#8b969d";
+    ctx.lineWidth = 4;
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(LANES[i] - 35, GND + 18);
+      ctx.lineTo(LANES[i] - 35, H);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(LANES[i] + 35, GND + 18);
+      ctx.lineTo(LANES[i] + 35, H);
+      ctx.stroke();
+    }
+  } else if (route.id === "roofs") {
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, "#254b70");
+    sky.addColorStop(1, "#f09b61");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+    for (let x = -180 - off; x < W + 180; x += 180) {
+      const h = 80 + ((x / 180) & 1) * 35;
+      ctx.fillStyle = "#27313d";
+      ctx.fillRect(x, GND - h, 145, h);
+      ctx.fillStyle = "#ffd66b";
+      for (let wy = GND - h + 18; wy < GND - 18; wy += 25)
+        for (let wx = x + 15; wx < x + 130; wx += 28)
+          ctx.fillRect(wx, wy, 10, 9);
+      ctx.fillStyle = "#354555";
+      ctx.fillRect(x + 48, GND - h - 28, 38, 28);
+    }
+    ctx.fillStyle = "#18222d";
+    ctx.fillRect(0, GND - 8, W, H - GND + 8);
+    ctx.fillStyle = "#526170";
+    for (let i = 0; i < 3; i++)
+      ctx.fillRect(LANES[i] - 42, GND - 4, 84, H - GND + 4);
+  } else {
+    ctx.fillStyle = "#171425";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#30294a";
+    ctx.fillRect(0, 45, W, 220);
+    for (let x = -120 - off; x < W + 120; x += 120) {
+      ctx.fillStyle = "#51486b";
+      ctx.fillRect(x, 68, 16, 190);
+      ctx.fillStyle = "#e8d36c";
+      ctx.beginPath();
+      ctx.arc(x + 8, 78, 7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#12101c";
+    ctx.fillRect(0, GND - 8, W, H - GND + 8);
+    ctx.fillStyle = "#29243a";
+    for (let i = 0; i < 3; i++)
+      ctx.fillRect(LANES[i] - 42, GND - 4, 84, H - GND + 4);
+  }
+
+  ctx.fillStyle = route.color;
+  ctx.fillRect(0, GND - 7, W, 7);
+}
+
+function drawSecretRouteEntrance() {
+  if (
+    !secretRoute ||
+    !secretRoute.offered ||
+    secretRoute.active ||
+    secretRoute.completed ||
+    secretRoute.missed
+  )
+    return;
+
+  const x = secretRoute.entranceX;
+  const y = GND;
+  const near =
+    pLane === secretRoute.lane && Math.abs(x - LANES[pLane]) <= 72;
+  ctx.save();
+  ctx.globalAlpha = Math.max(0.25, Math.min(1, (x + 80) / 150));
+  ctx.shadowColor = secretRoute.color;
+  ctx.shadowBlur = near ? 22 : 10;
+  ctx.strokeStyle = near ? "#ffffff" : secretRoute.color;
+  ctx.lineWidth = near ? 5 : 3;
+  ctx.strokeRect(x - 38, y - 112, 76, 112);
+  ctx.fillStyle = "rgba(8,12,20,0.88)";
+  ctx.fillRect(x - 34, y - 108, 68, 108);
+  ctx.fillStyle = secretRoute.color;
+  ctx.beginPath();
+  ctx.moveTo(x - 18, y - 70);
+  ctx.lineTo(x + 18, y - 70);
+  ctx.lineTo(x, y - 48);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 10px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(
+    near
+      ? "\u25bc \u0423\u0412\u0406\u0419\u0422\u0418"
+      : secretRoute.name.toUpperCase(),
+    x,
+    y - 88,
+  );
+  ctx.textAlign = "left";
+  ctx.restore();
+}
+
+function drawSecretRouteHUD() {
+  if (!secretRoute || !secretRoute.active) return;
+  const progress = Math.min(secretRoute.timer / SECRET_ROUTE_DURATION, 1);
+  ctx.fillStyle = "rgba(5,8,15,0.76)";
+  ctx.fillRect(W / 2 - 132, 30, 264, 36);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(
+    `\u0421\u0415\u041a\u0420\u0415\u0422\u041d\u0418\u0419 \u041c\u0410\u0420\u0428\u0420\u0423\u0422: ${secretRoute.name.toUpperCase()}`,
+    W / 2,
+    45,
+  );
+  ctx.fillStyle = "#27313c";
+  ctx.fillRect(W / 2 - 112, 52, 224, 7);
+  ctx.fillStyle = secretRoute.color;
+  ctx.fillRect(W / 2 - 112, 52, 224 * progress, 7);
+  ctx.textAlign = "left";
 }
 
 function drawFinishLine() {
@@ -3856,6 +4088,41 @@ function update() {
   );
   if (fr % 120 === 0) saveGame();
 
+  if (
+    secretRoute &&
+    !secretRoute.offered &&
+    !secretRoute.completed &&
+    totalDist >= FDIST * 0.28
+  ) {
+    secretRoute.offered = true;
+    secretRoute.entranceX = W + 90;
+    showAndriiBubble(secretRoute.hint);
+  }
+  if (
+    secretRoute &&
+    secretRoute.offered &&
+    !secretRoute.active &&
+    !secretRoute.completed &&
+    !secretRoute.missed
+  ) {
+    secretRoute.entranceX -= spd;
+    if (secretRoute.entranceX < -70) secretRoute.missed = true;
+  }
+  if (secretRoute && secretRoute.active) {
+    secretRoute.timer++;
+    spd = Math.min(spd, 3.15);
+    if (secretRoute.timer % 56 === 8) {
+      const lane = Math.floor(secretRoute.timer / 56) % 3;
+      coins.push({
+        x: W + 25,
+        lane,
+        y: secretRoute.id === "roofs" && lane === 1 ? GND - 70 : GND,
+        done: false,
+      });
+    }
+    if (secretRoute.timer >= SECRET_ROUTE_DURATION) completeSecretRoute();
+  }
+
   const isKyivFinalBoss =
     currentLocation === 0 && currentLevel === LEVELS_KYIV.length - 1;
   if (isKyivFinalBoss && !bossActive && !bossDefeated && totalDist >= FDIST - 240) {
@@ -3969,7 +4236,7 @@ function update() {
   }
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
-  if (!bossActive && chaserX < LANES[0] - 100)
+  if (!bossActive && !secretRoute?.active && chaserX < LANES[0] - 100)
     chaserX += 0.5 + (spd - 2.8) * 0.1;
   if (andriiCooldown > 0) andriiCooldown--;
 
@@ -3987,9 +4254,21 @@ function update() {
     160 - Math.floor(spd * 6),
     settingDiff === "hard" ? 55 : 80,
   );
-  if (!bossActive && !bossDefeated && fr % interval === 0 && totalDist < FDIST - 100)
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    fr % interval === 0 &&
+    totalDist < FDIST - 100
+  )
     spawnObs();
-  if (!bossActive && !bossDefeated && fr % 110 === 0 && totalDist < FDIST - 50)
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    fr % 110 === 0 &&
+    totalDist < FDIST - 50
+  )
     spawnCoin();
 
   obs.forEach((o) => (o.x -= spd));
@@ -4190,6 +4469,7 @@ function loop() {
     return;
   }
   drawBG();
+  drawSecretRouteEntrance();
   drawFinishLine();
   coins.forEach(drawCoin);
   obs.forEach(drawObs);
@@ -4202,6 +4482,7 @@ function loop() {
   if (gameState === "run") {
     drawHUDCanvas();
     drawDistBar();
+    drawSecretRouteHUD();
   }
   if (gameState === "win") {
     drawConfetti();
