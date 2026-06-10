@@ -4840,16 +4840,17 @@ function drawSchoolMarichkaScene() {
   }
 }
 
-function drawSchoolPoliceScene() {
+function drawSchoolPursuersScene() {
   if (gameState !== "schoolEnter") return;
   const doorX = finishX + 249;
   const arrival = Math.min(Math.max((schoolEnterTimer - 12) / 54, 0), 1);
   const ease = 1 - Math.pow(1 - arrival, 3);
   const stopX = doorX - 145;
+  const pursuerType = currentLocation === 1 ? "tck" : "cop";
 
   for (let i = 0; i < 2; i++) {
-    const policeX = -105 - i * 52 + (stopX - i * 46 + 105 + i * 52) * ease;
-    drawObs({ x: policeX, type: "cop", lane: i });
+    const pursuerX = -105 - i * 52 + (stopX - i * 46 + 105 + i * 52) * ease;
+    drawObs({ x: pursuerX, type: pursuerType, lane: i });
   }
 }
 
@@ -5389,7 +5390,7 @@ function loop() {
   obs.forEach(drawObs);
   drawKyivBoss();
   drawChaser();
-  drawSchoolPoliceScene();
+  drawSchoolPursuersScene();
   drawSchoolMarichkaScene();
   drawPlayer();
   drawSecretTunnelForeground();
