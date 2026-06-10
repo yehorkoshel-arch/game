@@ -841,6 +841,14 @@ let bgOff = 0,
   raf = null;
 let loopActive = false;
 let fireCooldown = 0;
+let bossActive = false,
+  bossDefeated = false,
+  bossTransform = 0,
+  bossHp = 0,
+  bossX = 760,
+  bossShotCooldown = 0,
+  bossFlash = 0;
+const BOSS_MAX_HP = 18;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
@@ -858,6 +866,13 @@ const W = 680,
 function getAndriiWeapon(level = currentLevel, location = currentLocation) {
   const levelIndex = Number(level);
   const locationIndex = Number(location);
+  if (
+    locationIndex === 0 &&
+    levelIndex === LEVELS_KYIV.length - 1 &&
+    bossActive &&
+    bossTransform >= 90
+  )
+    return "bossblaster";
   if (locationIndex !== 1) return null;
   if (levelIndex >= 2) return "minigun";
   return "machinegun";
@@ -865,6 +880,19 @@ function getAndriiWeapon(level = currentLevel, location = currentLocation) {
 
 function t() {
   return LANGS[lang];
+}
+function updateFireControl() {
+  const weapon = getAndriiWeapon(currentLevel, currentLocation);
+  const fireButton = document.getElementById("cFire");
+  fireButton.textContent =
+    weapon === "minigun"
+      ? "Мініган"
+      : weapon === "bossblaster"
+        ? "Бластер"
+        : weapon
+          ? "Вогонь"
+          : t().menu;
+  fireButton.style.display = weapon ? "" : "none";
 }
 const ROBOT_VOICE_UI = {
   uk: ["Голос Роботрона", "Оберіть мову озвучення"],
@@ -986,11 +1014,8 @@ function applyLang() {
   document.getElementById("cJump").textContent = L.jump;
   document.getElementById("cSlide").textContent = L.slide;
   document.getElementById("cRight").textContent = L.right;
-  const weapon = getAndriiWeapon(currentLevel, currentLocation);
   document.getElementById("cMenu").textContent = L.menu;
-  document.getElementById("cFire").textContent =
-    weapon === "minigun" ? "\u041c\u0456\u043d\u0456\u0433\u0430\u043d" : weapon ? "\u0412\u043e\u0433\u043e\u043d\u044c" : L.menu;
-  document.getElementById("cFire").style.display = weapon ? "" : "none";
+  updateFireControl();
   document
     .querySelectorAll(".lbtn")
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
@@ -1525,6 +1550,20 @@ function fireAndriiWeapon() {
     return;
   }
 
+  if (weapon === "bossblaster") {
+    fireCooldown = 10;
+    playerBullets.push({
+      x,
+      y: pY - 34,
+      lane: pLane,
+      vx: 15,
+      life: 50,
+      type: "bossblaster",
+    });
+    sfxShot();
+    return;
+  }
+
   fireCooldown = 16;
   for (let i = 0; i < 3; i++) {
     playerBullets.push({
@@ -1600,6 +1639,13 @@ function startLevel() {
   flash = 0;
   finishX = 9999;
   finishActive = false;
+  bossActive = false;
+  bossDefeated = false;
+  bossTransform = 0;
+  bossHp = BOSS_MAX_HP;
+  bossX = W + 90;
+  bossShotCooldown = 0;
+  bossFlash = 0;
   winTimer = 0;
   levelClearTimer = 0;
   andriiFirstObs = false;
@@ -1607,6 +1653,7 @@ function startLevel() {
   bubbleText = "";
   bubbleTimer = 0;
   gameState = "run";
+  updateFireControl();
   hudUp();
   if (!loopActive) {
     if (raf) cancelAnimationFrame(raf);
@@ -1808,6 +1855,124 @@ function drawFinishLine() {
   }
 }
 
+function drawKyivBoss() {
+  if (!bossActive && !bossDefeated) return;
+  const transform = Math.min(bossTransform / 120, 1);
+  const x = bossX;
+  const bodyY = -50 - Math.max(0, transform - 0.58) * 88;
+
+  ctx.save();
+  ctx.translate(x, GND);
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
+  ctx.beginPath();
+  ctx.ellipse(0, 7, 72, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (transform < 0.58) {
+    const unfold = transform / 0.58;
+    ctx.translate(0, -24 - unfold * 16);
+    ctx.scale(1, 1 - unfold * 0.22);
+    ctx.fillStyle = "#4b5140";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-70, -54, 140, 58, 10);
+    else ctx.fillRect(-70, -54, 140, 58);
+    ctx.fill();
+    ctx.fillStyle = "#252d29";
+    ctx.fillRect(-48, -47, 58, 27);
+    ctx.fillStyle = "#61706d";
+    ctx.fillRect(17, -48, 36, 25);
+    ctx.fillStyle = "#202721";
+    ctx.fillRect(52, -18, 18, 17);
+    ctx.fillStyle = bossFlash > 0 ? "#fff7b2" : "#e8ddbd";
+    ctx.fillRect(54, -14, 12, 8);
+    ctx.fillStyle = "#1a1d19";
+    ctx.beginPath();
+    ctx.arc(-43, 4, 15, 0, Math.PI * 2);
+    ctx.arc(43, 4, 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#536052";
+    ctx.beginPath();
+    ctx.arc(-43, 4, 7, 0, Math.PI * 2);
+    ctx.arc(43, 4, 7, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    const rise = Math.min((transform - 0.58) / 0.42, 1);
+    const spread = rise * 24;
+    ctx.strokeStyle = "#2a3028";
+    ctx.lineWidth = 22;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-22, bodyY + 40);
+    ctx.lineTo(-31 - spread * 0.3, -8);
+    ctx.moveTo(22, bodyY + 40);
+    ctx.lineTo(31 + spread * 0.3, -8);
+    ctx.stroke();
+    ctx.fillStyle = "#141814";
+    ctx.fillRect(-53, -18, 35, 18);
+    ctx.fillRect(18, -18, 35, 18);
+    ctx.strokeStyle = "#48513f";
+    ctx.lineWidth = 20;
+    ctx.beginPath();
+    ctx.moveTo(-45, bodyY + 5);
+    ctx.lineTo(-72 - spread, bodyY + 42);
+    ctx.moveTo(45, bodyY + 5);
+    ctx.lineTo(72 + spread, bodyY + 42);
+    ctx.stroke();
+    ctx.fillStyle = "#1d221c";
+    ctx.fillRect(-101 - spread, bodyY + 34, 35, 19);
+    ctx.fillRect(66 + spread, bodyY + 34, 35, 19);
+    ctx.fillStyle = "#4b5140";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-48, bodyY - 20, 96, 72, 9);
+    else ctx.fillRect(-48, bodyY - 20, 96, 72);
+    ctx.fill();
+    ctx.fillStyle = "#252d29";
+    ctx.fillRect(-36, bodyY - 12, 72, 28);
+    ctx.strokeStyle = "#66715d";
+    ctx.lineWidth = 3;
+    for (let grille = -28; grille <= 28; grille += 8) {
+      ctx.beginPath();
+      ctx.moveTo(grille, bodyY + 22);
+      ctx.lineTo(grille, bodyY + 43);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#384239";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-28, bodyY - 61, 56, 43, 8);
+    else ctx.fillRect(-28, bodyY - 61, 56, 43);
+    ctx.fill();
+    ctx.fillStyle = "#111713";
+    ctx.fillRect(-20, bodyY - 50, 40, 16);
+    ctx.fillStyle = bossFlash > 0 ? "#fff" : "#ff5a25";
+    ctx.shadowColor = "#ff5a25";
+    ctx.shadowBlur = 10;
+    ctx.fillRect(-15, bodyY - 46, 10, 7);
+    ctx.fillRect(5, bodyY - 46, 10, 7);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#171b17";
+    ctx.fillRect(-16, bodyY - 29, 32, 6);
+    ctx.fillStyle = "#77806d";
+    ctx.fillRect(-10, bodyY - 27, 20, 2);
+  }
+
+  if (bossActive) {
+    const hpWidth = 180;
+    ctx.fillStyle = "rgba(0,0,0,0.72)";
+    ctx.fillRect(-hpWidth / 2, -190, hpWidth, 13);
+    ctx.fillStyle = bossHp > 5 ? "#e14b32" : "#ffcf33";
+    ctx.fillRect(-hpWidth / 2 + 2, -188, (hpWidth - 4) * (bossHp / BOSS_MAX_HP), 9);
+    ctx.strokeStyle = "#d7d9d0";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-hpWidth / 2, -190, hpWidth, 13);
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("ТРАНСФОРМЕР-ФУРГОН", 0, -198);
+    ctx.textAlign = "left";
+  }
+  ctx.restore();
+}
+
 function drawConfetti() {
   confetti = confetti.filter((c) => {
     c.x += c.vx;
@@ -1840,6 +2005,34 @@ function drawAndriiWeapon(x, y, slide = false) {
   ctx.save();
   ctx.translate(baseX, baseY);
   ctx.rotate(slide ? -0.08 : -0.12);
+
+  if (weapon === "bossblaster") {
+    ctx.fillStyle = "#153866";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-8, -8, 35, 16, 5);
+    else ctx.fillRect(-8, -8, 35, 16);
+    ctx.fill();
+    ctx.strokeStyle = "#00e5ff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#00e5ff";
+    ctx.fillRect(20 + recoil, -3, 30, 6);
+    ctx.fillStyle = "#ff3c64";
+    ctx.beginPath();
+    ctx.arc(2, 0, 4, 0, Math.PI * 2);
+    ctx.fill();
+    if (fireCooldown > 5) {
+      ctx.fillStyle = "rgba(0,229,255,0.9)";
+      ctx.beginPath();
+      ctx.moveTo(51 + recoil, -7);
+      ctx.lineTo(80 + recoil, 0);
+      ctx.lineTo(51 + recoil, 7);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+    return;
+  }
 
   if (weapon === "minigun") {
     const spin = fr * 0.45;
@@ -3506,7 +3699,44 @@ function update() {
   );
   if (fr % 120 === 0) saveGame();
 
-  if (!finishActive && totalDist >= FDIST - 200) {
+  const isKyivFinalBoss =
+    currentLocation === 0 && currentLevel === LEVELS_KYIV.length - 1;
+  if (isKyivFinalBoss && !bossActive && !bossDefeated && totalDist >= FDIST - 240) {
+    bossActive = true;
+    bossHp = BOSS_MAX_HP;
+    bossX = W + 90;
+    bossTransform = 0;
+    bossShotCooldown = 150;
+    chaserX = -220;
+    obs = [];
+    coins = [];
+    speakAndrii(["Ого! Машина перетворюється на трансформера!"]);
+  }
+  if (bossActive) {
+    bossX += (535 - bossX) * 0.04;
+    bossTransform = Math.min(120, bossTransform + 1);
+    spd = Math.min(spd, 2.15);
+    if (bossFlash > 0) bossFlash--;
+    if (bossTransform >= 90) {
+      if (bossTransform === 90) updateFireControl();
+      bossShotCooldown--;
+      if (bossShotCooldown <= 0) {
+        const lane = Math.floor(Math.random() * 3);
+        bullets.push({
+          x: bossX - 8,
+          y: GND - 38,
+          lane,
+          vx: -(spd + 6.2),
+          life: 100,
+        });
+        bossShotCooldown = Math.max(48, 92 - currentLevel * 2);
+        bossFlash = 6;
+        sfxShot();
+      }
+    }
+  }
+
+  if (!finishActive && (!isKyivFinalBoss || bossDefeated) && totalDist >= FDIST - 200) {
     finishActive = true;
     finishX = W + 100;
   }
@@ -3550,7 +3780,8 @@ function update() {
   }
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
-  if (chaserX < LANES[0] - 100) chaserX += 0.5 + (spd - 2.8) * 0.1;
+  if (!bossActive && chaserX < LANES[0] - 100)
+    chaserX += 0.5 + (spd - 2.8) * 0.1;
   if (andriiCooldown > 0) andriiCooldown--;
 
   // перший ворог на екрані — Андрій реагує
@@ -3567,8 +3798,10 @@ function update() {
     160 - Math.floor(spd * 6),
     settingDiff === "hard" ? 55 : 80,
   );
-  if (fr % interval === 0 && totalDist < FDIST - 100) spawnObs();
-  if (fr % 110 === 0 && totalDist < FDIST - 50) spawnCoin();
+  if (!bossActive && !bossDefeated && fr % interval === 0 && totalDist < FDIST - 100)
+    spawnObs();
+  if (!bossActive && !bossDefeated && fr % 110 === 0 && totalDist < FDIST - 50)
+    spawnCoin();
 
   obs.forEach((o) => (o.x -= spd));
   coins.forEach((c) => (c.x -= spd));
@@ -3612,6 +3845,34 @@ function update() {
 
   playerBullets = playerBullets.filter((b) => {
     let hitTarget = false;
+    if (
+      bossActive &&
+      bossTransform >= 90 &&
+      b.x > bossX - 70 &&
+      b.x < bossX + 60
+    ) {
+      hitTarget = true;
+      bossHp -= b.type === "bossblaster" ? 2 : 1;
+      bossFlash = 5;
+      addParts(bossX - 25, GND - 95, "#8cffd8");
+      sfxHit();
+      if (bossHp <= 0) {
+        bossHp = 0;
+        bossActive = false;
+        bossDefeated = true;
+        bossTransform = 120;
+        bossX = W + 180;
+        updateFireControl();
+        bullets = [];
+        addConfetti();
+        addConfetti();
+        totalCoins += 250;
+        syncCoins();
+        saveGame();
+        speakAndrii(["Перемога! Трансформера знищено!"]);
+      }
+    }
+    if (hitTarget) return false;
     obs = obs.filter((o) => {
       const isEnemy = o.type === "tck" || o.type === "cop";
       const isLvivBarrier =
@@ -3723,6 +3984,7 @@ function loop() {
   drawFinishLine();
   coins.forEach(drawCoin);
   obs.forEach(drawObs);
+  drawKyivBoss();
   drawChaser();
   drawPlayer();
   drawParts();
