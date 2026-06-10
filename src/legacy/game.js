@@ -3487,10 +3487,10 @@ function drawChaser() {
   ctx.fill();
   // вуха
   ctx.fillStyle = "#e8c090";
-  ix.beginPath();
+  ctx.beginPath();
   ctx.arc(cx - 12, cy - 60, 3, 0, Math.PI * 2);
   ctx.fill();
-  ix.beginPath();
+  ctx.beginPath();
   ctx.arc(cx + 12, cy - 60, 3, 0, Math.PI * 2);
   ctx.fill();
   // сережки
@@ -3569,6 +3569,19 @@ function drawChaser() {
   ctx.lineWidth = 1;
 
   // іконка x2 над головою коли близько
+  ctx.globalAlpha = Math.min(1, Math.max(0.45, dangerPct + 0.2));
+  ctx.fillStyle = "rgba(15,18,30,0.84)";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(cx - 31, cy - 98, 62, 18, 5);
+  else ctx.fillRect(cx - 31, cy - 98, 62, 18);
+  ctx.fill();
+  ctx.fillStyle = "#ff8fc8";
+  ctx.font = "bold 11px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("\u041c\u0430\u0440\u0456\u0447\u043a\u0430", cx, cy - 85);
+  ctx.textAlign = "left";
+  ctx.globalAlpha = 1;
+
   if (dangerPct > 0.45) {
     const pulse = 0.7 + Math.sin(fr * 0.15) * 0.3;
     ctx.globalAlpha = (pulse * (dangerPct - 0.45)) / 0.55;
