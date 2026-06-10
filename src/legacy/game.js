@@ -17,6 +17,10 @@ function getLevels() {
   return currentLocation === 0 ? LEVELS_KYIV : LEVELS_LVIV;
 }
 
+function getPlayableLevel(level) {
+  return Math.min(Math.max(Number(level) || 0, 0), getLevels().length - 1);
+}
+
 const FINISH_DIST = 800;
 const save = loadGameSave();
 let lang = "uk",
@@ -896,7 +900,11 @@ const W = 680,
 function getAndriiWeapon(level = currentLevel, location = currentLocation) {
   const levelIndex = Number(level);
   const locationIndex = Number(location);
-  if (locationIndex === 0 && levelIndex === LEVELS_KYIV.length - 1)
+  if (
+    locationIndex === 0 &&
+    levelIndex === LEVELS_KYIV.length - 1 &&
+    !bossDefeated
+  )
     return "bossblaster";
   if (locationIndex !== 1) return null;
   if (levelIndex >= 2) return "minigun";
@@ -1514,14 +1522,18 @@ function buildShop() {
 document.getElementById("btnPlay").onclick = () => {
   focusApp();
   // Продовжити з останнього збереженого рівня
-  currentLevel = currentLocation === 0 ? progressKyiv : progressLviv;
+  currentLevel = getPlayableLevel(
+    currentLocation === 0 ? progressKyiv : progressLviv,
+  );
   showScreen("sGame");
   startLevel();
 };
 document.querySelectorAll(".loc-tab").forEach((b) => {
   b.onclick = () => {
     currentLocation = Number(b.dataset.loc);
-    currentLevel = currentLocation === 0 ? progressKyiv : progressLviv;
+    currentLevel = getPlayableLevel(
+      currentLocation === 0 ? progressKyiv : progressLviv,
+    );
     if (musicPlaying) {
       stopMusic();
       startMusic();
@@ -1779,6 +1791,7 @@ function getLvl() {
 
 function startLevel() {
   focusApp();
+  currentLevel = getPlayableLevel(currentLevel);
   const tckSceneKey = currentLocation + ":" + currentLevel;
   if (currentLocation === 0 && currentLevel === 0 && !marichkaProjectSceneSeen) {
     beginStoryScene("marichka_project");
@@ -1850,7 +1863,9 @@ function restartLevel() {
 
 function startGame() {
   // використовується тільки якщо треба явно почати з рівня 1
-  currentLevel = currentLocation === 0 ? progressKyiv : progressLviv;
+  currentLevel = getPlayableLevel(
+    currentLocation === 0 ? progressKyiv : progressLviv,
+  );
   startLevel();
 }
 function stopGame() {
@@ -4918,10 +4933,15 @@ function drawTckScene() {
 
 function completeLevelAfterSchool() {
   const lv = getLvl();
+  const isFinalLevel = currentLevel >= getLevels().length - 1;
   addQuestProgress("levels");
   addQuestProgress("finishes");
   runCoins += lv.bonusCoins;
   totalCoins += runCoins;
+  if (isFinalLevel) {
+    if (currentLocation === 0) progressKyiv = getLevels().length;
+    else progressLviv = getLevels().length;
+  }
   syncCoins();
   saveGame();
   hudUp();
@@ -4929,7 +4949,7 @@ function completeLevelAfterSchool() {
   speakAndriiForce(ANDRII_WIN);
   addConfetti();
 
-  if (currentLevel >= getLevels().length - 1) {
+  if (isFinalLevel) {
     gameState = "win";
     winTimer = 0;
   } else {
@@ -5070,7 +5090,13 @@ function update() {
 
   const isKyivFinalBoss =
     currentLocation === 0 && currentLevel === LEVELS_KYIV.length - 1;
-  if (isKyivFinalBoss && !bossActive && !bossDefeated && totalDist >= FDIST - 240) {
+  if (
+    isKyivFinalBoss &&
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    totalDist >= FDIST - 240
+  ) {
     bossActive = true;
     bossHp = BOSS_MAX_HP;
     bossX = W + 90;
@@ -5137,7 +5163,12 @@ function update() {
     }
   }
 
-  if (!finishActive && (!isKyivFinalBoss || bossDefeated) && totalDist >= FDIST - 200) {
+  if (
+    !finishActive &&
+    !secretRoute?.active &&
+    (!isKyivFinalBoss || bossDefeated) &&
+    totalDist >= FDIST - 200
+  ) {
     finishActive = true;
     finishX = W + 100;
   }
@@ -5285,10 +5316,12 @@ function update() {
         bossX = W + 180;
         updateFireControl();
         bullets = [];
+        obs = obs.filter((o) => o.type !== "boss_dancer");
         addConfetti();
         addConfetti();
         addQuestProgress("bosses");
-        totalCoins += 250;
+        runCoins += 250;
+        hudUp();
         syncCoins();
         saveGame();
         speakAndrii(["Перемога! Трансформера знищено!"]);
