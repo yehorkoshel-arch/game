@@ -954,6 +954,7 @@ function createSecretRoute() {
     entranceX: W + 100,
     timer: 0,
     transitionTimer: 0,
+    resumeSpeed: 0,
     attempts: 0,
     nextOfferPct: 0.18,
   };
@@ -975,6 +976,7 @@ function tryEnterSecretRoute() {
   secretRoute.entering = true;
   secretRoute.timer = 0;
   secretRoute.transitionTimer = 0;
+  secretRoute.resumeSpeed = Math.max(spd, 0.1);
   secretRoute.entranceX = LANES[pLane];
   obs = [];
   bullets = [];
@@ -987,6 +989,7 @@ function completeSecretRoute() {
   if (!secretRoute || !secretRoute.active) return;
   secretRoute.active = false;
   secretRoute.completed = true;
+  spd = Math.max(secretRoute.resumeSpeed || 0, 0.1);
   addQuestProgress("routes");
   runCoins += SECRET_ROUTE_REWARD;
   addParts(LANES[pLane], pY - 35, secretRoute.color);
@@ -1647,7 +1650,9 @@ document.getElementById("cLeft").onclick = () => act("ArrowLeft");
 document.getElementById("cRight").onclick = () => act("ArrowRight");
 document.getElementById("cJump").onclick = () => act("ArrowUp");
 document.getElementById("cSlide").onclick = () => act("ArrowDown");
-document.getElementById("cFire").onclick = () => fireAndriiWeapon();
+document.getElementById("cFire").onclick = () => {
+  if (!skipStoryScene()) fireAndriiWeapon();
+};
 
 const keys = {};
 document.addEventListener("keydown", (e) => {
@@ -1665,8 +1670,17 @@ document.addEventListener("keydown", (e) => {
 document.addEventListener("keyup", (e) => {
   keys[e.code] = false;
 });
+function skipStoryScene() {
+  if (gameState !== "story" || !tckScene || tckScene.frame <= 30) return false;
+  cancelSpeech();
+  finishTckScene();
+  return true;
+}
 function act(c) {
-  if (gameState === "story") return;
+  if (gameState === "story") {
+    skipStoryScene();
+    return;
+  }
   if (gameState === "over") {
     restartLevel();
     return;
@@ -5074,7 +5088,10 @@ function update() {
       }
     } else {
       secretRoute.timer++;
-      spd = Math.min(spd, 3.15);
+      spd = Math.min(
+        Math.max(spd, secretRoute.resumeSpeed || 0.1),
+        3.15,
+      );
       if (secretRoute.timer % 56 === 8) {
         const lane = Math.floor(secretRoute.timer / 56) % 3;
         coins.push({
@@ -5090,11 +5107,13 @@ function update() {
 
   const isKyivFinalBoss =
     currentLocation === 0 && currentLevel === LEVELS_KYIV.length - 1;
+  const secretRouteResolved =
+    !secretRoute || secretRoute.completed || secretRoute.missed;
   if (
     isKyivFinalBoss &&
     !bossActive &&
     !bossDefeated &&
-    !secretRoute?.active &&
+    secretRouteResolved &&
     totalDist >= FDIST - 240
   ) {
     bossActive = true;
@@ -5165,7 +5184,7 @@ function update() {
 
   if (
     !finishActive &&
-    !secretRoute?.active &&
+    secretRouteResolved &&
     (!isKyivFinalBoss || bossDefeated) &&
     totalDist >= FDIST - 200
   ) {
@@ -5269,6 +5288,7 @@ function update() {
 
   // рухаємо кулі
   bullets.forEach((b) => {
+    b.prevX = b.x;
     b.x += b.vx;
     b.life--;
   });
@@ -5368,7 +5388,12 @@ function update() {
     const br =
       b.type === "dance_hologram"
         ? { x: b.x - 22, y: b.y - 74, w: 44, h: 98 }
-        : { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
+        : {
+            x: Math.min(b.prevX ?? b.x, b.x) - 5,
+            y: b.y - 4,
+            w: Math.abs(b.x - (b.prevX ?? b.x)) + 10,
+            h: 8,
+          };
     if (hit(pr, br) && inv === 0) {
       lives--;
       inv = 75;
@@ -5966,7 +5991,7 @@ function speakAndWait(text, voiceLanguage = "uk") {
   return new Promise((resolve) => {
     if (voiceLanguage === "uk" && playRecordedVoice(cleanText, resolve)) return;
     if (voiceLanguage !== "uk" && playSystemVoice(text, voiceLanguage, resolve)) return;
-    setTimeout(resolve, Math.max(900, cleanText.length * 60));
+    setTimeout(resolve, Math.min(2200, Math.max(900, cleanText.length * 35)));
   });
 }
 
