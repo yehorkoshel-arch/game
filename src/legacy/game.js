@@ -886,12 +886,7 @@ const W = 680,
 function getAndriiWeapon(level = currentLevel, location = currentLocation) {
   const levelIndex = Number(level);
   const locationIndex = Number(location);
-  if (
-    locationIndex === 0 &&
-    levelIndex === LEVELS_KYIV.length - 1 &&
-    bossActive &&
-    bossTransform >= 90
-  )
+  if (locationIndex === 0 && levelIndex === LEVELS_KYIV.length - 1)
     return "bossblaster";
   if (locationIndex !== 1) return null;
   if (levelIndex >= 2) return "minigun";
