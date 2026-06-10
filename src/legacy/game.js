@@ -40,10 +40,11 @@ let dailyTaskProgress = Number(save.dailyTaskProgress) || 0;
 let dailyTaskClaimed = Boolean(save.dailyTaskClaimed);
 function refreshDailyTask() {
   const today = getLocalDateKey();
-  if (dailyTaskDate === today) return;
+  if (dailyTaskDate === today) return false;
   dailyTaskDate = today;
   dailyTaskProgress = 0;
   dailyTaskClaimed = false;
+  return true;
 }
 refreshDailyTask();
 let settingDiff = save.settingDiff || "normal",
@@ -910,7 +911,7 @@ const DAILY_TASK_UI = {
   },
 };
 function buildDailyTask() {
-  refreshDailyTask();
+  if (refreshDailyTask()) saveGame();
   const ui = DAILY_TASK_UI[lang] || DAILY_TASK_UI.uk;
   const progress = Math.min(Math.floor(dailyTaskProgress), DAILY_TASK_TARGET);
   const complete = progress >= DAILY_TASK_TARGET;
@@ -1384,6 +1385,11 @@ document.getElementById("dailyTaskClaim").onclick = () => {
   buildDailyTask();
   sfxCoin();
 };
+setInterval(() => {
+  if (!refreshDailyTask()) return;
+  saveGame();
+  buildDailyTask();
+}, 30000);
 
 // Settings controls
 document.querySelectorAll("#segDiff .seg-btn").forEach((b) => {
@@ -1563,7 +1569,7 @@ function getLvl() {
 
 function startLevel() {
   focusApp();
-  refreshDailyTask();
+  if (refreshDailyTask()) saveGame();
   const tckSceneKey = currentLocation + ":" + currentLevel;
   if (currentLocation === 1 && currentLevel === 1 && !tckSceneSeenLevels[tckSceneKey]) {
     beginTckScene(tckSceneKey);
