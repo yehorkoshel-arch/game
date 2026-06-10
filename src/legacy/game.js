@@ -27,6 +27,7 @@ let currentLevel = save.currentLevel || 0;
 let currentLocation = save.currentLocation || 0; // 0=Київ, 1=Львів
 let progressKyiv = save.progressKyiv || 0,
   progressLviv = save.progressLviv || 0; // скільки рівнів пройдено у кожній локації
+let marichkaProjectSceneSeen = Boolean(save.marichkaProjectSceneSeen);
 const QUEST_REWARD = 100;
 const QUESTS = [
   { id: "distance", title: "Пробіжи 2 000 метрів", target: 2000, unit: "м" },
@@ -68,6 +69,7 @@ function saveGame() {
     currentLocation,
     progressKyiv,
     progressLviv,
+    marichkaProjectSceneSeen,
     questStats,
     questClaimed,
   });
@@ -1768,8 +1770,12 @@ function getLvl() {
 function startLevel() {
   focusApp();
   const tckSceneKey = currentLocation + ":" + currentLevel;
+  if (currentLocation === 0 && currentLevel === 0 && !marichkaProjectSceneSeen) {
+    beginStoryScene("marichka_project");
+    return;
+  }
   if (currentLocation === 1 && currentLevel === 1 && !tckSceneSeenLevels[tckSceneKey]) {
-    beginTckScene(tckSceneKey);
+    beginStoryScene("tck", tckSceneKey);
     return;
   }
   const lv = getLvl();
@@ -4451,8 +4457,22 @@ const TCK_SCENE_LINES = [
   },
 ];
 const TCK_SCENE_END_FRAME = 2700;
+const MARICHKA_PROJECT_LINES = [
+  {
+    who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
+    text: "\u041e\u0439, \u0449\u043e \u0446\u0435 \u0432\u0438\u043f\u0430\u043b\u043e \u0437 \u0440\u044e\u043a\u0437\u0430\u043a\u0430 \u0410\u043d\u0434\u0440\u0456\u044f?",
+  },
+  {
+    who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
+    text: "\u0422\u0430 \u0446\u0435 \u0436 \u0439\u043e\u0433\u043e \u0448\u043a\u0456\u043b\u044c\u043d\u0438\u0439 \u043f\u0440\u043e\u0454\u043a\u0442! \u0411\u0435\u0437 \u043d\u044c\u043e\u0433\u043e \u0432\u0456\u043d \u043d\u0435 \u0437\u043c\u043e\u0436\u0435 \u0432\u0438\u0441\u0442\u0443\u043f\u0438\u0442\u0438.",
+  },
+  {
+    who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
+    text: "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u043f\u0440\u043e\u0454\u043a\u0442! \u042f \u0442\u0435\u0431\u0435 \u043d\u0430\u0437\u0434\u043e\u0436\u0435\u043d\u0443!",
+  },
+];
 
-function beginTckScene(sceneKey) {
+function beginStoryScene(kind, sceneKey = null) {
   gameState = "story";
   fr = 0;
   bgOff = 0;
@@ -4467,7 +4487,15 @@ function beginTckScene(sceneKey) {
   confetti = [];
   bubbleText = "";
   bubbleTimer = 0;
-  tckScene = { frame: 0, line: null, lineIndex: -1, sceneKey, spoken: false, waitUntil: 50 };
+  tckScene = {
+    kind,
+    frame: 0,
+    line: null,
+    lineIndex: -1,
+    sceneKey,
+    spoken: false,
+    waitUntil: kind === "marichka_project" ? 95 : 50,
+  };
   if (!loopActive) {
     if (raf) cancelAnimationFrame(raf);
     loop();
@@ -4475,25 +4503,35 @@ function beginTckScene(sceneKey) {
 }
 
 function finishTckScene() {
-  if (tckScene && tckScene.sceneKey) tckSceneSeenLevels[tckScene.sceneKey] = true;
+  if (tckScene?.kind === "marichka_project") {
+    marichkaProjectSceneSeen = true;
+    saveGame();
+  } else if (tckScene && tckScene.sceneKey) {
+    tckSceneSeenLevels[tckScene.sceneKey] = true;
+  }
   tckScene = null;
   startLevel();
 }
 
 function updateTckScene() {
   if (!tckScene) return;
+  const sceneLines =
+    tckScene.kind === "marichka_project"
+      ? MARICHKA_PROJECT_LINES
+      : TCK_SCENE_LINES;
   tckScene.frame++;
   fr++;
   bgOff += 1.2;
   if (!tckScene.spoken && tckScene.frame >= tckScene.waitUntil) {
     tckScene.lineIndex++;
-    tckScene.line = TCK_SCENE_LINES[tckScene.lineIndex] || null;
+    tckScene.line = sceneLines[tckScene.lineIndex] || null;
     if (tckScene.line) {
       tckScene.spoken = true;
       speakSceneLine(tckScene.line);
     }
   }
-  if (!tckScene.line && tckScene.lineIndex >= TCK_SCENE_LINES.length) finishTckScene();
+  if (!tckScene.line && tckScene.lineIndex >= sceneLines.length)
+    finishTckScene();
 }
 
 function drawSpeechBox(who, text, x, y, align = "left") {
@@ -4515,15 +4553,17 @@ function drawSpeechBox(who, text, x, y, align = "left") {
   const h = pad * 2 + 18 + lines.length * lineH;
   const w = maxW;
   const bx = align === "right" ? x - w : x;
+  const isAndrii = who === "Андрій";
+  const isMarichka = who === "Марічка";
   ctx.fillStyle = "rgba(8,12,24,0.9)";
-  ctx.strokeStyle = who === "Андрій" ? "#ffd700" : "#ff5c5c";
+  ctx.strokeStyle = isAndrii ? "#ffd700" : isMarichka ? "#ff69b4" : "#ff5c5c";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   if (ctx.roundRect) ctx.roundRect(bx, y, w, h, 8);
   else ctx.rect(bx, y, w, h);
   ctx.fill();
   ctx.stroke();
-  ctx.fillStyle = who === "Андрій" ? "#ffd700" : "#ff9a9a";
+  ctx.fillStyle = isAndrii ? "#ffd700" : isMarichka ? "#ff9ed2" : "#ff9a9a";
   ctx.fillText(who, bx + pad, y + 18);
   ctx.fillStyle = "#eef3ff";
   ctx.font = "13px sans-serif";
@@ -4622,6 +4662,135 @@ function drawBlackCar(x, y) {
     ctx.fillStyle = "#090909";
   });
   ctx.restore();
+}
+
+function drawStoryMarichka(x, y, holdingProject) {
+  const step = Math.sin(fr * 0.22) * 7;
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 6, 15, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ff69b4";
+  ctx.fillRect(x - 10, y - 3, 7, 17 + step);
+  ctx.fillRect(x + 3, y - 3, 7, 17 - step);
+  ctx.fillStyle = "#e91e8c";
+  ctx.beginPath();
+  ctx.moveTo(x - 17, y - 2);
+  ctx.lineTo(x - 13, y - 30);
+  ctx.lineTo(x + 13, y - 30);
+  ctx.lineTo(x + 17, y - 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#c2185b";
+  ctx.fillRect(x - 12, y - 48, 24, 20);
+  ctx.strokeStyle = "#f0d0a8";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - 10, y - 42);
+  ctx.lineTo(x - 18, y - 27);
+  ctx.moveTo(x + 10, y - 42);
+  ctx.lineTo(x + 19, y - 28);
+  ctx.stroke();
+  ctx.fillStyle = "#f0d0a8";
+  ctx.beginPath();
+  ctx.arc(x, y - 62, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#3a1a0a";
+  ctx.beginPath();
+  ctx.arc(x, y - 69, 12, Math.PI, 0);
+  ctx.fill();
+  ctx.strokeStyle = "#3a1a0a";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(x - 11, y - 64);
+  ctx.lineTo(x - 15, y - 39);
+  ctx.moveTo(x + 11, y - 64);
+  ctx.lineTo(x + 15, y - 39);
+  ctx.stroke();
+  ctx.fillStyle = "#333";
+  ctx.beginPath();
+  ctx.arc(x - 4, y - 63, 2, 0, Math.PI * 2);
+  ctx.arc(x + 4, y - 63, 2, 0, Math.PI * 2);
+  ctx.fill();
+  if (holdingProject) {
+    ctx.save();
+    ctx.translate(x + 24, y - 28);
+    ctx.rotate(-0.12);
+    ctx.fillStyle = "#f5ecd4";
+    ctx.fillRect(-14, -18, 28, 36);
+    ctx.fillStyle = "#2878bd";
+    ctx.fillRect(-14, -18, 28, 7);
+    ctx.fillStyle = "#333";
+    ctx.font = "bold 6px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("ПРОЄКТ", 0, -6);
+    ctx.fillStyle = "#7396a8";
+    ctx.fillRect(-9, 0, 18, 2);
+    ctx.fillRect(-9, 5, 14, 2);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawMarichkaProjectScene() {
+  if (!tckScene) return;
+  const f = tckScene.frame;
+  const lv = getLvl();
+  ctx.fillStyle = lv.sky;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#23334a";
+  ctx.fillRect(0, 78, W, GND - 78);
+  for (let x = 30; x < W; x += 115) {
+    ctx.fillStyle = "#547090";
+    ctx.fillRect(x, 105, 82, 112);
+    ctx.fillStyle = "#f4cc62";
+    ctx.fillRect(x + 14, 123, 18, 24);
+    ctx.fillRect(x + 48, 123, 18, 24);
+  }
+  ctx.fillStyle = lv.road;
+  ctx.fillRect(0, GND - 10, W, H - GND + 10);
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = "#1a2030";
+    ctx.fillRect(LANES[i] - 42, GND - 4, 84, H - GND + 4);
+  }
+
+  const andriiX = Math.min(W + 100, 120 + f * 3.8);
+  if (andriiX < W + 50) drawStoryAndrii(andriiX, GND);
+
+  if (f > 38 && tckScene.lineIndex < 1) {
+    ctx.save();
+    ctx.translate(345, GND - 8);
+    ctx.rotate(-0.16);
+    ctx.fillStyle = "#f5ecd4";
+    ctx.fillRect(-18, -12, 36, 24);
+    ctx.fillStyle = "#2878bd";
+    ctx.fillRect(-18, -12, 36, 6);
+    ctx.fillStyle = "#333";
+    ctx.font = "bold 7px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("ПРОЄКТ", 0, 3);
+    ctx.restore();
+  }
+
+  const marichkaX = Math.min(410, -55 + Math.max(0, f - 30) * 3.2);
+  drawStoryMarichka(marichkaX, GND, tckScene.lineIndex >= 1);
+
+  if (tckScene.line)
+    drawSpeechBox(tckScene.line.who, tckScene.line.text, 650, 46, "right");
+
+  ctx.fillStyle = "rgba(0,0,0,0.42)";
+  ctx.fillRect(0, H - 34, W, 34);
+  ctx.fillStyle = "#aabbcc";
+  ctx.font = "12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(
+    "Марічка знайшла забутий проєкт Андрія",
+    W / 2,
+    H - 13,
+  );
+  ctx.textAlign = "left";
 }
 
 function drawTckScene() {
@@ -5142,7 +5311,8 @@ function loop() {
   loopActive = true;
   ctx.clearRect(0, 0, W, H);
   if (gameState === "story") {
-    drawTckScene();
+    if (tckScene?.kind === "marichka_project") drawMarichkaProjectScene();
+    else drawTckScene();
     update();
     loopActive = false;
     if (gameState === "story") raf = requestAnimationFrame(loop);
