@@ -4,20 +4,6 @@ export function MenuScreen() {
   return (
     <div id="sMenu" className="screen">
       <DancingAndrii />
-      <section className="daily-task" aria-labelledby="dailyTaskTitle">
-        <div className="daily-task-head">
-          <span id="dailyTaskTitle">Щоденне завдання</span>
-          <span className="daily-task-reward">+100 ₴</span>
-        </div>
-        <div className="daily-task-text" id="dailyTaskText">Пробіжи 500 метрів</div>
-        <div className="daily-task-progress">
-          <div className="daily-task-progress-fill" id="dailyTaskProgressFill" />
-        </div>
-        <div className="daily-task-footer">
-          <span id="dailyTaskProgressText">0 / 500 м</span>
-          <button id="dailyTaskClaim" type="button" disabled>Забрати</button>
-        </div>
-      </section>
       <button className="gear-btn" id="btnSettingsOpen" title="Налаштування" type="button">
         ⚙
       </button>

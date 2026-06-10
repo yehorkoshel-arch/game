@@ -9,15 +9,6 @@ canvas{display:block}
 .screen.active{display:flex}
 #sMenu{align-items:center;justify-content:center;background:#1a1a2e}
 .menu-dancing-andrii{position:absolute;left:0;bottom:38px;width:680px;height:150px;pointer-events:none;filter:drop-shadow(0 8px 8px rgba(0,0,0,.28))}
-.daily-task{position:absolute;top:10px;left:12px;width:190px;padding:10px;background:#11182b;border:1px solid #334466;border-radius:8px;color:#aabbcc;z-index:2}
-.daily-task-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:#f0f4ff}
-.daily-task-reward{color:#ffd700;white-space:nowrap}
-.daily-task-text{font-size:10px;color:#7788aa;margin-top:5px}
-.daily-task-progress{height:6px;margin-top:7px;background:#242d45;border-radius:3px;overflow:hidden}
-.daily-task-progress-fill{width:0;height:100%;background:#ffd700;transition:width .25s}
-.daily-task-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;font-size:10px;color:#7788aa}
-#dailyTaskClaim{min-width:66px;padding:4px 7px;border:1px solid #ffd700;border-radius:5px;background:#ffd700;color:#17192a;font-size:10px;font-weight:700;cursor:pointer}
-#dailyTaskClaim:disabled{border-color:#303950;background:#232a3d;color:#59647b;cursor:default}
 #sShop{background:#1a1a2e}
 #sGame{align-items:center;justify-content:center}
 .title{font-size:30px;font-weight:500;color:#ffd700;letter-spacing:2px;margin-bottom:4px}
