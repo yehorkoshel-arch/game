@@ -877,6 +877,9 @@ const LEVEL_START_SPEED_CAP = 2.54;
 let finishX = 9999,
   finishActive = false,
   schoolEnterTimer = 0,
+  schoolDialogueStep = 0,
+  schoolDialogueDone = false,
+  schoolExitTimer = 0,
   winTimer = 0,
   levelClearTimer = 0;
 let tckSceneSeenLevels = {},
@@ -1804,6 +1807,9 @@ function startLevel() {
   finishX = 9999;
   finishActive = false;
   schoolEnterTimer = 0;
+  schoolDialogueStep = 0;
+  schoolDialogueDone = false;
+  schoolExitTimer = 0;
   bossActive = false;
   bossDefeated = false;
   bossTransform = 0;
@@ -2419,7 +2425,7 @@ function drawFinishSchool(x) {
   const doorX = x + schoolW / 2;
   const doorOpen =
     gameState === "schoolEnter"
-      ? Math.min(Math.max((schoolEnterTimer - 88) / 30, 0), 1)
+      ? Math.min(schoolExitTimer / 30, 1)
       : 0;
   ctx.fillStyle = "#101419";
   ctx.fillRect(doorX - 20, GND - 45, 40, 45);
@@ -2754,7 +2760,7 @@ function drawPlayer() {
     ctx.translate(-x, -y);
   }
   if (gameState === "schoolEnter") {
-    const progress = Math.min(Math.max((schoolEnterTimer - 76) / 94, 0), 1);
+    const progress = Math.min(schoolExitTimer / 94, 1);
     const ease = 1 - Math.pow(1 - progress, 3);
     const doorX = finishX + 249;
     const startX = LANES[pLane];
@@ -4800,10 +4806,10 @@ function drawSchoolMarichkaScene() {
   const catchEase = 1 - Math.pow(1 - catchProgress, 3);
   const waitX = doorX - 58;
   let x = -50 + (waitX + 50) * catchEase;
-  let holdingProject = schoolEnterTimer < 72;
+  const holdingProject = schoolDialogueStep < 2;
 
-  if (schoolEnterTimer >= 76) {
-    const enterProgress = Math.min((schoolEnterTimer - 76) / 94, 1);
+  if (schoolDialogueDone) {
+    const enterProgress = Math.min(schoolExitTimer / 94, 1);
     const enterEase = 1 - Math.pow(1 - enterProgress, 3);
     x = waitX + (doorX - waitX) * enterEase;
     const scale = 1 - Math.max(0, enterProgress - 0.46) * 0.7;
@@ -4821,7 +4827,7 @@ function drawSchoolMarichkaScene() {
     drawStoryMarichka(x, GND, holdingProject);
   }
 
-  if (schoolEnterTimer >= 22 && schoolEnterTimer < 52) {
+  if (schoolDialogueStep === 1) {
     drawSpeechBox(
       "Марічка",
       "Андрію, зачекай! Ти забув свій проєкт.",
@@ -4829,7 +4835,7 @@ function drawSchoolMarichkaScene() {
       48,
       "right",
     );
-  } else if (schoolEnterTimer >= 54 && schoolEnterTimer < 78) {
+  } else if (schoolDialogueStep === 2) {
     drawSpeechBox(
       "Андрій",
       "Дякую, Марічко! Ти мене врятувала.",
@@ -4954,15 +4960,27 @@ function update() {
   }
   if (gameState === "schoolEnter") {
     schoolEnterTimer++;
+    if (schoolDialogueDone) schoolExitTimer++;
     fr++;
     pY = GND;
     pVY = 0;
     pSlide = false;
-    if (schoolEnterTimer === 22)
-      speakAndWait("Андрію зачекай ти забув свій проєкт");
-    if (schoolEnterTimer === 54)
-      speakAndWait("Дякую Марічко ти мене врятувала");
-    if (schoolEnterTimer >= 176) completeLevelAfterSchool();
+    if (schoolEnterTimer === 22 && schoolDialogueStep === 0) {
+      schoolDialogueStep = 1;
+      speakAndWait("Андрію зачекай ти забув свій проєкт")
+        .then(() => {
+          if (gameState !== "schoolEnter") return null;
+          schoolDialogueStep = 2;
+          return speakAndWait("Дякую Марічко ти мене врятувала");
+        })
+        .then(() => {
+          if (gameState !== "schoolEnter") return;
+          schoolDialogueStep = 0;
+          schoolDialogueDone = true;
+        });
+    }
+    if ((schoolDialogueDone && schoolExitTimer >= 100) || schoolEnterTimer >= 600)
+      completeLevelAfterSchool();
     return;
   }
   if (gameState !== "run") return;
@@ -5122,6 +5140,9 @@ function update() {
     if (finishX < W / 2 && totalDist >= FDIST) {
       gameState = "schoolEnter";
       schoolEnterTimer = 0;
+      schoolDialogueStep = 0;
+      schoolDialogueDone = false;
+      schoolExitTimer = 0;
       spd = 0;
       obs = [];
       bullets = [];
