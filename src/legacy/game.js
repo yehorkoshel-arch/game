@@ -27,6 +27,25 @@ let currentLevel = save.currentLevel || 0;
 let currentLocation = save.currentLocation || 0; // 0=Київ, 1=Львів
 let progressKyiv = save.progressKyiv || 0,
   progressLviv = save.progressLviv || 0; // скільки рівнів пройдено у кожній локації
+const DAILY_TASK_TARGET = 500;
+const DAILY_TASK_REWARD = 100;
+function getLocalDateKey() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+let dailyTaskDate = save.dailyTaskDate || getLocalDateKey();
+let dailyTaskProgress = Number(save.dailyTaskProgress) || 0;
+let dailyTaskClaimed = Boolean(save.dailyTaskClaimed);
+function refreshDailyTask() {
+  const today = getLocalDateKey();
+  if (dailyTaskDate === today) return;
+  dailyTaskDate = today;
+  dailyTaskProgress = 0;
+  dailyTaskClaimed = false;
+}
+refreshDailyTask();
 let settingDiff = save.settingDiff || "normal",
   settingLives = save.settingLives || 3,
   settingDist = save.settingDist || 800,
@@ -50,6 +69,9 @@ function saveGame() {
     currentLocation,
     progressKyiv,
     progressLviv,
+    dailyTaskDate,
+    dailyTaskProgress,
+    dailyTaskClaimed,
   });
 }
 
@@ -850,6 +872,58 @@ const ROBOT_VOICE_UI = {
   fr: ["Voix de Robotron", "Choisissez la langue parlée"],
   es: ["Voz de Robotron", "Elige el idioma de la voz"],
 };
+const DAILY_TASK_UI = {
+  uk: {
+    title: "Щоденне завдання",
+    task: "Пробіжи 500 метрів",
+    claim: "Забрати",
+    claimed: "Отримано",
+    unit: "м",
+  },
+  en: {
+    title: "Daily task",
+    task: "Run 500 meters",
+    claim: "Claim",
+    claimed: "Claimed",
+    unit: "m",
+  },
+  de: {
+    title: "Tagesaufgabe",
+    task: "Laufe 500 Meter",
+    claim: "Abholen",
+    claimed: "Erhalten",
+    unit: "m",
+  },
+  fr: {
+    title: "Défi quotidien",
+    task: "Cours 500 mètres",
+    claim: "Recevoir",
+    claimed: "Reçu",
+    unit: "m",
+  },
+  es: {
+    title: "Tarea diaria",
+    task: "Corre 500 metros",
+    claim: "Recoger",
+    claimed: "Recibido",
+    unit: "m",
+  },
+};
+function buildDailyTask() {
+  refreshDailyTask();
+  const ui = DAILY_TASK_UI[lang] || DAILY_TASK_UI.uk;
+  const progress = Math.min(Math.floor(dailyTaskProgress), DAILY_TASK_TARGET);
+  const complete = progress >= DAILY_TASK_TARGET;
+  document.getElementById("dailyTaskTitle").textContent = ui.title;
+  document.getElementById("dailyTaskText").textContent = ui.task;
+  document.getElementById("dailyTaskProgressText").textContent =
+    `${progress} / ${DAILY_TASK_TARGET} ${ui.unit}`;
+  document.getElementById("dailyTaskProgressFill").style.width =
+    `${(progress / DAILY_TASK_TARGET) * 100}%`;
+  const claimButton = document.getElementById("dailyTaskClaim");
+  claimButton.textContent = dailyTaskClaimed ? ui.claimed : ui.claim;
+  claimButton.disabled = !complete || dailyTaskClaimed;
+}
 window.addEventListener("load", () => setTimeout(focusApp, 100));
 function unlockGameAudio() {
   const c = getSfxCtx();
@@ -922,6 +996,7 @@ function applyLang() {
   buildLevelBar();
   buildShop();
   buildSettings();
+  buildDailyTask();
 }
 
 function buildSettings() {
@@ -979,6 +1054,7 @@ document.querySelectorAll(".lbtn").forEach((b) => {
 
 function showScreen(id) {
   setActiveScreen(id);
+  if (id === "sMenu") buildDailyTask();
   if (settingSound) {
     if (id === "sMenu" || id === "sGame") {
       startMusic();
@@ -1298,6 +1374,16 @@ document.getElementById("cMenu").onclick = () => {
   saveGame();
   buildLevelBar();
 };
+document.getElementById("dailyTaskClaim").onclick = () => {
+  refreshDailyTask();
+  if (dailyTaskClaimed || dailyTaskProgress < DAILY_TASK_TARGET) return;
+  dailyTaskClaimed = true;
+  totalCoins += DAILY_TASK_REWARD;
+  syncCoins();
+  saveGame();
+  buildDailyTask();
+  sfxCoin();
+};
 
 // Settings controls
 document.querySelectorAll("#segDiff .seg-btn").forEach((b) => {
@@ -1477,6 +1563,7 @@ function getLvl() {
 
 function startLevel() {
   focusApp();
+  refreshDailyTask();
   const tckSceneKey = currentLocation + ":" + currentLevel;
   if (currentLocation === 1 && currentLevel === 1 && !tckSceneSeenLevels[tckSceneKey]) {
     beginTckScene(tckSceneKey);
@@ -3405,7 +3492,13 @@ function update() {
     spd = Math.min(spd, maxS);
   }
   score = Math.round((fr * spd) / 10);
-  totalDist += spd / 60;
+  const distanceStep = spd / 60;
+  totalDist += distanceStep;
+  dailyTaskProgress = Math.min(
+    DAILY_TASK_TARGET,
+    dailyTaskProgress + distanceStep,
+  );
+  if (fr % 120 === 0) saveGame();
 
   if (!finishActive && totalDist >= FDIST - 200) {
     finishActive = true;
