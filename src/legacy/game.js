@@ -933,6 +933,8 @@ function createSecretRoute() {
     missed: false,
     entranceX: W + 100,
     timer: 0,
+    attempts: 0,
+    nextOfferPct: 0.18,
   };
 }
 
@@ -4092,7 +4094,9 @@ function update() {
     secretRoute &&
     !secretRoute.offered &&
     !secretRoute.completed &&
-    totalDist >= FDIST * 0.28
+    !secretRoute.missed &&
+    secretRoute.attempts < 2 &&
+    totalDist >= FDIST * secretRoute.nextOfferPct
   ) {
     secretRoute.offered = true;
     secretRoute.entranceX = W + 90;
@@ -4106,7 +4110,15 @@ function update() {
     !secretRoute.missed
   ) {
     secretRoute.entranceX -= spd;
-    if (secretRoute.entranceX < -70) secretRoute.missed = true;
+    if (secretRoute.entranceX < -70) {
+      secretRoute.attempts++;
+      if (secretRoute.attempts < 2) {
+        secretRoute.offered = false;
+        secretRoute.nextOfferPct = 0.62;
+      } else {
+        secretRoute.missed = true;
+      }
+    }
   }
   if (secretRoute && secretRoute.active) {
     secretRoute.timer++;
