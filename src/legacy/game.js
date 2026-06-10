@@ -5271,18 +5271,26 @@ function update() {
     obs = obs.filter((o) => {
       const isEnemy =
         o.type === "tck" || o.type === "cop" || o.type === "boss_dancer";
-      const isLvivBarrier =
-        currentLocation === 1 && (o.type === "kiosk" || o.type === "bollard");
-      if (hitTarget || b.lane !== o.lane || (!isEnemy && !isLvivBarrier)) return true;
+      const isLvivObject =
+        currentLocation === 1 &&
+        (b.type === "minigun"
+          ? o.type !== "scooter" && o.type !== "boss_dancer"
+          : o.type === "kiosk" || o.type === "bollard");
+      if (hitTarget || b.lane !== o.lane || (!isEnemy && !isLvivObject)) return true;
       const br =
         b.type === "minigun"
-          ? { x: b.x - 8, y: b.y - 5, w: 16, h: 10 }
+          ? {
+              x: b.x - Math.max(22, b.vx),
+              y: b.y - 10,
+              w: Math.max(44, b.vx * 2),
+              h: 20,
+            }
           : { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
       if (!hit(br, oRect(o))) return true;
       hitTarget = true;
       if (isEnemy) addQuestProgress("enemies");
-      addParts(o.x, GND - 30, isLvivBarrier ? "#c8860a" : "#ffd700");
-      if (isLvivBarrier) sfxHit();
+      addParts(o.x, GND - 30, isEnemy ? "#ffd700" : "#c8860a");
+      sfxHit();
       return false;
     });
     return !hitTarget;
