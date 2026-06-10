@@ -1282,6 +1282,10 @@ function drawSkinPreview(canvas, sk) {
   c.clearRect(0, 0, w, h);
   const cx = w / 2,
     by = h - 4; // base y (feet)
+  if (sk.id === "robotron_neon") {
+    drawRobotronPreview(c, cx, by);
+    return;
+  }
 
   // legs
   c.fillStyle = sk.shoes || "#111";
@@ -2343,6 +2347,64 @@ function drawFinishLine() {
   }
 }
 
+function drawRobotronPreview(c, cx, by) {
+  c.save();
+  c.translate(cx, by);
+  c.scale(0.82, 0.82);
+  c.translate(-cx, -by);
+  c.shadowColor = "#20f0d0";
+  c.shadowBlur = 5;
+  c.strokeStyle = "#20f0d0";
+  c.lineWidth = 3;
+  c.beginPath();
+  c.moveTo(cx - 7, by - 15);
+  c.lineTo(cx - 9, by - 2);
+  c.moveTo(cx + 7, by - 15);
+  c.lineTo(cx + 9, by - 2);
+  c.stroke();
+  c.fillStyle = "#101b27";
+  c.fillRect(cx - 13, by - 43, 26, 29);
+  c.fillStyle = "#1c4050";
+  c.fillRect(cx - 10, by - 39, 20, 20);
+  c.fillStyle = "#ff3df2";
+  c.fillRect(cx - 7, by - 34, 5, 5);
+  c.fillStyle = "#20f0d0";
+  c.fillRect(cx + 2, by - 34, 5, 5);
+  c.fillStyle = "#ffd45c";
+  c.fillRect(cx - 5, by - 24, 10, 3);
+  c.strokeStyle = "#20f0d0";
+  c.lineWidth = 4;
+  c.beginPath();
+  c.moveTo(cx - 12, by - 37);
+  c.lineTo(cx - 18, by - 21);
+  c.moveTo(cx + 12, by - 37);
+  c.lineTo(cx + 18, by - 21);
+  c.stroke();
+  c.fillStyle = "#132c3a";
+  c.fillRect(cx - 12, by - 59, 24, 16);
+  c.fillStyle = "#07141d";
+  c.fillRect(cx - 8, by - 55, 16, 7);
+  c.fillStyle = "#20f0d0";
+  c.fillRect(cx - 6, by - 53, 4, 3);
+  c.fillStyle = "#ff3df2";
+  c.fillRect(cx + 2, by - 53, 4, 3);
+  c.strokeStyle = "#20f0d0";
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(cx, by - 59);
+  c.lineTo(cx, by - 67);
+  c.stroke();
+  c.fillStyle = "#ff3df2";
+  c.beginPath();
+  c.arc(cx, by - 69, 3, 0, Math.PI * 2);
+  c.fill();
+  c.shadowBlur = 0;
+  c.fillStyle = "#20f0d0";
+  c.fillRect(cx - 13, by - 2, 9, 3);
+  c.fillRect(cx + 4, by - 2, 9, 3);
+  c.restore();
+}
+
 function drawFinishSchool(x) {
   const isLviv = currentLocation === 1;
   const schoolY = GND - 154;
@@ -2729,6 +2791,12 @@ function drawPlayer() {
   }
   const al = inv > 0 ? (Math.sin(fr * 0.5) > 0 ? 0.3 : 1) : 1;
   ctx.globalAlpha = al;
+  if (sk.id === "robotron_neon") {
+    drawNeonRobotron(x, y);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    return;
+  }
 
   // shadow
   ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -3139,6 +3207,143 @@ function drawPlayer() {
   ctx.restore();
   ctx.globalAlpha = 1;
 }
+
+function drawNeonRobotron(x, y) {
+  const run = Math.sin(fr * 0.3) * 7;
+  const pulse = 0.55 + Math.sin(fr * 0.16) * 0.25;
+  const slide = pSlide;
+
+  ctx.save();
+  ctx.shadowColor = "#20f0d0";
+  ctx.shadowBlur = 8 + pulse * 8;
+  ctx.fillStyle = "rgba(32,240,208,0.22)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 7, slide ? 27 : 18, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (slide) {
+    ctx.translate(x, y - 9);
+    ctx.rotate(-0.16);
+    ctx.translate(-x, -y + 9);
+    ctx.strokeStyle = "#20f0d0";
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x - 10, y - 2);
+    ctx.lineTo(x + 22, y + 1);
+    ctx.moveTo(x - 8, y - 8);
+    ctx.lineTo(x + 17, y - 14);
+    ctx.stroke();
+    ctx.fillStyle = "#07141d";
+    ctx.fillRect(x + 17, y - 4, 17, 8);
+    ctx.fillStyle = "#20f0d0";
+    ctx.fillRect(x + 24, y + 2, 12, 3);
+    drawRobotronTorso(x - 4, y - 28, pulse, true);
+    drawRobotronHead(x - 29, y - 32, pulse, true);
+  } else {
+    ctx.strokeStyle = "#20f0d0";
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x - 7, y - 15);
+    ctx.lineTo(x - 10, y + 4 + run);
+    ctx.moveTo(x + 7, y - 15);
+    ctx.lineTo(x + 10, y + 4 - run);
+    ctx.stroke();
+    ctx.fillStyle = "#07141d";
+    ctx.fillRect(x - 16, y + 1 + run, 13, 7);
+    ctx.fillRect(x + 3, y + 1 - run, 13, 7);
+    ctx.fillStyle = "#ff3df2";
+    ctx.fillRect(x - 15, y + 6 + run, 11, 3);
+    ctx.fillStyle = "#20f0d0";
+    ctx.fillRect(x + 4, y + 6 - run, 11, 3);
+
+    drawRobotronTorso(x, y - 37, pulse, false);
+    ctx.strokeStyle = "#88dcea";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(x - 15, y - 34);
+    ctx.lineTo(x - 24, y - 19 + run * 0.25);
+    ctx.moveTo(x + 15, y - 34);
+    ctx.lineTo(x + 24, y - 19 - run * 0.25);
+    ctx.stroke();
+    ctx.fillStyle = "#20f0d0";
+    ctx.beginPath();
+    ctx.arc(x - 24, y - 18 + run * 0.25, 5, 0, Math.PI * 2);
+    ctx.arc(x + 24, y - 18 - run * 0.25, 5, 0, Math.PI * 2);
+    ctx.fill();
+    drawRobotronHead(x, y - 65, pulse, false);
+  }
+
+  ctx.shadowBlur = 0;
+  drawAndriiWeapon(x, y, slide);
+  ctx.restore();
+}
+
+function drawRobotronTorso(x, y, pulse, horizontal) {
+  ctx.save();
+  if (horizontal) {
+    ctx.translate(x, y);
+    ctx.rotate(Math.PI / 2);
+    ctx.translate(-x, -y);
+  }
+  ctx.fillStyle = "#07141d";
+  ctx.fillRect(x - 18, y - 13, 36, 29);
+  ctx.strokeStyle = "#20f0d0";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x - 18, y - 13, 36, 29);
+  ctx.fillStyle = "#163745";
+  ctx.fillRect(x - 12, y - 8, 24, 17);
+  ctx.fillStyle = "#ff3df2";
+  ctx.beginPath();
+  ctx.arc(x - 7, y, 3 + pulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#20f0d0";
+  ctx.beginPath();
+  ctx.arc(x + 1, y, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffd45c";
+  ctx.beginPath();
+  ctx.arc(x + 8, y, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#8d62ff";
+  ctx.fillRect(x - 4, y + 6, 8, 3);
+  ctx.restore();
+}
+
+function drawRobotronHead(x, y, pulse, sideways) {
+  ctx.save();
+  if (sideways) {
+    ctx.translate(x, y);
+    ctx.rotate(-0.08);
+    ctx.translate(-x, -y);
+  }
+  ctx.fillStyle = "#102a3a";
+  ctx.fillRect(x - 15, y - 13, 30, 24);
+  ctx.strokeStyle = "#20f0d0";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x - 15, y - 13, 30, 24);
+  ctx.fillStyle = "#050b12";
+  ctx.fillRect(x - 10, y - 7, 20, 9);
+  ctx.fillStyle = "#20f0d0";
+  ctx.fillRect(x - 7, y - 5, 5, 4);
+  ctx.fillStyle = "#ff3df2";
+  ctx.fillRect(x + 2, y - 5, 5, 4);
+  ctx.fillStyle = "#668699";
+  ctx.fillRect(x - 6, y + 6, 12, 2);
+  ctx.strokeStyle = "#20f0d0";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 13);
+  ctx.lineTo(x, y - 24);
+  ctx.stroke();
+  ctx.fillStyle = "#ff3df2";
+  ctx.beginPath();
+  ctx.arc(x, y - 26, 3 + pulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawChaser() {
   if (gameState === "win") return;
   const cx = chaserX,
