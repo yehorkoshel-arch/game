@@ -90,6 +90,30 @@ export const SKINS_BASE=[
     shoes:'#050505', scarf:'#8b0000', mask:null, hat:'#202020',
     body:'#151515', head:'#c8a780', scarfCol:'#8b0000'
   },
+  {
+    id:'parkour', name:'\u041c\u0456\u0441\u044c\u043a\u0438\u0439 \u043f\u0430\u0440\u043a\u0443\u0440\u043d\u0438\u043a', price:420,
+    shirt:'#23a6a8', shorts:'#202735', skin:'#d9aa80', hair:'#202020',
+    shoes:'#f2d14f', scarf:'#ef476f', mask:null, hat:'#1d2633',
+    body:'#23a6a8', head:'#d9aa80', scarfCol:'#ef476f'
+  },
+  {
+    id:'pilot', name:'\u041f\u0456\u043b\u043e\u0442', price:620,
+    shirt:'#5a3b26', shorts:'#2c2420', skin:'#c99168', hair:'#3a251b',
+    shoes:'#191513', scarf:'#f3f0d0', mask:null, hat:'#6f4a2e',
+    body:'#5a3b26', head:'#c99168', scarfCol:'#f3f0d0'
+  },
+  {
+    id:'firefighter', name:'\u041f\u043e\u0436\u0435\u0436\u043d\u0438\u043a', price:760,
+    shirt:'#b52b24', shorts:'#422925', skin:'#d4a276', hair:null,
+    shoes:'#171717', scarf:'#f3d34a', mask:null, hat:'#e13b30',
+    body:'#b52b24', head:'#d4a276', scarfCol:'#f3d34a'
+  },
+  {
+    id:'space_courier', name:'\u041a\u043e\u0441\u043c\u0456\u0447\u043d\u0438\u0439 \u043a\u0443\u0440\u2019\u0454\u0440', price:1750, exclusive:true,
+    shirt:'#e7eef4', shorts:'#384657', skin:'#b9d9e8', hair:null,
+    shoes:'#ff5c5c', scarf:'#28c8d8', mask:'#dceaf2', hat:'#f4f7fa',
+    body:'#e7eef4', head:'#b9d9e8', scarfCol:'#28c8d8'
+  },
 ];
 
 // ── ЛОКАЦІЇ ───────────────────────────────────────────────────────────────────

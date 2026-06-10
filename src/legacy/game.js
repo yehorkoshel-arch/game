@@ -1390,6 +1390,42 @@ function drawSkinPreview(canvas, sk) {
     c.fillStyle = "#050505";
     c.fillRect(cx - 9, by - 59, 8, 4);
     c.fillRect(cx + 1, by - 59, 8, 4);
+  } else if (sk.id === "parkour") {
+    c.fillStyle = sk.hat;
+    c.beginPath();
+    c.arc(cx, by - 62, 13, Math.PI, 0);
+    c.fill();
+    c.fillStyle = "#f2d14f";
+    c.fillRect(cx - 13, by - 63, 26, 4);
+    c.fillRect(cx + 7, by - 59, 10, 3);
+  } else if (sk.id === "pilot") {
+    c.fillStyle = sk.hat;
+    c.beginPath();
+    c.arc(cx, by - 61, 13, Math.PI, 0);
+    c.fill();
+    c.fillRect(cx - 13, by - 62, 26, 7);
+    c.fillStyle = "#79b9d1";
+    c.fillRect(cx - 9, by - 60, 7, 4);
+    c.fillRect(cx + 2, by - 60, 7, 4);
+  } else if (sk.id === "firefighter") {
+    c.fillStyle = sk.hat;
+    c.beginPath();
+    c.arc(cx, by - 62, 14, Math.PI, 0);
+    c.fill();
+    c.fillRect(cx - 15, by - 63, 30, 5);
+    c.fillStyle = "#f3d34a";
+    c.fillRect(cx - 3, by - 70, 6, 10);
+  } else if (sk.id === "space_courier") {
+    c.fillStyle = sk.hat;
+    c.beginPath();
+    c.arc(cx, by - 59, 15, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = "#21475d";
+    c.beginPath();
+    c.arc(cx, by - 58, 11, Math.PI, 0);
+    c.fill();
+    c.fillStyle = "#28c8d8";
+    c.fillRect(cx - 9, by - 59, 18, 2);
   } else {
     // blond hair
     c.fillStyle = sk.hair || "#e8c45c";
@@ -2880,6 +2916,42 @@ function drawPlayer() {
       ctx.fillStyle = "#050505";
       ctx.fillRect(x - 27, y - 17, 8, 4);
       ctx.fillRect(x - 17, y - 17, 8, 4);
+    } else if (sk.id === "parkour") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x - 18, y - 18, 13, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "#f2d14f";
+      ctx.fillRect(x - 31, y - 19, 26, 4);
+      ctx.fillRect(x - 8, y - 15, 10, 3);
+    } else if (sk.id === "pilot") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x - 18, y - 18, 13, Math.PI, 0);
+      ctx.fill();
+      ctx.fillRect(x - 31, y - 20, 26, 7);
+      ctx.fillStyle = "#79b9d1";
+      ctx.fillRect(x - 27, y - 18, 7, 4);
+      ctx.fillRect(x - 17, y - 18, 7, 4);
+    } else if (sk.id === "firefighter") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x - 18, y - 19, 14, Math.PI, 0);
+      ctx.fill();
+      ctx.fillRect(x - 33, y - 20, 30, 5);
+      ctx.fillStyle = "#f3d34a";
+      ctx.fillRect(x - 21, y - 28, 6, 10);
+    } else if (sk.id === "space_courier") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x - 18, y - 17, 15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#21475d";
+      ctx.beginPath();
+      ctx.arc(x - 18, y - 16, 11, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "#28c8d8";
+      ctx.fillRect(x - 27, y - 17, 18, 2);
     } else {
       ctx.fillStyle = sk.hair;
       ctx.beginPath();
@@ -2964,6 +3036,19 @@ function drawPlayer() {
       ctx.moveTo(x + 27, y + 3);
       ctx.lineTo(x + 30, y + 8);
       ctx.stroke();
+    }
+    if (sk.id === "firefighter") {
+      ctx.fillStyle = "#f3d34a";
+      ctx.fillRect(x - 15, y - 35, 30, 5);
+      ctx.fillRect(x - 15, y - 23, 30, 4);
+    }
+    if (sk.id === "space_courier") {
+      ctx.fillStyle = "#28c8d8";
+      ctx.fillRect(x - 12, y - 38, 24, 4);
+      ctx.fillStyle = "#ff5c5c";
+      ctx.beginPath();
+      ctx.arc(x, y - 27, 4, 0, Math.PI * 2);
+      ctx.fill();
     }
     if (sk.id === "cossack") {
       ctx.fillStyle = sk.trim;
@@ -3129,6 +3214,48 @@ function drawPlayer() {
       ctx.fillRect(x - 10, y - 58, 9, 4);
       ctx.fillRect(x + 1, y - 58, 9, 4);
       ctx.fillRect(x - 1, y - 57, 2, 2);
+    } else if (sk.id === "parkour") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x, y - 58, 13, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "#f2d14f";
+      ctx.fillRect(x - 13, y - 59, 26, 4);
+      ctx.fillRect(x + 8, y - 55, 11, 3);
+    } else if (sk.id === "pilot") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x, y - 58, 13, Math.PI, 0);
+      ctx.fill();
+      ctx.fillRect(x - 13, y - 60, 26, 7);
+      ctx.fillStyle = "#79b9d1";
+      ctx.fillRect(x - 9, y - 58, 7, 4);
+      ctx.fillRect(x + 2, y - 58, 7, 4);
+      ctx.strokeStyle = "#d7b56d";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 2, y - 55);
+      ctx.lineTo(x + 2, y - 55);
+      ctx.stroke();
+    } else if (sk.id === "firefighter") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x, y - 59, 14, Math.PI, 0);
+      ctx.fill();
+      ctx.fillRect(x - 15, y - 60, 30, 5);
+      ctx.fillStyle = "#f3d34a";
+      ctx.fillRect(x - 3, y - 68, 6, 10);
+    } else if (sk.id === "space_courier") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x, y - 55, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#21475d";
+      ctx.beginPath();
+      ctx.arc(x, y - 55, 12, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "#28c8d8";
+      ctx.fillRect(x - 10, y - 56, 20, 3);
     } else {
       // blond hair
       ctx.fillStyle = sk.hair || "#e8c45c";
