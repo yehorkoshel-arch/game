@@ -694,6 +694,24 @@ function sfxShot() {
 function sfxMachineGunBurst() {
   [0, 0.055, 0.11].forEach((delay) => setTimeout(sfxShot, delay * 1000));
 }
+function sfxBossDanceSummon() {
+  const c = getSfxCtx();
+  if (!c) return;
+  const now = c.currentTime;
+  const hijaz = [0, 1, 4, 5, 7, 8, 11, 8, 7, 5];
+  hijaz.forEach((step, index) => {
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = index % 2 === 0 ? "triangle" : "sine";
+    osc.frequency.setValueAtTime(220 * Math.pow(2, step / 12), now + index * 0.11);
+    gain.gain.setValueAtTime(0.07, now + index * 0.11);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.11 + 0.18);
+    osc.connect(gain);
+    gain.connect(c.destination);
+    osc.start(now + index * 0.11);
+    osc.stop(now + index * 0.11 + 0.2);
+  });
+}
 function sfxCoin() {
   const c = getSfxCtx();
   if (!c) return;
@@ -847,6 +865,7 @@ let bossActive = false,
   bossHp = 0,
   bossX = 760,
   bossShotCooldown = 0,
+  bossSummonCooldown = 0,
   bossFlash = 0;
 const BOSS_MAX_HP = 18;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
@@ -1645,6 +1664,7 @@ function startLevel() {
   bossHp = BOSS_MAX_HP;
   bossX = W + 90;
   bossShotCooldown = 0;
+  bossSummonCooldown = 0;
   bossFlash = 0;
   winTimer = 0;
   levelClearTimer = 0;
@@ -2736,7 +2756,85 @@ function drawChaser() {
 
 function drawObs(o) {
   const x = o.x;
-  if (o.type === "kiosk") {
+  if (o.type === "boss_dancer") {
+    const gx = x;
+    const gy = GND;
+    const phase = fr * 0.18 + (o.dancePhase || 0);
+    const bounce = Math.abs(Math.sin(phase * 1.5)) * 8;
+    const arm = Math.sin(phase) * 15;
+    const foot = Math.sin(phase * 2) * 7;
+
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(gx, gy + 5, 16, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#4b3525";
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(gx - 6, gy - 10 - bounce);
+    ctx.lineTo(gx - 8 - foot, gy + 6);
+    ctx.moveTo(gx + 6, gy - 10 - bounce);
+    ctx.lineTo(gx + 8 + foot, gy + 6);
+    ctx.stroke();
+
+    ctx.fillStyle = "#f0e3c4";
+    ctx.beginPath();
+    ctx.moveTo(gx - 16, gy - 51 - bounce);
+    ctx.lineTo(gx + 16, gy - 51 - bounce);
+    ctx.lineTo(gx + 20, gy - 8 - bounce);
+    ctx.lineTo(gx - 20, gy - 8 - bounce);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#d3bd8e";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#d6a52d";
+    ctx.fillRect(gx - 18, gy - 24 - bounce, 36, 6);
+
+    ctx.strokeStyle = "#bd8b60";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(gx - 14, gy - 44 - bounce);
+    ctx.lineTo(gx - 27 - arm, gy - 56 - bounce - Math.abs(arm) * 0.45);
+    ctx.moveTo(gx + 14, gy - 44 - bounce);
+    ctx.lineTo(gx + 27 + arm, gy - 56 - bounce - Math.abs(arm) * 0.45);
+    ctx.stroke();
+
+    ctx.fillStyle = "#bd8b60";
+    ctx.beginPath();
+    ctx.arc(gx, gy - 65 - bounce, 13, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#f1eee3";
+    ctx.beginPath();
+    ctx.arc(gx, gy - 71 - bounce, 14, Math.PI, 0);
+    ctx.fill();
+    ctx.fillStyle = "#a72b2b";
+    ctx.fillRect(gx - 14, gy - 72 - bounce, 28, 5);
+    ctx.fillRect(gx - 12, gy - 79 - bounce, 5, 8);
+    ctx.fillRect(gx - 2, gy - 79 - bounce, 5, 8);
+    ctx.fillRect(gx + 8, gy - 79 - bounce, 5, 8);
+
+    ctx.fillStyle = "#202020";
+    ctx.beginPath();
+    ctx.arc(gx - 4, gy - 66 - bounce, 2, 0, Math.PI * 2);
+    ctx.arc(gx + 4, gy - 66 - bounce, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#6f3d26";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(gx, gy - 61 - bounce, 5, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+
+    ctx.fillStyle = "#734d28";
+    ctx.font = "bold 6px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("ТЦК", gx, gy - 34 - bounce);
+    ctx.textAlign = "left";
+  } else if (o.type === "kiosk") {
     ctx.fillStyle = "#c8860a";
     ctx.fillRect(x - 24, GND - 46, 48, 46);
     ctx.fillStyle = "#e8a020";
@@ -3229,6 +3327,8 @@ function oRect(o) {
   if (o.type === "kiosk") return { x: o.x - 24, y: GND - 46, w: 48, h: 46 };
   if (o.type === "cop") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
   if (o.type === "tck") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
+  if (o.type === "boss_dancer")
+    return { x: o.x - 18, y: GND - 82, w: 36, h: 82 };
   return { x: o.x - 26, y: GND - 40, w: 52, h: 40 };
 }
 function hit(a, b) {
@@ -3707,6 +3807,7 @@ function update() {
     bossX = W + 90;
     bossTransform = 0;
     bossShotCooldown = 150;
+    bossSummonCooldown = 260;
     chaserX = -220;
     obs = [];
     coins = [];
@@ -3720,6 +3821,7 @@ function update() {
     if (bossTransform >= 90) {
       if (bossTransform === 90) updateFireControl();
       bossShotCooldown--;
+      bossSummonCooldown--;
       if (bossShotCooldown <= 0) {
         const lane = Math.floor(Math.random() * 3);
         bullets.push({
@@ -3732,6 +3834,18 @@ function update() {
         bossShotCooldown = Math.max(48, 92 - currentLevel * 2);
         bossFlash = 6;
         sfxShot();
+      }
+      if (bossSummonCooldown <= 0) {
+        for (let lane = 0; lane < 3; lane++) {
+          obs.push({
+            x: bossX - 25 + lane * 22,
+            lane,
+            type: "boss_dancer",
+            dancePhase: lane * 2.1,
+          });
+        }
+        bossSummonCooldown = 360;
+        sfxBossDanceSummon();
       }
     }
   }
@@ -3874,7 +3988,8 @@ function update() {
     }
     if (hitTarget) return false;
     obs = obs.filter((o) => {
-      const isEnemy = o.type === "tck" || o.type === "cop";
+      const isEnemy =
+        o.type === "tck" || o.type === "cop" || o.type === "boss_dancer";
       const isLvivBarrier =
         currentLocation === 1 && (o.type === "kiosk" || o.type === "bollard");
       if (hitTarget || b.lane !== o.lane || (!isEnemy && !isLvivBarrier)) return true;
