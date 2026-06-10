@@ -866,6 +866,7 @@ let bossActive = false,
   bossX = 760,
   bossShotCooldown = 0,
   bossSummonCooldown = 0,
+  bossSpecialCooldown = 0,
   bossFlash = 0;
 const BOSS_MAX_HP = 18;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
@@ -1665,6 +1666,7 @@ function startLevel() {
   bossX = W + 90;
   bossShotCooldown = 0;
   bossSummonCooldown = 0;
+  bossSpecialCooldown = 0;
   bossFlash = 0;
   winTimer = 0;
   levelClearTimer = 0;
@@ -1752,6 +1754,66 @@ function addParts(x, y, col) {
 function drawBullets() {
   bullets.forEach((b) => {
     const alpha = Math.min(1, b.life / 15);
+    if (b.type === "dance_hologram") {
+      const spin = fr * 0.18 + (b.phase || 0);
+      const wave = Math.sin(spin) * 8;
+      ctx.save();
+      ctx.translate(b.x, b.y + wave);
+      ctx.rotate(Math.sin(spin * 0.7) * 0.18);
+      ctx.globalAlpha = Math.min(0.9, alpha);
+      ctx.shadowColor = "#ff4fc8";
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = "rgba(255,79,200,0.22)";
+      ctx.beginPath();
+      ctx.arc(0, -18, 29, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#d58b58";
+      ctx.beginPath();
+      ctx.arc(0, -30, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ff9f1c";
+      ctx.beginPath();
+      ctx.moveTo(-14, -23);
+      ctx.lineTo(14, -23);
+      ctx.lineTo(20, 8);
+      ctx.lineTo(-20, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#27c7d9";
+      ctx.fillRect(-16, -16, 32, 6);
+      ctx.strokeStyle = "#ffd45c";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-12, -19);
+      ctx.lineTo(-25 - Math.sin(spin) * 8, -34);
+      ctx.moveTo(12, -19);
+      ctx.lineTo(25 + Math.sin(spin) * 8, -34);
+      ctx.stroke();
+      ctx.fillStyle = "#b62467";
+      ctx.beginPath();
+      ctx.moveTo(-9, -37);
+      ctx.quadraticCurveTo(0, -48, 9, -37);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#6b287d";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(-7, 6);
+      ctx.lineTo(-12 - Math.cos(spin) * 5, 22);
+      ctx.moveTo(7, 6);
+      ctx.lineTo(12 + Math.cos(spin) * 5, 22);
+      ctx.stroke();
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 7px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("HOLO", 0, -10);
+      ctx.textAlign = "left";
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      return;
+    }
     // траса (слід)
     ctx.globalAlpha = alpha * 0.35;
     ctx.fillStyle = "#ff8800";
@@ -3808,6 +3870,7 @@ function update() {
     bossTransform = 0;
     bossShotCooldown = 150;
     bossSummonCooldown = 260;
+    bossSpecialCooldown = 430;
     chaserX = -220;
     obs = [];
     coins = [];
@@ -3822,6 +3885,7 @@ function update() {
       if (bossTransform === 90) updateFireControl();
       bossShotCooldown--;
       bossSummonCooldown--;
+      bossSpecialCooldown--;
       if (bossShotCooldown <= 0) {
         const lane = Math.floor(Math.random() * 3);
         bullets.push({
@@ -3845,6 +3909,22 @@ function update() {
           });
         }
         bossSummonCooldown = 360;
+        sfxBossDanceSummon();
+      }
+      if (bossSpecialCooldown <= 0) {
+        for (let lane = 0; lane < 3; lane++) {
+          bullets.push({
+            x: bossX + lane * 34,
+            y: GND - 38,
+            lane,
+            vx: -(spd + 3.8 + lane * 0.45),
+            life: 145 + lane * 10,
+            type: "dance_hologram",
+            phase: lane * 2.2,
+          });
+        }
+        bossSpecialCooldown = 520;
+        bossFlash = 14;
         sfxBossDanceSummon();
       }
     }
@@ -3959,6 +4039,22 @@ function update() {
 
   playerBullets = playerBullets.filter((b) => {
     let hitTarget = false;
+    bullets = bullets.filter((enemyShot) => {
+      if (hitTarget || enemyShot.type !== "dance_hologram") return true;
+      const shotRect = { x: b.x - 7, y: b.y - 6, w: 14, h: 12 };
+      const hologramRect = {
+        x: enemyShot.x - 24,
+        y: enemyShot.y - 76,
+        w: 48,
+        h: 100,
+      };
+      if (!hit(shotRect, hologramRect)) return true;
+      hitTarget = true;
+      addParts(enemyShot.x, enemyShot.y - 30, "#ff4fc8");
+      sfxHit();
+      return false;
+    });
+    if (hitTarget) return false;
     if (
       bossActive &&
       bossTransform >= 90 &&
@@ -4015,7 +4111,10 @@ function update() {
   // перевірка куль
   bullets = bullets.filter((b) => {
     if (b.lane !== pLane) return true;
-    const br = { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
+    const br =
+      b.type === "dance_hologram"
+        ? { x: b.x - 22, y: b.y - 74, w: 44, h: 98 }
+        : { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
     if (hit(pr, br) && inv === 0) {
       lives--;
       inv = 75;
