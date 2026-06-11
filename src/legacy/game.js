@@ -5351,12 +5351,17 @@ function update() {
     obs = obs.filter((o) => {
       const isEnemy =
         o.type === "tck" || o.type === "cop" || o.type === "boss_dancer";
+      const isMinigunTarget =
+        b.type === "minigun" &&
+        currentLocation === 1 &&
+        o.type !== "boss_dancer";
       const isLvivObject =
         currentLocation === 1 &&
         (b.type === "minigun"
           ? o.type !== "boss_dancer"
           : o.type === "kiosk" || o.type === "bollard");
-      if (hitTarget || b.lane !== o.lane || (!isEnemy && !isLvivObject)) return true;
+      const laneMatches = isMinigunTarget || b.lane === o.lane;
+      if (hitTarget || !laneMatches || (!isEnemy && !isLvivObject)) return true;
       const br =
         b.type === "minigun"
           ? {
