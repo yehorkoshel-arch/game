@@ -9,5 +9,9 @@ export function loadGameSave(){
 }
 
 export function saveGameSave(save){
-  localStorage.setItem(SAVE_KEY,JSON.stringify(save));
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify(save));
+  }catch(e){
+    console.warn('Game progress could not be saved',e);
+  }
 }

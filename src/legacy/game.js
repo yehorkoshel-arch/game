@@ -23,14 +23,31 @@ function getPlayableLevel(level) {
 
 const FINISH_DIST = 800;
 const save = loadGameSave();
-let lang = "uk",
-  totalCoins = save.totalCoins || 0,
-  owned = save.owned || ["default"],
-  selectedSkin = save.selectedSkin || "default";
-let currentLevel = save.currentLevel || 0;
-let currentLocation = save.currentLocation || 0; // 0=Київ, 1=Львів
-let progressKyiv = save.progressKyiv || 0,
-  progressLviv = save.progressLviv || 0; // скільки рівнів пройдено у кожній локації
+const VALID_LANGUAGES = new Set(Object.keys(LANGS));
+const VALID_SKIN_IDS = new Set(SKINS_BASE.map((skin) => skin.id));
+const savedOwned = Array.isArray(save.owned)
+  ? save.owned.filter((id) => VALID_SKIN_IDS.has(id))
+  : [];
+let lang = VALID_LANGUAGES.has(save.lang) ? save.lang : "uk",
+  totalCoins = Math.max(0, Number(save.totalCoins) || 0),
+  owned = [...new Set(["default", ...savedOwned])],
+  selectedSkin =
+    VALID_SKIN_IDS.has(save.selectedSkin) && owned.includes(save.selectedSkin)
+      ? save.selectedSkin
+      : "default";
+let currentLocation = Number(save.currentLocation) === 1 ? 1 : 0;
+let currentLevel = Math.min(
+  Math.max(Number(save.currentLevel) || 0, 0),
+  (currentLocation === 0 ? LEVELS_KYIV : LEVELS_LVIV).length - 1,
+);
+let progressKyiv = Math.min(
+    Math.max(Number(save.progressKyiv) || 0, 0),
+    LEVELS_KYIV.length,
+  ),
+  progressLviv = Math.min(
+    Math.max(Number(save.progressLviv) || 0, 0),
+    LEVELS_LVIV.length,
+  );
 let marichkaProjectSceneSeen = Boolean(save.marichkaProjectSceneSeen);
 let tckSceneSeenLevels =
   save.tckSceneSeenLevels && typeof save.tckSceneSeenLevels === "object"
@@ -53,16 +70,31 @@ const savedQuestStats = save.questStats || {};
 let questStats = Object.fromEntries(
   QUESTS.map((quest) => [quest.id, Number(savedQuestStats[quest.id]) || 0]),
 );
-let questClaimed = save.questClaimed || {};
-let settingDiff = save.settingDiff || "normal",
-  settingLives = save.settingLives || 3,
-  settingDist = save.settingDist || 800,
-  settingSound = save.settingSound || false,
-  settingMusicTrack = save.settingMusicTrack || "kyiv",
-  settingRobotVoiceLang = save.settingRobotVoiceLang || "uk",
-  settingVib = save.settingVib || false;
+let questClaimed =
+  save.questClaimed && typeof save.questClaimed === "object"
+    ? save.questClaimed
+    : {};
+let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
+    ? save.settingDiff
+    : "normal",
+  settingLives = [2, 3, 5].includes(Number(save.settingLives))
+    ? Number(save.settingLives)
+    : 3,
+  settingDist = [400, 800, 1400].includes(Number(save.settingDist))
+    ? Number(save.settingDist)
+    : 800,
+  settingSound =
+    typeof save.settingSound === "boolean" ? save.settingSound : false,
+  settingMusicTrack = ["kyiv", "march"].includes(save.settingMusicTrack)
+    ? save.settingMusicTrack
+    : "kyiv",
+  settingRobotVoiceLang = VALID_LANGUAGES.has(save.settingRobotVoiceLang)
+    ? save.settingRobotVoiceLang
+    : "uk",
+  settingVib = typeof save.settingVib === "boolean" ? save.settingVib : false;
 function saveGame() {
   saveGameSave({
+    lang,
     totalCoins,
     owned,
     selectedSkin,
@@ -867,6 +899,7 @@ let bgOff = 0,
   raf = null;
 let loopActive = false;
 let fireCooldown = 0;
+let startVoiceTimer = null;
 let bossActive = false,
   bossDefeated = false,
   bossTransform = 0,
@@ -1197,6 +1230,7 @@ document.querySelectorAll(".lbtn").forEach((b) => {
   b.onclick = () => {
     lang = b.dataset.lang;
     applyLang();
+    saveGame();
     if (musicPlaying) {
       stopLyrics();
       startLyrics();
@@ -1509,6 +1543,7 @@ function buildShop() {
     div.onclick = () => {
       if (owned.includes(sk.id)) {
         selectedSkin = sk.id;
+        saveGame();
         buildShop();
       } else if (totalCoins >= sk.price) {
         totalCoins -= sk.price;
@@ -1687,6 +1722,7 @@ function act(c) {
     return;
   }
   if (gameState === "win") {
+    stopGame();
     showScreen("sMenu");
     syncCoins();
     buildLevelBar();
@@ -1806,6 +1842,11 @@ function getLvl() {
 
 function startLevel() {
   focusApp();
+  cancelSpeech();
+  if (startVoiceTimer) {
+    clearTimeout(startVoiceTimer);
+    startVoiceTimer = null;
+  }
   currentLevel = getPlayableLevel(currentLevel);
   const tckSceneKey = currentLocation + ":" + currentLevel;
   if (currentLocation === 0 && currentLevel === 0 && !marichkaProjectSceneSeen) {
@@ -1869,7 +1910,10 @@ function startLevel() {
     loop();
   }
   // Андрій кричить на старті з затримкою
-  setTimeout(() => speakAndrii(ANDRII_START), 800);
+  startVoiceTimer = setTimeout(() => {
+    startVoiceTimer = null;
+    if (gameState === "run") speakAndrii(ANDRII_START);
+  }, 800);
 }
 
 function restartLevel() {
@@ -1886,6 +1930,11 @@ function startGame() {
 function stopGame() {
   gameState = "stopped";
   tckScene = null;
+  cancelSpeech();
+  if (startVoiceTimer) {
+    clearTimeout(startVoiceTimer);
+    startVoiceTimer = null;
+  }
   if (raf) {
     cancelAnimationFrame(raf);
     raf = null;
@@ -4370,7 +4419,7 @@ function drawWinOverlay() {
   ctx.fillStyle = "#ffd700";
   ctx.font = "14px sans-serif";
   ctx.fillText(
-    L.earned + ": " + runCoins + "₴   " + L.winBonus + ": +50₴",
+    `${L.earned}: ${runCoins}₴   ${L.winBonus}: +${getLvl().bonusCoins}₴`,
     W / 2,
     H / 2 + 22,
   );
@@ -4515,6 +4564,11 @@ const MARICHKA_PROJECT_LINES = [
 ];
 
 function beginStoryScene(kind, sceneKey = null) {
+  cancelSpeech();
+  if (startVoiceTimer) {
+    clearTimeout(startVoiceTimer);
+    startVoiceTimer = null;
+  }
   gameState = "story";
   fr = 0;
   bgOff = 0;
