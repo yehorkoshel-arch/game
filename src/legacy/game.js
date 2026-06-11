@@ -883,6 +883,7 @@ const SECRET_ROUTE_REWARD = 30;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
+const FINISH_APPROACH_DISTANCE = 10;
 let finishX = 9999,
   finishActive = false,
   schoolEnterTimer = 0,
@@ -5186,14 +5187,14 @@ function update() {
     !finishActive &&
     secretRouteResolved &&
     (!isKyivFinalBoss || bossDefeated) &&
-    totalDist >= FDIST - 200
+    totalDist >= FDIST - FINISH_APPROACH_DISTANCE
   ) {
     finishActive = true;
     finishX = W + 100;
   }
   if (finishActive) {
     finishX -= spd;
-    if (finishX < W / 2 && totalDist >= FDIST) {
+    if (finishX < W / 2) {
       gameState = "schoolEnter";
       schoolEnterTimer = 0;
       schoolDialogueStep = 0;
