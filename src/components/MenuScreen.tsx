@@ -3,6 +3,9 @@ import { DancingAndrii } from './DancingAndrii';
 export function MenuScreen() {
   return (
     <div id="sMenu" className="screen">
+      <div id="menuTimeBadge" className="menu-time-badge">
+        День
+      </div>
       <DancingAndrii />
       <button className="gear-btn" id="btnSettingsOpen" title="Налаштування" type="button">
         ⚙

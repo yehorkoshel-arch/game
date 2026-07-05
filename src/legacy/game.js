@@ -1110,6 +1110,23 @@ function updateQuestReadyBadge() {
   badge.textContent = String(count);
   badge.style.display = count > 0 ? "" : "none";
 }
+function getMenuTimeOfDay(date = new Date()) {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 11)
+    return { className: "time-morning", label: "\u0420\u0430\u043d\u043e\u043a" };
+  if (hour >= 11 && hour < 19)
+    return { className: "time-day", label: "\u0414\u0435\u043d\u044c" };
+  return { className: "time-night", label: "\u041d\u0456\u0447" };
+}
+function updateMenuTimeOfDay() {
+  const menu = document.getElementById("sMenu");
+  const badge = document.getElementById("menuTimeBadge");
+  if (!menu) return;
+  const period = getMenuTimeOfDay();
+  menu.classList.remove("time-night", "time-morning", "time-day");
+  menu.classList.add(period.className);
+  if (badge) badge.textContent = period.label;
+}
 function refreshQuestUI() {
   const questScreen = document.getElementById("sQuests");
   if (questScreen?.classList.contains("active")) {
@@ -1153,6 +1170,8 @@ function buildQuests() {
   updateQuestReadyBadge();
 }
 window.addEventListener("load", () => setTimeout(focusApp, 100));
+window.addEventListener("load", updateMenuTimeOfDay);
+setInterval(updateMenuTimeOfDay, 60000);
 function unlockGameAudio() {
   const c = getSfxCtx();
   if (c && c.state === "suspended") c.resume().catch(() => {});
