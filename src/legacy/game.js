@@ -92,6 +92,35 @@ let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
     ? save.settingRobotVoiceLang
     : "uk",
   settingVib = typeof save.settingVib === "boolean" ? save.settingVib : false;
+const savedWeaponUpgrades =
+  save.weaponUpgrades && typeof save.weaponUpgrades === "object"
+    ? save.weaponUpgrades
+    : {};
+let weaponUpgrades = {
+  fireRate: Boolean(savedWeaponUpgrades.fireRate),
+  damage: Boolean(savedWeaponUpgrades.damage),
+  laser: Boolean(savedWeaponUpgrades.laser),
+};
+const WEAPON_UPGRADES = [
+  {
+    id: "fireRate",
+    name: "\u0428\u0432\u0438\u0434\u043a\u0438\u0439 \u043c\u0456\u043d\u0456\u0433\u0430\u043d",
+    desc: "\u041c\u0435\u043d\u0448\u0430 \u0437\u0430\u0442\u0440\u0438\u043c\u043a\u0430 \u043c\u0456\u0436 \u0447\u0435\u0440\u0433\u0430\u043c\u0438",
+    price: 450,
+  },
+  {
+    id: "damage",
+    name: "\u041f\u043e\u0442\u0443\u0436\u043d\u0456 \u043a\u0443\u043b\u0456",
+    desc: "\u0411\u0456\u043b\u044c\u0448\u0435 \u0443\u0440\u043e\u043d\u0443 \u043f\u043e \u0431\u043e\u0441\u0430\u0445",
+    price: 650,
+  },
+  {
+    id: "laser",
+    name: "\u041b\u0430\u0437\u0435\u0440\u043d\u0438\u0439 \u0431\u043b\u0430\u0441\u0442\u0435\u0440",
+    desc: "\u0414\u043e\u0434\u0430\u0454 \u043b\u0430\u0437\u0435\u0440\u043d\u0438\u0439 \u043f\u043e\u0441\u0442\u0440\u0456\u043b",
+    price: 900,
+  },
+];
 function saveGame() {
   saveGameSave({
     lang,
@@ -113,6 +142,7 @@ function saveGame() {
     tckSceneSeenLevels,
     questStats,
     questClaimed,
+    weaponUpgrades,
   });
 }
 
@@ -890,6 +920,7 @@ let pLane = 1,
   flash = 0;
 let obs = [],
   coins = [],
+  cityGifts = [],
   parts = [],
   confetti = [],
   bullets = [],
@@ -1871,6 +1902,7 @@ function startLevel() {
   slideT = 0;
   obs = [];
   coins = [];
+  cityGifts = [];
   parts = [];
   confetti = [];
   bullets = [];
@@ -1979,6 +2011,27 @@ function spawnCoin() {
   const l = Math.floor(Math.random() * 3),
     hi = Math.random() < 0.35;
   coins.push({ x: W + 20, lane: l, y: hi ? GND - 70 : GND, done: false });
+}
+function spawnCityGift(secret = false) {
+  if (secretRoute?.active || bossActive || gameState !== "run") return;
+  const lane = Math.floor(Math.random() * 3);
+  const sourceX = LANES[lane] + (Math.random() - 0.5) * 80;
+  const sourceY = secret ? 88 : 120 + Math.random() * 74;
+  cityGifts.push({
+    x: sourceX,
+    y: sourceY,
+    lane,
+    vx: (LANES[lane] - sourceX) / 70,
+    vy: secret ? 1.25 : 1.65,
+    value: secret ? 12 : 4,
+    life: 170,
+    secret,
+  });
+  showAndriiBubble(
+    secret
+      ? "\u0414\u0456\u0434 \u0437 \u0431\u0430\u043b\u043a\u043e\u043d\u0430 \u0434\u0430\u0454 \u0431\u043e\u043d\u0443\u0441!"
+      : "\u0411\u0456\u0436\u0438, \u0410\u043d\u0434\u0440\u0456\u044e!",
+  );
 }
 function addParts(x, y, col) {
   for (let i = 0; i < 7; i++)
@@ -2158,6 +2211,57 @@ function drawWindowPerson(cx, cy, scale, wavePhase, shirt = "#2f80ed") {
   ctx.restore();
 }
 
+function drawBalconyGrandpa(x, y, wavePhase) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
+  ctx.fillRect(-28, 14, 56, 5);
+  ctx.strokeStyle = "#d8c27a";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-24, 14);
+  ctx.lineTo(24, 14);
+  ctx.moveTo(-18, 14);
+  ctx.lineTo(-18, 30);
+  ctx.moveTo(0, 14);
+  ctx.lineTo(0, 30);
+  ctx.moveTo(18, 14);
+  ctx.lineTo(18, 30);
+  ctx.stroke();
+
+  ctx.fillStyle = "#f0c090";
+  ctx.beginPath();
+  ctx.arc(0, -5, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#eeeeee";
+  ctx.beginPath();
+  ctx.arc(0, -10, 9, Math.PI, 0);
+  ctx.fill();
+  ctx.fillRect(-5, 0, 10, 7);
+  ctx.fillStyle = "#3a6ea5";
+  ctx.fillRect(-10, 5, 20, 15);
+
+  const wave = Math.sin(fr * 0.13 + wavePhase) * 5;
+  ctx.strokeStyle = "#f0c090";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(8, 8);
+  ctx.quadraticCurveTo(22, -6 - wave, 31, -1 + wave);
+  ctx.stroke();
+  ctx.strokeStyle = "#6b4b28";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(30, 0);
+  ctx.lineTo(30, -26);
+  ctx.stroke();
+  ctx.fillStyle = "#0057b7";
+  ctx.fillRect(31, -25, 26, 8);
+  ctx.fillStyle = "#ffd700";
+  ctx.fillRect(31, -17, 26, 8);
+  ctx.restore();
+}
+
 function drawGreetingWindow(x, y, w, h, personIdx) {
   ctx.fillStyle = personIdx % 2 === 0 ? "#ffe8a8" : "#f4d7a1";
   if (ctx.roundRect) {
@@ -2189,6 +2293,7 @@ function drawGreetingWindow(x, y, w, h, personIdx) {
 }
 
 function drawGreetingBuildings(x, location) {
+  const secretGrandpaVisible = Math.floor(fr / 480) % 3 === 1;
   const people = [
     [18, 102, 0],
     [138, 135, 1],
@@ -2213,6 +2318,7 @@ function drawGreetingBuildings(x, location) {
     );
     drawGreetingWindow(x + wx, wy, ww, wh, person ? person[2] : -1);
   }
+  if (secretGrandpaVisible) drawBalconyGrandpa(x + 138, 102, x * 0.01);
 
   ctx.save();
   ctx.globalAlpha = 0.9;
@@ -4703,6 +4809,7 @@ function beginStoryScene(kind, sceneKey = null) {
   slideT = 0;
   obs = [];
   coins = [];
+  cityGifts = [];
   parts = [];
   bullets = [];
   confetti = [];
@@ -5305,7 +5412,8 @@ function update() {
     bossSpecialCooldown = 430;
     chaserX = -220;
     obs = [];
-    coins = [];
+  coins = [];
+  cityGifts = [];
     speakAndrii(["Ого! Машина перетворюється на трансформера!"]);
   }
   if (bossActive) {
