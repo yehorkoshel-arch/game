@@ -39,6 +39,10 @@ canvas{display:block}
 .sitem-price{font-size:12px;color:#ffd700}
 .sitem-owned{font-size:12px;color:#6bcb77}
 .sitem canvas{border-radius:6px;background:#0d1220}
+.shop-section-title{grid-column:1/-1;color:#ffd700;font-size:14px;font-weight:700;margin-top:6px;text-align:left}
+.sitem.upgrade{min-height:118px;justify-content:center}
+.sitem-upgrade-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#101833;border:1px solid #4466aa;color:#7df9ff;font-weight:800;font-size:18px;box-shadow:0 0 16px rgba(0,229,255,.12)}
+.sitem-desc{font-size:11px;line-height:1.25;color:#8fa0bb;text-align:center;min-height:28px}
 .shop-footer{flex-shrink:0;padding:12px 18px;border-top:0.5px solid #2a3a5a;display:flex;justify-content:flex-start}
 #sSettings{background:#1a1a2e}
 .settings-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:0.5px solid #2a3a5a;flex-shrink:0}

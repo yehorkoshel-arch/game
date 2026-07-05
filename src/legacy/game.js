@@ -1587,6 +1587,42 @@ function buildShop() {
     };
     grid.appendChild(div);
   });
+  const upgradesTitle = document.createElement("div");
+  upgradesTitle.className = "shop-section-title";
+  upgradesTitle.textContent = "\u041f\u043e\u043a\u0440\u0430\u0449\u0435\u043d\u043d\u044f \u0437\u0431\u0440\u043e\u0457";
+  grid.appendChild(upgradesTitle);
+  WEAPON_UPGRADES.forEach((upgrade) => {
+    const div = document.createElement("div");
+    const bought = Boolean(weaponUpgrades[upgrade.id]);
+    div.className = "sitem upgrade" + (bought ? " owned" : "");
+    const icon = document.createElement("div");
+    icon.className = "sitem-upgrade-icon";
+    icon.textContent =
+      upgrade.id === "fireRate" ? "\u2699" : upgrade.id === "damage" ? "x2" : "\u26a1";
+    const nm = document.createElement("div");
+    nm.className = "sitem-name";
+    nm.textContent = upgrade.name;
+    const desc = document.createElement("div");
+    desc.className = "sitem-desc";
+    desc.textContent = upgrade.desc;
+    const pr = document.createElement("div");
+    pr.className = bought ? "sitem-owned" : "sitem-price";
+    pr.textContent = bought ? "\u041a\u0443\u043f\u043b\u0435\u043d\u043e" : upgrade.price + "\u20b4";
+    div.appendChild(icon);
+    div.appendChild(nm);
+    div.appendChild(desc);
+    div.appendChild(pr);
+    div.onclick = () => {
+      if (bought || totalCoins < upgrade.price) return;
+      totalCoins -= upgrade.price;
+      weaponUpgrades[upgrade.id] = true;
+      syncCoins();
+      saveGame();
+      buildShop();
+      sfxCoin();
+    };
+    grid.appendChild(div);
+  });
 }
 
 document.getElementById("btnPlay").onclick = () => {
@@ -1799,7 +1835,7 @@ function fireAndriiWeapon() {
   const x = LANES[pLane] + 24;
   const y = pSlide ? pY - 12 : pY - 34;
   if (weapon === "minigun") {
-    fireCooldown = 12;
+    fireCooldown = weaponUpgrades.fireRate ? 8 : 12;
     for (let i = 0; i < 9; i++) {
       playerBullets.push({
         x: x + i * 8,
@@ -1810,13 +1846,23 @@ function fireAndriiWeapon() {
         type: "minigun",
       });
     }
+    if (weaponUpgrades.laser) {
+      playerBullets.push({
+        x,
+        y: y - 9,
+        lane: pLane,
+        vx: 19,
+        life: 34,
+        type: "laser",
+      });
+    }
     sfxMachineGunBurst();
     setTimeout(sfxShot, 170);
     return;
   }
 
   if (weapon === "bossblaster") {
-    fireCooldown = 10;
+    fireCooldown = weaponUpgrades.fireRate ? 7 : 10;
     playerBullets.push({
       x,
       y: pY - 34,
@@ -1825,11 +1871,21 @@ function fireAndriiWeapon() {
       life: 50,
       type: "bossblaster",
     });
+    if (weaponUpgrades.laser) {
+      playerBullets.push({
+        x,
+        y: pY - 44,
+        lane: pLane,
+        vx: 20,
+        life: 38,
+        type: "laser",
+      });
+    }
     sfxShot();
     return;
   }
 
-  fireCooldown = 16;
+  fireCooldown = weaponUpgrades.fireRate ? 11 : 16;
   for (let i = 0; i < 3; i++) {
     playerBullets.push({
       x: x + i * 12,
@@ -1838,6 +1894,16 @@ function fireAndriiWeapon() {
       vx: 11 + i * 0.9,
       life: 46,
       type: "machinegun",
+    });
+  }
+  if (weaponUpgrades.laser) {
+    playerBullets.push({
+      x,
+      y: y - 8,
+      lane: pLane,
+      vx: 18,
+      life: 34,
+      type: "laser",
     });
   }
   sfxMachineGunBurst();
@@ -2128,6 +2194,27 @@ function drawBullets() {
   });
   playerBullets.forEach((b) => {
     const alpha = Math.min(1, b.life / 12);
+    if (b.type === "laser") {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.shadowColor = "#63f7ff";
+      ctx.shadowBlur = 14;
+      ctx.strokeStyle = "#bffcff";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(b.x - 42, b.y);
+      ctx.lineTo(b.x + 30, b.y);
+      ctx.stroke();
+      ctx.strokeStyle = "#1fd1ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(b.x - 46, b.y);
+      ctx.lineTo(b.x + 34, b.y);
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
     ctx.globalAlpha = alpha * 0.35;
     ctx.fillStyle = "#3aa7ff";
     ctx.fillRect(b.x - 20, b.y - 2, 22, 4);
@@ -4479,6 +4566,36 @@ function drawCoin(c) {
   ctx.textAlign = "left";
 }
 
+function drawCityGift(gift) {
+  const bob = Math.sin(fr * 0.16 + gift.x * 0.04) * 3;
+  const x = gift.x;
+  const y = gift.y + bob;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, gift.life / 24);
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, gift.secret ? 28 : 22);
+  glow.addColorStop(0, gift.secret ? "rgba(255,247,178,0.95)" : "rgba(255,255,210,0.8)");
+  glow.addColorStop(1, "rgba(255,215,0,0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, gift.secret ? 28 : 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = gift.secret ? "#ffd45c" : "#ffd700";
+  ctx.beginPath();
+  ctx.arc(x, y, gift.secret ? 12 : 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = gift.secret ? "#0057b7" : "#b8860b";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(x, y, gift.secret ? 12 : 9, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "#6b4b00";
+  ctx.font = gift.secret ? "bold 12px sans-serif" : "bold 10px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("+" + gift.value, x, y + 4);
+  ctx.textAlign = "left";
+  ctx.restore();
+}
+
 function drawDistBar() {
   const lv = getLvl();
   const pct = Math.min(totalDist / lv.dist, 1);
@@ -5412,8 +5529,8 @@ function update() {
     bossSpecialCooldown = 430;
     chaserX = -220;
     obs = [];
-  coins = [];
-  cityGifts = [];
+    coins = [];
+    cityGifts = [];
     speakAndrii(["Ого! Машина перетворюється на трансформера!"]);
   }
   if (bossActive) {
@@ -5545,9 +5662,35 @@ function update() {
     totalDist < FDIST - 50
   )
     spawnCoin();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    fr % 260 === 80 &&
+    totalDist < FDIST - 80
+  )
+    spawnCityGift(false);
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    fr % 780 === 220 &&
+    totalDist < FDIST - 120
+  )
+    spawnCityGift(true);
 
   obs.forEach((o) => (o.x -= spd + (o.vx || 0)));
   coins.forEach((c) => (c.x -= spd));
+  cityGifts.forEach((gift) => {
+    gift.x += gift.vx - spd * 0.12;
+    gift.y += gift.vy;
+    gift.life--;
+    if (gift.y > GND - 15) {
+      gift.y = GND - 15;
+      gift.vy = 0;
+      gift.vx *= 0.94;
+    }
+  });
 
   // ТЦК стріляють у Львові з третього рівня, коли їхня зброя вже видима.
   if (currentLocation === 1 && currentLevel >= 2) {
@@ -5612,7 +5755,7 @@ function update() {
       b.x < bossX + 60
     ) {
       hitTarget = true;
-      bossHp -= b.type === "bossblaster" ? 2 : 1;
+      bossHp -= b.type === "bossblaster" ? (weaponUpgrades.damage ? 3 : 2) : weaponUpgrades.damage ? 2 : 1;
       bossFlash = 5;
       addParts(bossX - 25, GND - 95, "#8cffd8");
       sfxHit();
@@ -5658,6 +5801,8 @@ function update() {
               w: Math.max(44, b.vx * 2),
               h: 20,
             }
+          : b.type === "laser"
+            ? { x: b.x - 48, y: b.y - 8, w: 86, h: 16 }
           : { x: b.x - 5, y: b.y - 4, w: 10, h: 8 };
       if (!hit(br, oRect(o))) return true;
       hitTarget = true;
@@ -5671,9 +5816,20 @@ function update() {
 
   obs = obs.filter((o) => o.x > -80);
   coins = coins.filter((c) => !c.done && c.x > -20);
+  cityGifts = cityGifts.filter((gift) => gift.life > 0 && gift.x > -30);
 
   const pr = pRect(),
     px = LANES[pLane];
+  cityGifts = cityGifts.filter((gift) => {
+    const gr = { x: gift.x - 16, y: gift.y - 16, w: 32, h: 32 };
+    if (!hit(pr, gr)) return true;
+    runCoins += gift.value;
+    addQuestProgress("coins", gift.value);
+    sfxCoin();
+    addParts(gift.x, gift.y, gift.secret ? "#ffd45c" : "#ffd700");
+    hudUp();
+    return false;
+  });
 
   // перевірка куль
   bullets = bullets.filter((b) => {
@@ -5772,6 +5928,7 @@ function loop() {
   drawSecretRouteEntrance();
   drawFinishLine();
   coins.forEach(drawCoin);
+  cityGifts.forEach(drawCityGift);
   obs.forEach(drawObs);
   drawKyivBoss();
   drawChaser();
