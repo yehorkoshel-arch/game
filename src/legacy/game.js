@@ -1127,6 +1127,57 @@ function updateMenuTimeOfDay() {
   menu.classList.add(period.className);
   if (badge) badge.textContent = period.label;
 }
+function drawTimeOfDaySky(lv) {
+  const period = getMenuTimeOfDay().className;
+  const sky = ctx.createLinearGradient(0, 0, 0, GND);
+  if (period === "time-night") {
+    sky.addColorStop(0, "#07122f");
+    sky.addColorStop(0.58, "#111834");
+    sky.addColorStop(1, lv.sky);
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#f8f1c6";
+    ctx.beginPath();
+    ctx.arc(82, 42, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#07122f";
+    ctx.beginPath();
+    ctx.arc(89, 37, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    for (let i = 0; i < 18; i++) {
+      const sx = (i * 73 + 41) % W;
+      const sy = 18 + ((i * 29) % 86);
+      ctx.fillRect(sx, sy, i % 4 === 0 ? 2 : 1, i % 5 === 0 ? 2 : 1);
+    }
+  } else if (period === "time-morning") {
+    sky.addColorStop(0, "#f3a35f");
+    sky.addColorStop(0.5, "#6da7d4");
+    sky.addColorStop(1, lv.sky);
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(255,218,105,0.9)";
+    ctx.beginPath();
+    ctx.arc(96, 82, 34, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    sky.addColorStop(0, "#54a9e8");
+    sky.addColorStop(0.58, "#2e78b0");
+    sky.addColorStop(1, lv.sky);
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#fff6a6";
+    ctx.beginPath();
+    ctx.arc(W - 86, 58, 34, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.78)";
+    ctx.beginPath();
+    ctx.ellipse(145, 58, 46, 14, 0, 0, Math.PI * 2);
+    ctx.ellipse(188, 54, 36, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  return period;
+}
 function refreshQuestUI() {
   const questScreen = document.getElementById("sQuests");
   if (questScreen?.classList.contains("active")) {
@@ -2464,9 +2515,8 @@ function drawBG() {
     return;
   }
   const lv = getLvl();
-  ctx.fillStyle = lv.sky;
-  ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = lv.road;
+  const timePeriod = drawTimeOfDaySky(lv);
+  ctx.fillStyle = timePeriod === "time-night" ? "#12182d" : lv.road;
   ctx.fillRect(0, GND - 10, W, H - GND + 10);
 
   const off = (bgOff * 0.25) % 400;
