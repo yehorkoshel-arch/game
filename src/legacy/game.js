@@ -1094,7 +1094,7 @@ function addQuestProgress(id, amount = 1) {
   const quest = QUESTS.find((item) => item.id === id);
   if (!quest || questClaimed[id]) return;
   questStats[id] = Math.min(quest.target, (Number(questStats[id]) || 0) + amount);
-  updateQuestReadyBadge();
+  refreshQuestUI();
 }
 function getReadyQuestCount() {
   return QUESTS.filter(
@@ -1109,6 +1109,14 @@ function updateQuestReadyBadge() {
   const count = getReadyQuestCount();
   badge.textContent = String(count);
   badge.style.display = count > 0 ? "" : "none";
+}
+function refreshQuestUI() {
+  const questScreen = document.getElementById("sQuests");
+  if (questScreen?.classList.contains("active")) {
+    buildQuests();
+    return;
+  }
+  updateQuestReadyBadge();
 }
 function buildQuests() {
   const list = document.getElementById("questList");
@@ -3821,6 +3829,189 @@ function drawRobotronHead(x, y, pulse, sideways) {
   ctx.restore();
 }
 
+function drawMarichkaRemodel(x, y, options = {}) {
+  const step = options.step ?? Math.sin(fr * 0.32) * 10;
+  const holdingProject = Boolean(options.holdingProject);
+  const showName = Boolean(options.showName);
+  const dangerPct = options.dangerPct ?? 0;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.23)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 5, 18, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#f0d0a8";
+  ctx.fillRect(x - 10, y - 1, 7, 16 + step);
+  ctx.fillRect(x + 3, y - 1, 7, 16 - step);
+  ctx.fillStyle = "#ffd23f";
+  ctx.fillRect(x - 12, y + 13 + step, 11, 5);
+  ctx.fillRect(x + 1, y + 13 - step, 11, 5);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(x - 12, y + 18 + step, 12, 3);
+  ctx.fillRect(x, y + 18 - step, 12, 3);
+
+  ctx.fillStyle = "#ffe45c";
+  ctx.beginPath();
+  ctx.moveTo(x - 18, y - 1);
+  ctx.lineTo(x - 13, y - 31);
+  ctx.quadraticCurveTo(x, y - 40, x + 13, y - 31);
+  ctx.lineTo(x + 18, y - 1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#1f5b8f";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 37);
+  ctx.lineTo(x, y - 4);
+  ctx.moveTo(x - 12, y - 29);
+  ctx.lineTo(x + 12, y - 29);
+  ctx.stroke();
+  ctx.fillStyle = "#101820";
+  for (let i = 0; i < 4; i++) {
+    const by = y - 31 + i * 7;
+    ctx.fillRect(x - 10, by, 3, 3);
+    ctx.fillRect(x + 7, by, 3, 3);
+  }
+
+  ctx.fillStyle = "#1f5b8f";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - 12, y - 48, 24, 20, 5);
+  else ctx.fillRect(x - 12, y - 48, 24, 20);
+  ctx.fill();
+  ctx.fillStyle = "#ffe45c";
+  ctx.fillRect(x - 10, y - 43, 20, 4);
+
+  ctx.strokeStyle = "#f0d0a8";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - 11, y - 42);
+  ctx.lineTo(x - 23, y - 24 + step * 0.25);
+  ctx.moveTo(x + 11, y - 42);
+  ctx.lineTo(x + 23, y - 24 - step * 0.25);
+  ctx.stroke();
+  ctx.strokeStyle = "#0d5fb8";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x - 11, y - 45);
+  ctx.quadraticCurveTo(x - 24, y - 31, x - 30, y - 9);
+  ctx.moveTo(x + 11, y - 45);
+  ctx.quadraticCurveTo(x + 24, y - 31, x + 30, y - 9);
+  ctx.stroke();
+
+  ctx.fillStyle = "#f0d0a8";
+  ctx.fillRect(x - 4, y - 53, 8, 7);
+  ctx.beginPath();
+  ctx.arc(x, y - 62, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#e6b989";
+  ctx.beginPath();
+  ctx.arc(x - 13, y - 61, 3, 0, Math.PI * 2);
+  ctx.arc(x + 13, y - 61, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#3a1a0a";
+  ctx.beginPath();
+  ctx.arc(x, y - 70, 14, Math.PI, 0);
+  ctx.fill();
+  ctx.strokeStyle = "#3a1a0a";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - 12, y - 66);
+  ctx.quadraticCurveTo(x - 23, y - 52 + step * 0.1, x - 18, y - 33);
+  ctx.moveTo(x + 12, y - 66);
+  ctx.quadraticCurveTo(x + 23, y - 52 - step * 0.1, x + 18, y - 33);
+  ctx.stroke();
+
+  const flowers = [
+    [-15, -77, "#0057b7"],
+    [-8, -81, "#ffd700"],
+    [0, -79, "#0057b7"],
+    [8, -81, "#ffd700"],
+    [15, -77, "#0057b7"],
+  ];
+  flowers.forEach(([fx, fy, col], i) => {
+    ctx.fillStyle = col;
+    for (let p = 0; p < 5; p++) {
+      const a = (Math.PI * 2 * p) / 5 + i * 0.2;
+      ctx.beginPath();
+      ctx.arc(x + fx + Math.cos(a) * 3, y + fy + Math.sin(a) * 3, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#3a2a05";
+    ctx.beginPath();
+    ctx.arc(x + fx, y + fy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.fillStyle = "#263238";
+  ctx.beginPath();
+  ctx.arc(x - 4, y - 63, 2, 0, Math.PI * 2);
+  ctx.arc(x + 4, y - 63, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,150,150,0.42)";
+  ctx.beginPath();
+  ctx.ellipse(x - 8, y - 58, 4, 2.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + 8, y - 58, 4, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#9a4b36";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(x, y - 57, 4, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+  ctx.fillStyle = "#ffd700";
+  ctx.beginPath();
+  ctx.arc(x - 13, y - 55, 2, 0, Math.PI * 2);
+  ctx.arc(x + 13, y - 55, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (holdingProject) {
+    ctx.save();
+    ctx.translate(x + 26, y - 27);
+    ctx.rotate(-0.12);
+    ctx.fillStyle = "#f5ecd4";
+    ctx.fillRect(-14, -18, 28, 36);
+    ctx.fillStyle = "#2878bd";
+    ctx.fillRect(-14, -18, 28, 7);
+    ctx.fillStyle = "#333";
+    ctx.font = "bold 6px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("ПРОЄКТ", 0, -6);
+    ctx.fillStyle = "#7396a8";
+    ctx.fillRect(-9, 0, 18, 2);
+    ctx.fillRect(-9, 5, 14, 2);
+    ctx.restore();
+  }
+
+  if (showName) {
+    ctx.globalAlpha = Math.min(1, Math.max(0.45, dangerPct + 0.2));
+    ctx.fillStyle = "rgba(15,18,30,0.84)";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - 31, y - 99, 62, 18, 5);
+    else ctx.fillRect(x - 31, y - 99, 62, 18);
+    ctx.fill();
+    ctx.fillStyle = "#ff8fc8";
+    ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Марічка", x, y - 86);
+    ctx.textAlign = "left";
+    ctx.globalAlpha = 1;
+    if (dangerPct > 0.45) {
+      const pulse = 0.7 + Math.sin(fr * 0.15) * 0.3;
+      ctx.globalAlpha = (pulse * (dangerPct - 0.45)) / 0.55;
+      ctx.fillStyle = "#ffd700";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("x2 ₴", x, y - 85);
+      ctx.textAlign = "left";
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.restore();
+}
+
 function drawChaser() {
   if (gameState === "win" || gameState === "schoolEnter") return;
   const cx = chaserX,
@@ -3834,6 +4025,8 @@ function drawChaser() {
     ctx.fillStyle = `rgba(255,100,180,${auraAlpha})`;
     ctx.fillRect(cx - 20, cy - 80, 40, H - cy + 80);
   }
+  drawMarichkaRemodel(cx, cy, { step: lp, showName: true, dangerPct });
+  return;
 
   // тінь
   ctx.fillStyle = "rgba(0,0,0,0.2)";
@@ -3846,7 +4039,7 @@ function drawChaser() {
   ctx.fillRect(cx - 10, cy, 7, 14 + lp);
   ctx.fillRect(cx + 3, cy, 7, 14 - lp);
   // кросівки
-  ctx.fillStyle = "#ff69b4";
+  ctx.fillStyle = "#ffd23f";
   ctx.fillRect(cx - 11, cy + 12 + lp, 10, 6);
   ctx.fillRect(cx + 2, cy + 12 - lp, 10, 6);
   // підошва
@@ -3855,7 +4048,7 @@ function drawChaser() {
   ctx.fillRect(cx + 1, cy + 17 - lp, 11, 3);
 
   // спідниця / плаття
-  ctx.fillStyle = "#e91e8c";
+  ctx.fillStyle = "#ffe45c";
   ctx.beginPath();
   ctx.moveTo(cx - 16, cy);
   ctx.lineTo(cx - 14, cy - 28);
@@ -3864,15 +4057,21 @@ function drawChaser() {
   ctx.closePath();
   ctx.fill();
   // візерунок на спідниці (серця)
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.font = "8px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("♥", cx - 5, cy - 10);
-  ctx.fillText("♥", cx + 5, cy - 18);
-  ctx.textAlign = "left";
+  ctx.strokeStyle = "#1f5b8f";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 28);
+  ctx.lineTo(cx, cy - 2);
+  ctx.stroke();
+  ctx.fillStyle = "#101820";
+  for (let i = 0; i < 3; i++) {
+    const by = cy - 23 + i * 7;
+    ctx.fillRect(cx - 10, by, 3, 3);
+    ctx.fillRect(cx + 7, by, 3, 3);
+  }
 
   // тіло (топ)
-  ctx.fillStyle = "#c2185b";
+  ctx.fillStyle = "#ffe45c";
   ctx.beginPath();
   if (ctx.roundRect) {
     ctx.roundRect(cx - 12, cy - 46, 24, 20, 4);
@@ -3889,6 +4088,14 @@ function drawChaser() {
   ctx.lineTo(cx - 18, cy - 26 + lp * 0.3);
   ctx.moveTo(cx + 10, cy - 40);
   ctx.lineTo(cx + 18, cy - 26 - lp * 0.3);
+  ctx.stroke();
+  ctx.strokeStyle = "#0d5fb8";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx - 10, cy - 43);
+  ctx.quadraticCurveTo(cx - 22, cy - 28, cx - 29, cy - 5);
+  ctx.moveTo(cx + 10, cy - 43);
+  ctx.quadraticCurveTo(cx + 22, cy - 28, cx + 29, cy - 5);
   ctx.stroke();
 
   // шия
@@ -3909,7 +4116,7 @@ function drawChaser() {
   ctx.arc(cx + 12, cy - 60, 3, 0, Math.PI * 2);
   ctx.fill();
   // сережки
-  ctx.fillStyle = "#ff69b4";
+  ctx.fillStyle = "#ffd700";
   ctx.beginPath();
   ctx.arc(cx - 12, cy - 55, 2, 0, Math.PI * 2);
   ctx.fill();
@@ -3984,6 +4191,33 @@ function drawChaser() {
   ctx.lineWidth = 1;
 
   // іконка x2 над головою коли близько
+  const chaserFlowers = [
+    [-13, -75, "#0057b7"],
+    [-6, -79, "#ffd700"],
+    [1, -77, "#0057b7"],
+    [8, -79, "#ffd700"],
+    [15, -75, "#0057b7"],
+  ];
+  chaserFlowers.forEach(([fx, fy, col], i) => {
+    ctx.fillStyle = col;
+    for (let p = 0; p < 5; p++) {
+      const a = (Math.PI * 2 * p) / 5 + i * 0.18;
+      ctx.beginPath();
+      ctx.arc(
+        cx + fx + Math.cos(a) * 3,
+        cy + fy + Math.sin(a) * 3,
+        3,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.fillStyle = "#3a2a05";
+    ctx.beginPath();
+    ctx.arc(cx + fx, cy + fy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
   ctx.globalAlpha = Math.min(1, Math.max(0.45, dangerPct + 0.2));
   ctx.fillStyle = "rgba(15,18,30,0.84)";
   ctx.beginPath();
@@ -5111,6 +5345,8 @@ function drawBlackCar(x, y) {
 
 function drawStoryMarichka(x, y, holdingProject) {
   const step = Math.sin(fr * 0.22) * 7;
+  drawMarichkaRemodel(x, y, { step, holdingProject });
+  return;
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,0.22)";
   ctx.beginPath();
