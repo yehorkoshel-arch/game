@@ -2114,6 +2114,130 @@ function addConfetti() {
     });
 }
 
+function drawWindowPerson(cx, cy, scale, wavePhase, shirt = "#2f80ed") {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+
+  ctx.fillStyle = "#f0c090";
+  ctx.beginPath();
+  ctx.arc(0, -12, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = shirt;
+  ctx.beginPath();
+  ctx.moveTo(-10, 14);
+  ctx.quadraticCurveTo(0, -3, 10, 14);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#f0c090";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  const wave = Math.sin(fr * 0.12 + wavePhase) * 5;
+  ctx.beginPath();
+  ctx.moveTo(8, 0);
+  ctx.quadraticCurveTo(18, -14 - wave, 26, -7 + wave);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-8, 1);
+  ctx.quadraticCurveTo(-16, -7, -21, -2);
+  ctx.stroke();
+
+  ctx.fillStyle = "#1a1a2e";
+  ctx.beginPath();
+  ctx.arc(-3, -14, 1.2, 0, Math.PI * 2);
+  ctx.arc(4, -14, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#7a3c2b";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.arc(1, -9, 4, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawGreetingWindow(x, y, w, h, personIdx) {
+  ctx.fillStyle = personIdx % 2 === 0 ? "#ffe8a8" : "#f4d7a1";
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 4);
+    ctx.fill();
+  } else {
+    ctx.fillRect(x, y, w, h);
+  }
+  ctx.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+
+  if (personIdx >= 0) {
+    const shirts = ["#2f80ed", "#ff6b6b", "#27c7d9", "#ffd45c"];
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x + 2, y + 2, w - 4, h - 4);
+    ctx.clip();
+    drawWindowPerson(
+      x + w * 0.5,
+      y + h * 0.78,
+      0.72,
+      personIdx * 1.7,
+      shirts[personIdx % shirts.length],
+    );
+    ctx.restore();
+  }
+}
+
+function drawGreetingBuildings(x, location) {
+  const people = [
+    [18, 102, 0],
+    [138, 135, 1],
+    [226, 82, 2],
+    [18, 205, 3],
+    [226, 188, 4],
+  ];
+  const windows = [
+    [18, 102, 38, 42],
+    [18, 155, 38, 42],
+    [18, 205, 38, 42],
+    [138, 135, 36, 40],
+    [138, 188, 36, 40],
+    [226, 82, 30, 38],
+    [226, 135, 30, 38],
+    [226, 188, 30, 38],
+  ];
+
+  for (const [wx, wy, ww, wh] of windows) {
+    const person = people.find(
+      ([px, py]) => Math.abs(px - wx) < 2 && Math.abs(py - wy) < 2,
+    );
+    drawGreetingWindow(x + wx, wy, ww, wh, person ? person[2] : -1);
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(x + 54, 58, 148, 30, 8);
+    ctx.fill();
+  } else {
+    ctx.fillRect(x + 54, 58, 148, 30);
+  }
+  ctx.fillStyle = location === 1 ? "#6a2d1f" : "#1f4b8f";
+  ctx.font = "bold 15px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(
+    location === 1
+      ? "\u0412\u043f\u0435\u0440\u0435\u0434, \u0410\u043d\u0434\u0440\u0456\u044e!"
+      : "\u041f\u0440\u0438\u0432\u0456\u0442, \u0410\u043d\u0434\u0440\u0456\u044e!",
+    x + 128,
+    78,
+  );
+  ctx.textAlign = "left";
+  ctx.restore();
+}
+
 function drawBG() {
   if (secretRoute && secretRoute.active && !secretRoute.entering) {
     drawSecretRouteBackground();
@@ -2134,6 +2258,7 @@ function drawBG() {
     ctx.fillRect(x + 120, 110, 70, H - 160);
     ctx.fillStyle = lv.bldC;
     ctx.fillRect(x + 210, 60, 50, H - 110);
+    drawGreetingBuildings(x, lv.loc);
   }
 
   for (let i = 0; i < 3; i++) {
