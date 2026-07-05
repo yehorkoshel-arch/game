@@ -5202,18 +5202,25 @@ const TCK_SCENE_LINES = [
   },
 ];
 const TCK_SCENE_END_FRAME = 2700;
+const MARICHKA_PROJECT_01 = "\u041e\u0439, \u0449\u043e \u0446\u0435 \u0432\u0438\u043f\u0430\u043b\u043e \u0437 \u0440\u044e\u043a\u0437\u0430\u043a\u0430 \u0410\u043d\u0434\u0440\u0456\u044f?";
+const MARICHKA_PROJECT_02 =
+  "\u0422\u0430 \u0446\u0435 \u0436 \u0439\u043e\u0433\u043e \u0448\u043a\u0456\u043b\u044c\u043d\u0438\u0439 \u043f\u0440\u043e\u0454\u043a\u0442! \u0411\u0435\u0437 \u043d\u044c\u043e\u0433\u043e \u0432\u0456\u043d \u043d\u0435 \u0437\u043c\u043e\u0436\u0435 \u0432\u0438\u0441\u0442\u0443\u043f\u0438\u0442\u0438.";
+const MARICHKA_PROJECT_03 =
+  "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u043f\u0440\u043e\u0454\u043a\u0442! \u042f \u0442\u0435\u0431\u0435 \u043d\u0430\u0437\u0434\u043e\u0436\u0435\u043d\u0443!";
+const MARICHKA_SCHOOL_PROJECT =
+  "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u0441\u0432\u0456\u0439 \u043f\u0440\u043e\u0454\u043a\u0442.";
 const MARICHKA_PROJECT_LINES = [
   {
     who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
-    text: "\u041e\u0439, \u0449\u043e \u0446\u0435 \u0432\u0438\u043f\u0430\u043b\u043e \u0437 \u0440\u044e\u043a\u0437\u0430\u043a\u0430 \u0410\u043d\u0434\u0440\u0456\u044f?",
+    text: MARICHKA_PROJECT_01,
   },
   {
     who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
-    text: "\u0422\u0430 \u0446\u0435 \u0436 \u0439\u043e\u0433\u043e \u0448\u043a\u0456\u043b\u044c\u043d\u0438\u0439 \u043f\u0440\u043e\u0454\u043a\u0442! \u0411\u0435\u0437 \u043d\u044c\u043e\u0433\u043e \u0432\u0456\u043d \u043d\u0435 \u0437\u043c\u043e\u0436\u0435 \u0432\u0438\u0441\u0442\u0443\u043f\u0438\u0442\u0438.",
+    text: MARICHKA_PROJECT_02,
   },
   {
     who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
-    text: "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u043f\u0440\u043e\u0454\u043a\u0442! \u042f \u0442\u0435\u0431\u0435 \u043d\u0430\u0437\u0434\u043e\u0436\u0435\u043d\u0443!",
+    text: MARICHKA_PROJECT_03,
   },
 ];
 
@@ -5681,6 +5688,16 @@ function drawSchoolMarichkaScene() {
 
   if (schoolDialogueStep === 1) {
     drawSpeechBox(
+      "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
+      MARICHKA_SCHOOL_PROJECT,
+      650,
+      48,
+      "right",
+    );
+    return;
+  }
+  if (schoolDialogueStep === 1) {
+    drawSpeechBox(
       "Марічка",
       "Андрію, зачекай! Ти забув свій проєкт.",
       650,
@@ -5822,6 +5839,20 @@ function update() {
     pY = GND;
     pVY = 0;
     pSlide = false;
+    if (schoolEnterTimer === 22 && schoolDialogueStep === 0) {
+      schoolDialogueStep = 1;
+      speakAndWait(MARICHKA_SCHOOL_PROJECT)
+        .then(() => {
+          if (gameState !== "schoolEnter") return null;
+          schoolDialogueStep = 2;
+          return speakAndWait("Дякую Марічко ти мене врятувала");
+        })
+        .then(() => {
+          if (gameState !== "schoolEnter") return;
+          schoolDialogueStep = 0;
+          schoolDialogueDone = true;
+        });
+    }
     if (schoolEnterTimer === 22 && schoolDialogueStep === 0) {
       schoolDialogueStep = 1;
       speakAndWait("Андрію зачекай ти забув свій проєкт")
