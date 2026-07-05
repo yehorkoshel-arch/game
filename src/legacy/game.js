@@ -5114,30 +5114,83 @@ function drawStoryMarichka(x, y, holdingProject) {
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,0.22)";
   ctx.beginPath();
-  ctx.ellipse(x, y + 6, 15, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + 6, 19, 6, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#ff69b4";
-  ctx.fillRect(x - 10, y - 3, 7, 17 + step);
-  ctx.fillRect(x + 3, y - 3, 7, 17 - step);
-  ctx.fillStyle = "#e91e8c";
+
+  ctx.fillStyle = "#24304a";
+  ctx.fillRect(x - 10, y - 5, 7, 19 + step);
+  ctx.fillRect(x + 3, y - 5, 7, 19 - step);
+  ctx.fillStyle = "#ffd23f";
+  ctx.fillRect(x - 11, y - 7, 8, 8);
+  ctx.fillRect(x + 3, y - 7, 8, 8);
+
+  ctx.save();
+  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = "#19a7ff";
   ctx.beginPath();
-  ctx.moveTo(x - 17, y - 2);
-  ctx.lineTo(x - 13, y - 30);
-  ctx.lineTo(x + 13, y - 30);
-  ctx.lineTo(x + 17, y - 2);
+  ctx.moveTo(x - 9, y - 42);
+  ctx.quadraticCurveTo(x - 42, y - 32, x - 31, y - 7);
+  ctx.lineTo(x - 12, y - 4);
+  ctx.lineTo(x - 5, y - 39);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#c2185b";
-  ctx.fillRect(x - 12, y - 48, 24, 20);
+  ctx.beginPath();
+  ctx.moveTo(x + 9, y - 42);
+  ctx.quadraticCurveTo(x + 42, y - 32, x + 31, y - 7);
+  ctx.lineTo(x + 12, y - 4);
+  ctx.lineTo(x + 5, y - 39);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = "#ffe45c";
+  ctx.beginPath();
+  ctx.moveTo(x - 18, y - 3);
+  ctx.lineTo(x - 14, y - 35);
+  ctx.quadraticCurveTo(x, y - 43, x + 14, y - 35);
+  ctx.lineTo(x + 18, y - 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#1f5b8f";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 39);
+  ctx.lineTo(x, y - 7);
+  ctx.stroke();
+  ctx.fillStyle = "#101820";
+  for (let i = 0; i < 4; i++) {
+    const by = y - 32 + i * 6;
+    ctx.fillRect(x - 11, by, 3, 3);
+    ctx.fillRect(x + 8, by, 3, 3);
+  }
+  ctx.strokeStyle = "#1f5b8f";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 16, y - 23);
+  ctx.lineTo(x - 24, y - 18);
+  ctx.moveTo(x + 16, y - 23);
+  ctx.lineTo(x + 24, y - 18);
+  ctx.stroke();
+
   ctx.strokeStyle = "#f0d0a8";
   ctx.lineWidth = 5;
   ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(x - 10, y - 42);
-  ctx.lineTo(x - 18, y - 27);
-  ctx.moveTo(x + 10, y - 42);
-  ctx.lineTo(x + 19, y - 28);
+  ctx.moveTo(x - 11, y - 39);
+  ctx.lineTo(x - 24, y - 20);
+  ctx.moveTo(x + 11, y - 39);
+  ctx.lineTo(x + 24, y - 20);
   ctx.stroke();
+
+  ctx.strokeStyle = "#0d5fb8";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x - 11, y - 43);
+  ctx.quadraticCurveTo(x - 23, y - 27, x - 31, y - 10);
+  ctx.moveTo(x + 11, y - 43);
+  ctx.quadraticCurveTo(x + 23, y - 27, x + 31, y - 10);
+  ctx.stroke();
+
   ctx.fillStyle = "#f0d0a8";
   ctx.beginPath();
   ctx.arc(x, y - 62, 12, 0, Math.PI * 2);
@@ -5146,19 +5199,71 @@ function drawStoryMarichka(x, y, holdingProject) {
   ctx.beginPath();
   ctx.arc(x, y - 69, 12, Math.PI, 0);
   ctx.fill();
+  ctx.save();
   ctx.strokeStyle = "#3a1a0a";
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(x - 11, y - 64);
-  ctx.lineTo(x - 15, y - 39);
-  ctx.moveTo(x + 11, y - 64);
-  ctx.lineTo(x + 15, y - 39);
+  ctx.moveTo(x - 10, y - 64);
+  ctx.quadraticCurveTo(x - 18, y - 52, x - 17, y - 34);
+  ctx.moveTo(x + 10, y - 64);
+  ctx.quadraticCurveTo(x + 18, y - 52, x + 17, y - 34);
   ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x - 7, y - 72);
+  ctx.quadraticCurveTo(x, y - 75, x + 7, y - 72);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.strokeStyle = "#0d5fb8";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x - 13, y - 73);
+  ctx.quadraticCurveTo(x - 31, y - 55, x - 27, y - 20);
+  ctx.moveTo(x + 13, y - 73);
+  ctx.quadraticCurveTo(x + 31, y - 55, x + 27, y - 20);
+  ctx.stroke();
+  ctx.strokeStyle = "#ffd23f";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x - 17, y - 72);
+  ctx.quadraticCurveTo(x - 36, y - 54, x - 33, y - 23);
+  ctx.moveTo(x + 17, y - 72);
+  ctx.quadraticCurveTo(x + 36, y - 54, x + 33, y - 23);
+  ctx.stroke();
+
+  const flowers = [
+    [-14, -76, "#0057b7"],
+    [-7, -80, "#ffd700"],
+    [0, -78, "#0057b7"],
+    [8, -80, "#ffd700"],
+    [15, -76, "#0057b7"],
+  ];
+  flowers.forEach(([fx, fy, col], i) => {
+    ctx.fillStyle = col;
+    for (let p = 0; p < 5; p++) {
+      const a = (Math.PI * 2 * p) / 5 + i * 0.2;
+      ctx.beginPath();
+      ctx.arc(x + fx + Math.cos(a) * 3, y + fy + Math.sin(a) * 3, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#3a2a05";
+    ctx.beginPath();
+    ctx.arc(x + fx, y + fy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
   ctx.fillStyle = "#333";
   ctx.beginPath();
   ctx.arc(x - 4, y - 63, 2, 0, Math.PI * 2);
   ctx.arc(x + 4, y - 63, 2, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = "#9a4b36";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(x, y - 58, 4, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
   if (holdingProject) {
     ctx.save();
     ctx.translate(x + 24, y - 28);
