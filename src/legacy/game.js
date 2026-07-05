@@ -2781,6 +2781,9 @@ function drawFinishSchool(x) {
   const schoolH = 154;
 
   ctx.save();
+  ctx.translate(x, 0);
+  ctx.scale(-1, 1);
+  ctx.translate(-x, 0);
   ctx.fillStyle = "rgba(0,0,0,0.24)";
   ctx.beginPath();
   ctx.ellipse(x + schoolW / 2, GND + 5, 122, 13, 0, 0, Math.PI * 2);
