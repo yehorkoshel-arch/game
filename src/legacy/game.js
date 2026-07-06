@@ -821,6 +821,55 @@ function sfxHit() {
   g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
   src.start(now);
 }
+function sfxRainLayer() {
+  const c = getSfxCtx();
+  if (!c) return;
+  const now = c.currentTime;
+  const duration = 0.55;
+  const buf = c.createBuffer(1, Math.floor(c.sampleRate * duration), c.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const fade = Math.sin((i / d.length) * Math.PI);
+    d[i] = (Math.random() * 2 - 1) * fade * 0.16;
+  }
+  const src = c.createBufferSource();
+  const g = c.createGain();
+  const filt = c.createBiquadFilter();
+  filt.type = "bandpass";
+  filt.frequency.value = 2400;
+  filt.Q.value = 0.7;
+  src.buffer = buf;
+  src.connect(filt);
+  filt.connect(g);
+  g.connect(c.destination);
+  g.gain.setValueAtTime(0.08, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  src.start(now);
+}
+function sfxThunder() {
+  const c = getSfxCtx();
+  if (!c) return;
+  const now = c.currentTime;
+  const duration = 1.4;
+  const buf = c.createBuffer(1, Math.floor(c.sampleRate * duration), c.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / d.length;
+    d[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.4) * 0.75;
+  }
+  const src = c.createBufferSource();
+  const g = c.createGain();
+  const filt = c.createBiquadFilter();
+  filt.type = "lowpass";
+  filt.frequency.value = 180;
+  src.buffer = buf;
+  src.connect(filt);
+  filt.connect(g);
+  g.connect(c.destination);
+  g.gain.setValueAtTime(0.42, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  src.start(now);
+}
 function sfxWin() {
   const c = getSfxCtx();
   if (!c) return;
@@ -935,6 +984,8 @@ let bgOff = 0,
   raf = null;
 let loopActive = false;
 let fireCooldown = 0;
+let lightningFlash = 0,
+  nextLightning = 240;
 let startVoiceTimer = null;
 let bossActive = false,
   bossDefeated = false,
@@ -1182,6 +1233,60 @@ function drawTimeOfDaySky(lv) {
     ctx.fill();
   }
   return period;
+}
+function isStormWeather() {
+  return gameState === "run" || gameState === "schoolEnter";
+}
+function drawStormSkyOverlay() {
+  if (!isStormWeather()) return;
+  const storm = ctx.createLinearGradient(0, 0, 0, GND);
+  storm.addColorStop(0, "rgba(9, 16, 30, 0.5)");
+  storm.addColorStop(0.65, "rgba(17, 27, 42, 0.32)");
+  storm.addColorStop(1, "rgba(35, 45, 58, 0.12)");
+  ctx.fillStyle = storm;
+  ctx.fillRect(0, 0, W, GND);
+
+  ctx.fillStyle = "rgba(22, 30, 44, 0.86)";
+  const off = (bgOff * 0.08) % 240;
+  for (let x = -260 - off; x < W + 260; x += 240) {
+    ctx.beginPath();
+    ctx.ellipse(x + 50, 44, 72, 20, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 118, 38, 88, 24, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 196, 51, 76, 22, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  if (lightningFlash > 0) {
+    const alpha = Math.min(0.82, lightningFlash / 12);
+    ctx.fillStyle = `rgba(210,235,255,${alpha * 0.34})`;
+    ctx.fillRect(0, 0, W, H);
+    const lx = W * 0.62 + Math.sin(fr * 0.33) * 110;
+    ctx.strokeStyle = `rgba(230,247,255,${alpha})`;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(lx, 18);
+    ctx.lineTo(lx - 22, 74);
+    ctx.lineTo(lx + 6, 74);
+    ctx.lineTo(lx - 28, 142);
+    ctx.lineTo(lx + 12, 94);
+    ctx.lineTo(lx - 8, 96);
+    ctx.stroke();
+  }
+}
+function drawRain() {
+  if (!isStormWeather()) return;
+  ctx.save();
+  ctx.strokeStyle = "rgba(175, 218, 255, 0.58)";
+  ctx.lineWidth = 1.4;
+  for (let i = 0; i < 90; i++) {
+    const x = (i * 53 + bgOff * 5.2) % (W + 120) - 60;
+    const y = (i * 71 + fr * 16) % (H + 80) - 50;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - 12, y + 28);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 function refreshQuestUI() {
   const questScreen = document.getElementById("sQuests");
@@ -2063,6 +2168,8 @@ function startLevel() {
   playerBullets = [];
   fireCooldown = 0;
   bgOff = 0;
+  lightningFlash = 0;
+  nextLightning = 160 + ((Math.random() * 180) | 0);
   chaserX = -100;
   inv = 0;
   flash = 0;
@@ -2152,10 +2259,13 @@ const cv = document.getElementById("gc"),
 function spawnObs() {
   const lv = getLvl();
   const types = lv.obsTypes;
-  const hazardChance = Math.min(0.14 + currentLevel * 0.012, 0.28);
+  const hazardChance = Math.min(
+    (isStormWeather() ? 0.28 : 0.14) + currentLevel * 0.012,
+    isStormWeather() ? 0.42 : 0.28,
+  );
   const type =
     Math.random() < hazardChance
-      ? Math.random() < 0.52
+      ? Math.random() < (isStormWeather() ? 0.72 : 0.52)
         ? "puddle"
         : "hole"
       : types[Math.floor(Math.random() * types.length)];
@@ -2599,6 +2709,34 @@ function drawRealRoad(timePeriod) {
 
   ctx.fillStyle = isNight ? "rgba(9, 12, 20, 0.35)" : "rgba(17, 22, 31, 0.18)";
   ctx.fillRect(0, GND - 3, W, 6);
+
+  if (isStormWeather()) {
+    const wet = ctx.createLinearGradient(0, horizonY, 0, bottomY);
+    wet.addColorStop(0, "rgba(118, 180, 210, 0.12)");
+    wet.addColorStop(0.6, "rgba(125, 205, 255, 0.2)");
+    wet.addColorStop(1, "rgba(190, 236, 255, 0.1)");
+    ctx.fillStyle = wet;
+    ctx.beginPath();
+    ctx.moveTo(cx - topHalf, horizonY);
+    ctx.lineTo(cx + topHalf, horizonY);
+    ctx.lineTo(cx + bottomHalf, bottomY);
+    ctx.lineTo(cx - bottomHalf, bottomY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(213, 244, 255, 0.28)";
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 16; i++) {
+      const y = horizonY + 24 + ((i * 53 + bgOff * 1.8) % (bottomY - horizonY));
+      const t = (y - horizonY) / (bottomY - horizonY);
+      const half = topHalf + (bottomHalf - topHalf) * t;
+      const x = cx - half * 0.7 + ((i * 91) % Math.max(1, half * 1.4));
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 28 + t * 36, y + 2);
+      ctx.stroke();
+    }
+  }
 }
 
 function drawRoadSign(x, y, label, kind = "direction") {
@@ -2728,6 +2866,7 @@ function drawBG() {
   }
   const lv = getLvl();
   const timePeriod = drawTimeOfDaySky(lv);
+  drawStormSkyOverlay();
 
   const off = (bgOff * 0.25) % 400;
   for (let bx = -400; bx < W + 400; bx += 400) {
@@ -6597,6 +6736,16 @@ function update() {
   if (magnetTimer > 0) magnetTimer--;
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
+  if (lightningFlash > 0) lightningFlash--;
+  if (isStormWeather()) {
+    if (fr % 22 === 0) sfxRainLayer();
+    nextLightning--;
+    if (nextLightning <= 0) {
+      lightningFlash = 18;
+      nextLightning = 250 + ((Math.random() * 320) | 0);
+      sfxThunder();
+    }
+  }
   if (!bossActive && !secretRoute?.active && chaserX < LANES[0] - 100)
     chaserX += 0.5 + (spd - 2.8) * 0.1;
   if (andriiCooldown > 0) andriiCooldown--;
@@ -6987,6 +7136,7 @@ function loop() {
   drawSchoolMarichkaScene();
   drawPlayer();
   drawPlayerShieldAura();
+  drawRain();
   drawSecretTunnelForeground();
   drawParts();
   drawBullets();
