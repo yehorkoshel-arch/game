@@ -40,6 +40,18 @@ export function SettingsScreen() {
             <button className="seg-btn" data-val="1400" type="button">1400 м</button>
           </div>
         </div>
+        <div className="srow time-settings-row">
+          <div>
+            <div className="srow-label" id="sLblTime">Час доби</div>
+            <div className="srow-desc" id="sDescTime">Обери фон меню та гри</div>
+          </div>
+          <div className="seg time-picker" id="segTime">
+            <button className="seg-btn" data-val="auto" type="button">Авто</button>
+            <button className="seg-btn" data-val="morning" type="button">Ранок</button>
+            <button className="seg-btn" data-val="day" type="button">День</button>
+            <button className="seg-btn" data-val="night" type="button">Ніч</button>
+          </div>
+        </div>
         <div className="srow music-settings-row">
           <div className="music-settings-copy">
             <div className="srow-label" id="sLblSound">Музика</div>

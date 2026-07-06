@@ -88,6 +88,11 @@ let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
   settingMusicTrack = ["kyiv", "march"].includes(save.settingMusicTrack)
     ? save.settingMusicTrack
     : "kyiv",
+  settingTimeOfDay = ["auto", "morning", "day", "night"].includes(
+    save.settingTimeOfDay,
+  )
+    ? save.settingTimeOfDay
+    : "auto",
   settingRobotVoiceLang = VALID_LANGUAGES.has(save.settingRobotVoiceLang)
     ? save.settingRobotVoiceLang
     : "uk",
@@ -132,6 +137,7 @@ function saveGame() {
     settingDist,
     settingSound,
     settingMusicTrack,
+    settingTimeOfDay,
     settingRobotVoiceLang,
     settingVib,
     currentLevel,
@@ -1172,6 +1178,12 @@ function updateQuestReadyBadge() {
   badge.style.display = count > 0 ? "" : "none";
 }
 function getMenuTimeOfDay(date = new Date()) {
+  if (settingTimeOfDay === "morning")
+    return { className: "time-morning", label: "\u0420\u0430\u043d\u043e\u043a" };
+  if (settingTimeOfDay === "day")
+    return { className: "time-day", label: "\u0414\u0435\u043d\u044c" };
+  if (settingTimeOfDay === "night")
+    return { className: "time-night", label: "\u041d\u0456\u0447" };
   const hour = date.getHours();
   if (hour >= 5 && hour < 11)
     return { className: "time-morning", label: "\u0420\u0430\u043d\u043e\u043a" };
@@ -1417,6 +1429,12 @@ function buildSettings() {
   document.getElementById("sDescLives").textContent = L.descLives;
   document.getElementById("sLblDist").textContent = L.lblDist;
   document.getElementById("sDescDist").textContent = L.descDist;
+  const timeLabel = document.getElementById("sLblTime");
+  const timeDesc = document.getElementById("sDescTime");
+  if (timeLabel) timeLabel.textContent = "\u0427\u0430\u0441 \u0434\u043e\u0431\u0438";
+  if (timeDesc)
+    timeDesc.textContent =
+      "\u041e\u0431\u0435\u0440\u0438 \u0444\u043e\u043d \u043c\u0435\u043d\u044e \u0442\u0430 \u0433\u0440\u0438";
   document.getElementById("sLblSound").textContent = L.lblSound;
   document.getElementById("sDescSound").textContent =
     settingMusicTrack === "march" ? getMarchLyrics()[0] : L.descSound;
@@ -1437,6 +1455,9 @@ function buildSettings() {
   });
   document.querySelectorAll("#segDist .seg-btn").forEach((b) => {
     b.classList.toggle("active", Number(b.dataset.val) === settingDist);
+  });
+  document.querySelectorAll("#segTime .seg-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.val === settingTimeOfDay);
   });
   document.querySelectorAll("#segMusic .seg-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.val === settingMusicTrack);
@@ -1909,6 +1930,14 @@ document.querySelectorAll("#segLives .seg-btn").forEach((b) => {
 document.querySelectorAll("#segDist .seg-btn").forEach((b) => {
   b.onclick = () => {
     settingDist = Number(b.dataset.val);
+    buildSettings();
+  };
+});
+document.querySelectorAll("#segTime .seg-btn").forEach((b) => {
+  b.onclick = () => {
+    settingTimeOfDay = b.dataset.val;
+    updateMenuTimeOfDay();
+    saveGame();
     buildSettings();
   };
 });

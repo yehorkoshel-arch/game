@@ -66,6 +66,9 @@ canvas{display:block}
 .music-track-picker{grid-column:1/-1}
 .music-track-picker .seg{display:grid;grid-template-columns:1fr 1fr;width:100%}
 .music-track-picker .seg-btn{min-height:38px;padding:6px 10px;white-space:normal;line-height:1.25}
+.time-settings-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px}
+.time-picker{display:grid;grid-template-columns:repeat(4,58px)}
+.time-picker .seg-btn{padding:7px 6px}
 .robot-voice-settings-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px}
 .robot-voice-picker{display:grid;grid-template-columns:repeat(5,42px)}
 .robot-voice-picker .seg-btn{padding:7px 6px}
