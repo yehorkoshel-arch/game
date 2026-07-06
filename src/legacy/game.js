@@ -1240,7 +1240,7 @@ function drawTimeOfDaySky(lv) {
   return period;
 }
 function isStormWeather() {
-  return gameState === "run" || gameState === "schoolEnter";
+  return currentLocation === 0 && (gameState === "run" || gameState === "schoolEnter");
 }
 function drawStormSkyOverlay() {
   if (!isStormWeather()) return;
