@@ -3025,6 +3025,105 @@ function drawLvivTram() {
   ctx.restore();
 }
 
+function drawLvivCoffeeScene() {
+  if (currentLocation !== 1) return;
+  const off = (bgOff * 0.2) % 520;
+  for (let base = -520; base < W + 520; base += 520) {
+    const x = base - off;
+    const y = GND - 92;
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(x + 96, GND + 4, 120, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#6d3f2b";
+    ctx.fillRect(x + 18, y - 18, 162, 92);
+    ctx.fillStyle = "#9c5f3f";
+    ctx.fillRect(x + 24, y - 12, 150, 18);
+    ctx.fillStyle = "#f4d19c";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x + 49, y - 30, 100, 24, 6);
+    else ctx.fillRect(x + 49, y - 30, 100, 24);
+    ctx.fill();
+    ctx.fillStyle = "#5c2f1f";
+    ctx.font = "bold 14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("\u041a\u0410\u0412\u0410", x + 99, y - 13);
+    ctx.textAlign = "left";
+
+    ctx.fillStyle = "#263840";
+    for (let w = 0; w < 3; w++) {
+      const wx = x + 36 + w * 42;
+      ctx.fillRect(wx, y + 16, 28, 34);
+      ctx.fillStyle = "rgba(250,220,140,0.78)";
+      ctx.fillRect(wx + 3, y + 19, 22, 26);
+      ctx.fillStyle = "#263840";
+    }
+
+    ctx.fillStyle = "#4a2b1e";
+    ctx.fillRect(x + 82, y + 36, 34, 38);
+    ctx.fillStyle = "#7d4a2f";
+    ctx.fillRect(x + 86, y + 41, 26, 33);
+    ctx.fillStyle = "#f4d19c";
+    ctx.beginPath();
+    ctx.arc(x + 108, y + 58, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    const tableY = GND - 16;
+    ctx.strokeStyle = "#3f2a1f";
+    ctx.lineWidth = 3;
+    for (const tx of [x + 36, x + 160]) {
+      ctx.beginPath();
+      ctx.moveTo(tx, tableY - 18);
+      ctx.lineTo(tx, tableY + 2);
+      ctx.moveTo(tx - 15, tableY + 2);
+      ctx.lineTo(tx + 15, tableY + 2);
+      ctx.stroke();
+      ctx.fillStyle = "#8f5a38";
+      ctx.fillRect(tx - 19, tableY - 23, 38, 6);
+      ctx.fillStyle = "#f4f0df";
+      ctx.fillRect(tx - 5, tableY - 35, 10, 10);
+      ctx.strokeStyle = "rgba(255,255,255,0.55)";
+      ctx.lineWidth = 1.5;
+      const steam = Math.sin(fr * 0.08 + tx * 0.02) * 2;
+      ctx.beginPath();
+      ctx.moveTo(tx - 4, tableY - 39);
+      ctx.quadraticCurveTo(tx - 9 + steam, tableY - 49, tx - 2, tableY - 58);
+      ctx.moveTo(tx + 4, tableY - 39);
+      ctx.quadraticCurveTo(tx + 10 - steam, tableY - 48, tx + 2, tableY - 56);
+      ctx.stroke();
+      ctx.strokeStyle = "#3f2a1f";
+      ctx.lineWidth = 3;
+    }
+
+    for (const lx of [x - 32, x + 220]) {
+      ctx.strokeStyle = "#15171c";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(lx, GND);
+      ctx.lineTo(lx, GND - 92);
+      ctx.stroke();
+      ctx.fillStyle = "#15171c";
+      ctx.beginPath();
+      ctx.arc(lx, GND - 95, 11, Math.PI, 0);
+      ctx.fill();
+      const lampGlow = ctx.createRadialGradient(lx, GND - 82, 0, lx, GND - 82, 24);
+      lampGlow.addColorStop(0, "rgba(255,218,120,0.72)");
+      lampGlow.addColorStop(1, "rgba(255,218,120,0)");
+      ctx.fillStyle = lampGlow;
+      ctx.beginPath();
+      ctx.arc(lx, GND - 82, 24, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffd66d";
+      ctx.beginPath();
+      ctx.arc(lx, GND - 82, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
 function drawBG() {
   if (secretRoute && secretRoute.active && !secretRoute.entering) {
     drawSecretRouteBackground();
@@ -3046,6 +3145,7 @@ function drawBG() {
     drawGreetingBuildings(x, lv.loc);
   }
 
+  drawLvivCoffeeScene();
   drawRealRoad(timePeriod);
   drawLvivTram();
   drawRoadsideSigns();
