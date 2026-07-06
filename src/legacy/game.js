@@ -2172,6 +2172,8 @@ function spawnCityGift(secret = false) {
   cityGifts.push({
     x: sourceX,
     y: sourceY,
+    giverX: sourceX - 24,
+    giverY: sourceY + 58,
     lane,
     vx: (LANES[lane] - sourceX) / 70,
     vy: secret ? 1.25 : 1.65,
@@ -4984,6 +4986,7 @@ function drawCityGift(gift) {
   const bob = Math.sin(fr * 0.16 + gift.x * 0.04) * 3;
   const x = gift.x;
   const y = gift.y + bob;
+  drawPeasantGiftGiver(gift);
   ctx.save();
   ctx.globalAlpha = Math.min(1, gift.life / 24);
   const glow = ctx.createRadialGradient(x, y, 0, x, y, gift.secret ? 28 : 22);
@@ -5007,6 +5010,136 @@ function drawCityGift(gift) {
   ctx.textAlign = "center";
   ctx.fillText("+" + gift.value, x, y + 4);
   ctx.textAlign = "left";
+  ctx.restore();
+}
+
+function drawPeasantGiftGiver(gift) {
+  if (gift.life < 70) return;
+  const alpha = Math.min(1, (gift.life - 70) / 22);
+  const x = gift.giverX ?? gift.x - 24;
+  const y = gift.giverY ?? gift.y + 58;
+  const wave = Math.sin(fr * 0.22 + x * 0.02) * 4;
+  const scale = gift.secret ? 1.08 : 0.94;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+
+  ctx.fillStyle = "rgba(0,0,0,0.24)";
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 18, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#5c3b22";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-8, -15);
+  ctx.lineTo(-17, -1);
+  ctx.moveTo(8, -15);
+  ctx.lineTo(19, -23 + wave);
+  ctx.stroke();
+
+  ctx.fillStyle = "#f4ead7";
+  ctx.beginPath();
+  ctx.moveTo(-15, -32);
+  ctx.lineTo(15, -32);
+  ctx.lineTo(18, -4);
+  ctx.lineTo(-18, -4);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#c43b2f";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-15, -8);
+  ctx.lineTo(15, -8);
+  ctx.moveTo(-15, -28);
+  ctx.lineTo(15, -28);
+  ctx.moveTo(-15, -19);
+  ctx.lineTo(-6, -19);
+  ctx.moveTo(6, -19);
+  ctx.lineTo(15, -19);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#3b2416";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-16, -13);
+  ctx.lineTo(16, -13);
+  ctx.stroke();
+
+  ctx.fillStyle = "#e4d7c6";
+  ctx.fillRect(-12, -4, 9, 21);
+  ctx.fillRect(3, -4, 9, 21);
+  ctx.strokeStyle = "#7d715f";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-9, 2);
+  ctx.lineTo(-14, 18);
+  ctx.moveTo(-5, 4);
+  ctx.lineTo(-1, 18);
+  ctx.moveTo(6, 2);
+  ctx.lineTo(1, 18);
+  ctx.moveTo(10, 4);
+  ctx.lineTo(15, 18);
+  ctx.stroke();
+
+  ctx.fillStyle = "#9b7443";
+  ctx.beginPath();
+  ctx.ellipse(-9, 20, 9, 4, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(9, 20, 9, 4, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#d1a073";
+  ctx.beginPath();
+  ctx.arc(0, -43, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#3b2416";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(0, -44, 12, Math.PI * 1.05, Math.PI * 1.9);
+  ctx.stroke();
+
+  ctx.fillStyle = "#3b2416";
+  ctx.beginPath();
+  ctx.ellipse(0, -38, 8, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#171717";
+  ctx.beginPath();
+  ctx.arc(-4, -45, 1.4, 0, Math.PI * 2);
+  ctx.arc(4, -45, 1.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#7c4d2d";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-4, -40);
+  ctx.lineTo(4, -40);
+  ctx.stroke();
+
+  ctx.fillStyle = "#9a5a2d";
+  ctx.fillRect(16, -11, 11, 18);
+  ctx.strokeStyle = "#4d2b16";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(16, -11);
+  ctx.lineTo(11, -18);
+  ctx.moveTo(27, -11);
+  ctx.lineTo(23, -18);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffd45c";
+  ctx.beginPath();
+  ctx.arc(22, -25 + wave, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#b8860b";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
   ctx.restore();
 }
 
@@ -6244,6 +6377,7 @@ function update() {
   coins.forEach((c) => (c.x -= spd));
   cityGifts.forEach((gift) => {
     gift.x += gift.vx - spd * 0.12;
+    gift.giverX = (gift.giverX ?? gift.x) - spd * 0.12;
     gift.y += gift.vy;
     gift.life--;
     if (gift.y > GND - 15) {
