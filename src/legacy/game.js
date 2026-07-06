@@ -2922,6 +2922,109 @@ function drawRoadsideSigns() {
   if (lightX > -70 && lightX < W + 80) drawTrafficLight(lightX, GND - 1);
 }
 
+function drawLvivTram() {
+  if (currentLocation !== 1) return;
+  const railY1 = GND + 18;
+  const railY2 = GND + 38;
+  ctx.save();
+  ctx.strokeStyle = "rgba(60,50,42,0.68)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, railY1);
+  ctx.lineTo(W, railY1);
+  ctx.moveTo(0, railY2);
+  ctx.lineTo(W, railY2);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(220,205,176,0.4)";
+  ctx.lineWidth = 1.5;
+  for (let x = -40 + ((bgOff * 1.2) % 56); x < W + 60; x += 56) {
+    ctx.beginPath();
+    ctx.moveTo(x, railY1 - 5);
+    ctx.lineTo(x + 18, railY2 + 6);
+    ctx.stroke();
+  }
+
+  const tramX = W + 190 - ((bgOff * 0.36) % (W + 430));
+  const tramY = GND - 118;
+  if (tramX < -260 || tramX > W + 120) {
+    ctx.restore();
+    return;
+  }
+
+  ctx.fillStyle = "rgba(0,0,0,0.24)";
+  ctx.beginPath();
+  ctx.ellipse(tramX + 85, GND + 5, 104, 13, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#34302b";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(tramX + 86, tramY - 18);
+  ctx.lineTo(tramX + 130, tramY - 58);
+  ctx.lineTo(tramX + 158, tramY - 58);
+  ctx.stroke();
+
+  ctx.fillStyle = "#8e2f24";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(tramX, tramY, 184, 104, 12);
+  else ctx.fillRect(tramX, tramY, 184, 104);
+  ctx.fill();
+  ctx.fillStyle = "#f0d6a4";
+  ctx.fillRect(tramX + 8, tramY + 10, 168, 30);
+  ctx.fillStyle = "#b94a32";
+  ctx.fillRect(tramX + 7, tramY + 68, 170, 14);
+  ctx.strokeStyle = "#5c201a";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(tramX + 2, tramY + 2, 180, 100);
+
+  ctx.fillStyle = "#182b35";
+  for (let i = 0; i < 5; i++) {
+    const wx = tramX + 14 + i * 31;
+    ctx.fillRect(wx, tramY + 17, 24, 28);
+    ctx.fillStyle = "rgba(141,214,236,0.78)";
+    ctx.fillRect(wx + 3, tramY + 20, 18, 20);
+    ctx.fillStyle = "#182b35";
+  }
+
+  ctx.fillStyle = "#41231f";
+  ctx.fillRect(tramX + 78, tramY + 47, 28, 50);
+  ctx.strokeStyle = "#f0d6a4";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(tramX + 92, tramY + 48);
+  ctx.lineTo(tramX + 92, tramY + 96);
+  ctx.stroke();
+
+  ctx.fillStyle = "#fff3a6";
+  ctx.beginPath();
+  ctx.arc(tramX + 16, tramY + 84, 6, 0, Math.PI * 2);
+  ctx.arc(tramX + 168, tramY + 84, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#f0d6a4";
+  ctx.font = "bold 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("\u2116 7", tramX + 152, tramY + 62);
+  ctx.fillStyle = "#ffd95c";
+  ctx.fillRect(tramX + 54, tramY - 6, 72, 12);
+  ctx.fillStyle = "#5c201a";
+  ctx.font = "bold 8px sans-serif";
+  ctx.fillText("\u041b\u042c\u0412\u0406\u0412", tramX + 90, tramY + 3);
+  ctx.textAlign = "left";
+
+  ctx.fillStyle = "#2b2520";
+  ctx.beginPath();
+  ctx.arc(tramX + 44, tramY + 102, 12, 0, Math.PI * 2);
+  ctx.arc(tramX + 138, tramY + 102, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#73675a";
+  ctx.beginPath();
+  ctx.arc(tramX + 44, tramY + 102, 5, 0, Math.PI * 2);
+  ctx.arc(tramX + 138, tramY + 102, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawBG() {
   if (secretRoute && secretRoute.active && !secretRoute.entering) {
     drawSecretRouteBackground();
@@ -2944,6 +3047,7 @@ function drawBG() {
   }
 
   drawRealRoad(timePeriod);
+  drawLvivTram();
   drawRoadsideSigns();
 }
 
