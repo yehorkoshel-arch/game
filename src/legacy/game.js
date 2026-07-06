@@ -917,10 +917,12 @@ let pLane = 1,
   pSlide = false,
   slideT = 0,
   puddleSlow = 0,
+  magnetTimer = 0,
   inv = 0,
   flash = 0;
 let obs = [],
   coins = [],
+  magnets = [],
   cityGifts = [],
   parts = [],
   confetti = [],
@@ -2046,8 +2048,10 @@ function startLevel() {
   pSlide = false;
   slideT = 0;
   puddleSlow = 0;
+  magnetTimer = 0;
   obs = [];
   coins = [];
+  magnets = [];
   cityGifts = [];
   parts = [];
   confetti = [];
@@ -2163,6 +2167,10 @@ function spawnCoin() {
   const l = Math.floor(Math.random() * 3),
     hi = Math.random() < 0.35;
   coins.push({ x: W + 20, lane: l, y: hi ? GND - 70 : GND, done: false });
+}
+function spawnMagnet() {
+  const lane = Math.floor(Math.random() * 3);
+  magnets.push({ x: W + 30, lane, y: GND - 36, phase: Math.random() * Math.PI * 2 });
 }
 function spawnCityGift(secret = false) {
   if (secretRoute?.active || bossActive || gameState !== "run") return;
@@ -4961,8 +4969,18 @@ function drawScooterRider(o) {
 
 function drawCoin(c) {
   if (c.done) return;
-  const x = LANES[c.lane],
+  const x = c.x ?? LANES[c.lane],
     y = c.y - 14;
+  if (magnetTimer > 0 && c.magneted) {
+    ctx.globalAlpha = 0.72;
+    ctx.strokeStyle = "rgba(99, 214, 255, 0.62)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(LANES[pLane], pY - 34);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
   const g = ctx.createRadialGradient(x, y, 0, x, y, 20);
   g.addColorStop(0, "rgba(255,255,180,1)");
   g.addColorStop(1, "rgba(255,215,0,0)");
@@ -4980,6 +4998,40 @@ function drawCoin(c) {
   ctx.textAlign = "center";
   ctx.fillText("₴", x, y + 3);
   ctx.textAlign = "left";
+}
+
+function drawMagnet(m) {
+  const x = m.x;
+  const y = m.y + Math.sin(fr * 0.12 + (m.phase || 0)) * 4;
+  ctx.save();
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 30);
+  glow.addColorStop(0, "rgba(98, 214, 255, 0.78)");
+  glow.addColorStop(1, "rgba(98, 214, 255, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#e7f8ff";
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.arc(x, y, 14, Math.PI * 0.12, Math.PI * 0.88);
+  ctx.stroke();
+  ctx.strokeStyle = "#3dcfff";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(x, y, 14, Math.PI * 0.12, Math.PI * 0.88);
+  ctx.stroke();
+  ctx.fillStyle = "#ff4b5c";
+  ctx.fillRect(x - 18, y - 1, 8, 10);
+  ctx.fillRect(x + 10, y - 1, 8, 10);
+  ctx.fillStyle = "#fff36a";
+  ctx.font = "bold 11px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("M", x, y + 5);
+  ctx.textAlign = "left";
+  ctx.restore();
 }
 
 function drawCityGift(gift) {
@@ -5298,6 +5350,18 @@ function drawHUDCanvas() {
     ctx.fillText("x2💰", W - 10, 7);
     ctx.textAlign = "left";
     ctx.globalAlpha = 1;
+  }
+  if (magnetTimer > 0) {
+    const mw = 86;
+    const remain = Math.max(0, Math.min(1, magnetTimer / 520));
+    ctx.fillStyle = "rgba(7,18,28,0.62)";
+    ctx.fillRect(10, 22, mw, 9);
+    ctx.fillStyle = "#62d6ff";
+    ctx.fillRect(10, 22, mw * remain, 9);
+    ctx.fillStyle = "#e7f8ff";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("M", 101, 31);
   }
 }
 
@@ -6224,6 +6288,7 @@ function update() {
     chaserX = -220;
     obs = [];
     coins = [];
+    magnets = [];
     cityGifts = [];
     speakAndrii(["Ого! Машина перетворюється на трансформера!"]);
   }
@@ -6320,6 +6385,7 @@ function update() {
     slideT--;
     if (slideT <= 0) pSlide = false;
   }
+  if (magnetTimer > 0) magnetTimer--;
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
   if (!bossActive && !secretRoute?.active && chaserX < LANES[0] - 100)
@@ -6360,6 +6426,15 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    fr % 620 === 180 &&
+    totalDist > 80 &&
+    totalDist < FDIST - 160
+  )
+    spawnMagnet();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
     fr % 260 === 80 &&
     totalDist < FDIST - 80
   )
@@ -6374,7 +6449,24 @@ function update() {
     spawnCityGift(true);
 
   obs.forEach((o) => (o.x -= spd + (o.vx || 0)));
-  coins.forEach((c) => (c.x -= spd));
+  coins.forEach((c) => {
+    c.x -= spd;
+    const tx = LANES[pLane];
+    const ty = pY - 34;
+    const cx = c.x ?? LANES[c.lane];
+    const cy = c.y - 14;
+    const dx = tx - cx;
+    const dy = ty - cy;
+    const dist = Math.hypot(dx, dy);
+    if (magnetTimer > 0 && (dist < 190 || c.magneted)) {
+      c.magneted = true;
+      c.x = cx + dx * 0.16;
+      c.y += dy * 0.12;
+    } else {
+      c.magneted = false;
+    }
+  });
+  magnets.forEach((m) => (m.x -= spd));
   cityGifts.forEach((gift) => {
     gift.x += gift.vx - spd * 0.12;
     gift.giverX = (gift.giverX ?? gift.x) - spd * 0.12;
@@ -6512,10 +6604,21 @@ function update() {
 
   obs = obs.filter((o) => o.x > -80);
   coins = coins.filter((c) => !c.done && c.x > -20);
+  magnets = magnets.filter((m) => m.x > -50);
   cityGifts = cityGifts.filter((gift) => gift.life > 0 && gift.x > -30);
 
   const pr = pRect(),
     px = LANES[pLane];
+  magnets = magnets.filter((m) => {
+    if (m.lane !== pLane) return true;
+    const mr = { x: m.x - 22, y: m.y - 24, w: 44, h: 48 };
+    if (!hit(pr, mr)) return true;
+    magnetTimer = Math.max(magnetTimer, 520);
+    sfxCoin();
+    addParts(m.x, m.y, "#62d6ff");
+    showAndriiBubble("\u041c\u0430\u0433\u043d\u0456\u0442! \u041c\u043e\u043d\u0435\u0442\u0438 \u043b\u0435\u0442\u044f\u0442\u044c \u0434\u043e \u043c\u0435\u043d\u0435!");
+    return false;
+  });
   cityGifts = cityGifts.filter((gift) => {
     const gr = { x: gift.x - 16, y: gift.y - 16, w: 32, h: 32 };
     if (!hit(pr, gr)) return true;
@@ -6597,8 +6700,9 @@ function update() {
     }
   });
   coins = coins.filter((c) => {
-    if (c.lane !== pLane) return true;
-    const cr = { x: LANES[c.lane] - 8, y: c.y - 22, w: 16, h: 16 };
+    if (!c.magneted && c.lane !== pLane) return true;
+    const coinX = c.x ?? LANES[c.lane];
+    const cr = { x: coinX - 8, y: c.y - 22, w: 16, h: 16 };
     if (hit(pr, cr)) {
       const dangerPct = Math.min(
         Math.max((chaserX + 100) / (LANES[0] - 80), 0),
@@ -6609,9 +6713,9 @@ function update() {
       runCoins += mult;
       c.done = true;
       sfxCoin();
-      addParts(LANES[c.lane], c.y - 14, "#ffd700");
+      addParts(coinX, c.y - 14, "#ffd700");
       if (mult === 2) {
-        addParts(LANES[c.lane], c.y - 28, "#ff69b4");
+        addParts(coinX, c.y - 28, "#ff69b4");
       }
       return false;
     }
@@ -6635,6 +6739,7 @@ function loop() {
   drawBG();
   drawSecretRouteEntrance();
   drawFinishLine();
+  magnets.forEach(drawMagnet);
   coins.forEach(drawCoin);
   cityGifts.forEach(drawCityGift);
   obs.forEach(drawObs);
