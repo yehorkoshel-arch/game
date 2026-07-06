@@ -6891,20 +6891,6 @@ function update() {
           schoolDialogueDone = true;
         });
     }
-    if (schoolEnterTimer === 22 && schoolDialogueStep === 0) {
-      schoolDialogueStep = 1;
-      speakAndWait("Андрію зачекай ти забув свій проєкт")
-        .then(() => {
-          if (gameState !== "schoolEnter") return null;
-          schoolDialogueStep = 2;
-          return speakAndWait("Дякую Марічко ти мене врятувала");
-        })
-        .then(() => {
-          if (gameState !== "schoolEnter") return;
-          schoolDialogueStep = 0;
-          schoolDialogueDone = true;
-        });
-    }
     if ((schoolDialogueDone && schoolExitTimer >= 100) || schoolEnterTimer >= 600)
       completeLevelAfterSchool();
     return;
