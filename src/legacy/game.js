@@ -959,7 +959,10 @@ let gameState = "idle",
   lives = 3,
   spd = 2.8,
   fr = 0,
-  totalDist = 0;
+  totalDist = 0,
+  coinCombo = 0,
+  coinComboTimer = 0,
+  coinComboMult = 1;
 let pLane = 1,
   pY = 270,
   pVY = 0,
@@ -2151,6 +2154,9 @@ function startLevel() {
   spd = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP);
   fr = 0;
   totalDist = 0;
+  coinCombo = 0;
+  coinComboTimer = 0;
+  coinComboMult = 1;
   pLane = 1;
   pY = GND;
   pVY = 0;
@@ -5730,6 +5736,23 @@ function absorbShieldHit(x, y, color = "#58beff") {
   hudUp();
   return true;
 }
+function getCoinComboMult() {
+  if (coinCombo >= 16) return 4;
+  if (coinCombo >= 10) return 3;
+  if (coinCombo >= 5) return 2;
+  return 1;
+}
+function registerCoinCombo() {
+  coinCombo = coinComboTimer > 0 ? coinCombo + 1 : 1;
+  coinComboTimer = 150;
+  coinComboMult = getCoinComboMult();
+  return coinComboMult;
+}
+function resetCoinCombo() {
+  coinCombo = 0;
+  coinComboTimer = 0;
+  coinComboMult = 1;
+}
 
 function drawParts() {
   parts = parts.filter((p) => {
@@ -5803,6 +5826,17 @@ function drawHUDCanvas() {
     ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "left";
     ctx.fillText("JUMP", 101, 61);
+  }
+  if (coinComboTimer > 0 && coinCombo > 1) {
+    const pulse = 0.75 + Math.sin(fr * 0.22) * 0.25;
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = "rgba(20,18,6,0.72)";
+    ctx.fillRect(10, 66, 106, 18);
+    ctx.fillStyle = "#ffd700";
+    ctx.font = "bold 13px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("COMBO x" + coinComboMult + "  " + coinCombo, 16, 80);
+    ctx.globalAlpha = 1;
   }
 }
 
@@ -6832,6 +6866,10 @@ function update() {
   }
   if (magnetTimer > 0) magnetTimer--;
   if (superJumpTimer > 0) superJumpTimer--;
+  if (coinComboTimer > 0) {
+    coinComboTimer--;
+    if (coinComboTimer <= 0) resetCoinCombo();
+  }
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
   if (lightningFlash > 0) lightningFlash--;
@@ -7146,6 +7184,7 @@ function update() {
           };
     if (hit(pr, br) && inv === 0) {
       if (absorbShieldHit(b.x, b.y, "#58beff")) return false;
+      resetCoinCombo();
       lives--;
       inv = 75;
       flash = 22;
@@ -7188,6 +7227,7 @@ function update() {
         o.x = -100;
         return;
       }
+      resetCoinCombo();
       lives--;
       inv = 75;
       flash = 22;
@@ -7215,7 +7255,9 @@ function update() {
         Math.max((chaserX + 100) / (LANES[0] - 80), 0),
         1,
       );
-      const mult = dangerPct > 0.45 ? 2 : 1;
+      const dangerMult = dangerPct > 0.45 ? 2 : 1;
+      const comboMult = registerCoinCombo();
+      const mult = dangerMult * comboMult;
       addQuestProgress("coins", mult);
       runCoins += mult;
       c.done = true;
@@ -7223,6 +7265,9 @@ function update() {
       addParts(coinX, c.y - 14, "#ffd700");
       if (mult === 2) {
         addParts(coinX, c.y - 28, "#ff69b4");
+      }
+      if (comboMult > 1) {
+        addParts(coinX, c.y - 38, "#fff36a");
       }
       return false;
     }
