@@ -967,6 +967,7 @@ let pLane = 1,
   slideT = 0,
   puddleSlow = 0,
   magnetTimer = 0,
+  superJumpTimer = 0,
   shieldCharges = 0,
   inv = 0,
   flash = 0;
@@ -974,6 +975,7 @@ let obs = [],
   coins = [],
   magnets = [],
   shields = [],
+  superJumps = [],
   cityGifts = [],
   parts = [],
   confetti = [],
@@ -1993,7 +1995,7 @@ function act(c) {
   if (gameState !== "run") return;
   if (secretRoute && secretRoute.entering) return;
   if ((c === "ArrowUp" || c === "Space") && pY >= GND - 2) {
-    pVY = -16;
+    pVY = superJumpTimer > 0 ? -22 : -16;
     addQuestProgress("jumps");
     sfxJump();
   }
@@ -2156,11 +2158,13 @@ function startLevel() {
   slideT = 0;
   puddleSlow = 0;
   magnetTimer = 0;
+  superJumpTimer = 0;
   shieldCharges = 0;
   obs = [];
   coins = [];
   magnets = [];
   shields = [];
+  superJumps = [];
   cityGifts = [];
   parts = [];
   confetti = [];
@@ -2289,6 +2293,10 @@ function spawnMagnet() {
 function spawnShield() {
   const lane = Math.floor(Math.random() * 3);
   shields.push({ x: W + 30, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
+}
+function spawnSuperJump() {
+  const lane = Math.floor(Math.random() * 3);
+  superJumps.push({ x: W + 30, lane, y: GND - 40, phase: Math.random() * Math.PI * 2 });
 }
 function spawnCityGift(secret = false) {
   if (secretRoute?.active || bossActive || gameState !== "run") return;
@@ -5341,6 +5349,45 @@ function drawShieldItem(s) {
   ctx.restore();
 }
 
+function drawSuperJumpItem(j) {
+  const x = j.x;
+  const y = j.y + Math.sin(fr * 0.14 + (j.phase || 0)) * 5;
+  ctx.save();
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 32);
+  glow.addColorStop(0, "rgba(255, 232, 92, 0.82)");
+  glow.addColorStop(1, "rgba(255, 232, 92, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, 32, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#8b5cf6";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - 16, y + 14);
+  ctx.lineTo(x - 6, y + 4);
+  ctx.lineTo(x + 4, y + 14);
+  ctx.lineTo(x + 16, y + 2);
+  ctx.stroke();
+
+  ctx.fillStyle = "#fff36a";
+  ctx.beginPath();
+  ctx.moveTo(x, y - 24);
+  ctx.lineTo(x + 16, y - 2);
+  ctx.lineTo(x + 6, y - 2);
+  ctx.lineTo(x + 6, y + 14);
+  ctx.lineTo(x - 6, y + 14);
+  ctx.lineTo(x - 6, y - 2);
+  ctx.lineTo(x - 16, y - 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#5b2bd8";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawPlayerShieldAura() {
   if (shieldCharges <= 0 || gameState !== "run") return;
   const x = LANES[pLane];
@@ -5357,6 +5404,25 @@ function drawPlayerShieldAura() {
   ctx.beginPath();
   ctx.ellipse(x, pY - 28, 27 + pulse * 7, 45 + pulse * 7, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
+}
+
+function drawSuperJumpAura() {
+  if (superJumpTimer <= 0 || gameState !== "run") return;
+  const x = LANES[pLane];
+  const pulse = 0.5 + Math.sin(fr * 0.18) * 0.18;
+  ctx.save();
+  ctx.globalAlpha = 0.32 + pulse * 0.25;
+  ctx.strokeStyle = "#fff36a";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(x, pY - 52, 18 + pulse * 7, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "#8b5cf6";
+  ctx.font = "bold 16px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("↑", x, pY - 78 - pulse * 8);
+  ctx.textAlign = "left";
   ctx.restore();
 }
 
@@ -5708,6 +5774,18 @@ function drawHUDCanvas() {
     ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "left";
     ctx.fillText("SHIELD", 14, 46);
+  }
+  if (superJumpTimer > 0) {
+    const jw = 86;
+    const remain = Math.max(0, Math.min(1, superJumpTimer / 600));
+    ctx.fillStyle = "rgba(7,18,28,0.62)";
+    ctx.fillRect(10, 52, jw, 9);
+    ctx.fillStyle = "#fff36a";
+    ctx.fillRect(10, 52, jw * remain, 9);
+    ctx.fillStyle = "#8b5cf6";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("JUMP", 101, 61);
   }
 }
 
@@ -6636,6 +6714,7 @@ function update() {
     coins = [];
     magnets = [];
     shields = [];
+    superJumps = [];
     cityGifts = [];
     speakAndrii(["Ого! Машина перетворюється на трансформера!"]);
   }
@@ -6715,6 +6794,7 @@ function update() {
       bullets = [];
       playerBullets = [];
       shields = [];
+      superJumps = [];
       chaserX = -220;
       showAndriiBubble("\u0423\u0440\u0430! \u042f \u0434\u0456\u0441\u0442\u0430\u0432\u0441\u044f \u0434\u043e \u0448\u043a\u043e\u043b\u0438!");
       return;
@@ -6734,6 +6814,7 @@ function update() {
     if (slideT <= 0) pSlide = false;
   }
   if (magnetTimer > 0) magnetTimer--;
+  if (superJumpTimer > 0) superJumpTimer--;
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
   if (lightningFlash > 0) lightningFlash--;
@@ -6803,6 +6884,16 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    superJumpTimer <= 0 &&
+    fr % 840 === 420 &&
+    totalDist > 120 &&
+    totalDist < FDIST - 180
+  )
+    spawnSuperJump();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
     fr % 260 === 80 &&
     totalDist < FDIST - 80
   )
@@ -6836,6 +6927,7 @@ function update() {
   });
   magnets.forEach((m) => (m.x -= spd));
   shields.forEach((s) => (s.x -= spd));
+  superJumps.forEach((j) => (j.x -= spd));
   cityGifts.forEach((gift) => {
     gift.x += gift.vx - spd * 0.12;
     gift.giverX = (gift.giverX ?? gift.x) - spd * 0.12;
@@ -6975,6 +7067,7 @@ function update() {
   coins = coins.filter((c) => !c.done && c.x > -20);
   magnets = magnets.filter((m) => m.x > -50);
   shields = shields.filter((s) => s.x > -50);
+  superJumps = superJumps.filter((j) => j.x > -50);
   cityGifts = cityGifts.filter((gift) => gift.life > 0 && gift.x > -30);
 
   const pr = pRect(),
@@ -6997,6 +7090,17 @@ function update() {
     sfxCoin();
     addParts(s.x, s.y, "#58beff");
     showAndriiBubble("\u0429\u0438\u0442 \u0430\u043a\u0442\u0438\u0432\u043d\u0438\u0439!");
+    hudUp();
+    return false;
+  });
+  superJumps = superJumps.filter((j) => {
+    if (j.lane !== pLane) return true;
+    const jr = { x: j.x - 22, y: j.y - 25, w: 44, h: 50 };
+    if (!hit(pr, jr)) return true;
+    superJumpTimer = Math.max(superJumpTimer, 600);
+    sfxCoin();
+    addParts(j.x, j.y, "#fff36a");
+    showAndriiBubble("\u0421\u0443\u043f\u0435\u0440-\u0441\u0442\u0440\u0438\u0431\u043e\u043a!");
     hudUp();
     return false;
   });
@@ -7125,6 +7229,7 @@ function loop() {
   drawBG();
   drawSecretRouteEntrance();
   drawFinishLine();
+  superJumps.forEach(drawSuperJumpItem);
   shields.forEach(drawShieldItem);
   magnets.forEach(drawMagnet);
   coins.forEach(drawCoin);
@@ -7136,6 +7241,7 @@ function loop() {
   drawSchoolMarichkaScene();
   drawPlayer();
   drawPlayerShieldAura();
+  drawSuperJumpAura();
   drawRain();
   drawSecretTunnelForeground();
   drawParts();
