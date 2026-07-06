@@ -2509,6 +2509,72 @@ function drawGreetingBuildings(x, location) {
   ctx.restore();
 }
 
+function drawRealRoad(timePeriod) {
+  const horizonY = GND - 22;
+  const bottomY = H + 8;
+  const cx = W / 2;
+  const topHalf = 145;
+  const bottomHalf = Math.max(W * 0.62, 390);
+  const isNight = timePeriod === "time-night";
+
+  const road = ctx.createLinearGradient(0, horizonY, 0, bottomY);
+  road.addColorStop(0, isNight ? "#242a38" : "#3c4656");
+  road.addColorStop(0.55, isNight ? "#171d2a" : "#2b3340");
+  road.addColorStop(1, isNight ? "#0f1420" : "#1d2430");
+  ctx.fillStyle = road;
+  ctx.beginPath();
+  ctx.moveTo(cx - topHalf, horizonY);
+  ctx.lineTo(cx + topHalf, horizonY);
+  ctx.lineTo(cx + bottomHalf, bottomY);
+  ctx.lineTo(cx - bottomHalf, bottomY);
+  ctx.closePath();
+  ctx.fill();
+
+  const shoulder = ctx.createLinearGradient(0, horizonY, 0, bottomY);
+  shoulder.addColorStop(0, isNight ? "#384055" : "#687487");
+  shoulder.addColorStop(1, isNight ? "#242b3a" : "#3e4856");
+  ctx.strokeStyle = shoulder;
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(cx - topHalf, horizonY);
+  ctx.lineTo(cx - bottomHalf, bottomY);
+  ctx.moveTo(cx + topHalf, horizonY);
+  ctx.lineTo(cx + bottomHalf, bottomY);
+  ctx.stroke();
+
+  ctx.strokeStyle = isNight ? "rgba(255, 241, 168, 0.72)" : "rgba(255, 239, 154, 0.94)";
+  ctx.lineCap = "round";
+  const dashOffset = (bgOff * 2.4) % 72;
+  for (let y = horizonY - 72 + dashOffset; y < bottomY + 72; y += 72) {
+    const y2 = Math.min(bottomY, y + 32);
+    if (y2 <= horizonY) continue;
+    const t1 = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
+    const t2 = Math.max(0, Math.min(1, (y2 - horizonY) / (bottomY - horizonY)));
+    const half1 = topHalf + (bottomHalf - topHalf) * t1;
+    const half2 = topHalf + (bottomHalf - topHalf) * t2;
+    ctx.lineWidth = 3 + t1 * 3;
+    for (const laneMark of [-1 / 3, 1 / 3]) {
+      ctx.beginPath();
+      ctx.moveTo(cx + half1 * laneMark, y);
+      ctx.lineTo(cx + half2 * laneMark, y2);
+      ctx.stroke();
+    }
+  }
+  ctx.lineCap = "butt";
+
+  ctx.fillStyle = isNight ? "rgba(255, 255, 255, 0.035)" : "rgba(255, 255, 255, 0.055)";
+  for (let i = 0; i < 85; i++) {
+    const y = horizonY + ((i * 47 + bgOff * 2.1) % (bottomY - horizonY));
+    const t = (y - horizonY) / (bottomY - horizonY);
+    const half = topHalf + (bottomHalf - topHalf) * t;
+    const x = cx - half + ((i * 83) % Math.max(1, half * 2));
+    ctx.fillRect(x, y, 1 + t * 2, 1 + t * 1.4);
+  }
+
+  ctx.fillStyle = isNight ? "rgba(9, 12, 20, 0.35)" : "rgba(17, 22, 31, 0.18)";
+  ctx.fillRect(0, GND - 3, W, 6);
+}
+
 function drawBG() {
   if (secretRoute && secretRoute.active && !secretRoute.entering) {
     drawSecretRouteBackground();
@@ -2516,8 +2582,6 @@ function drawBG() {
   }
   const lv = getLvl();
   const timePeriod = drawTimeOfDaySky(lv);
-  ctx.fillStyle = timePeriod === "time-night" ? "#12182d" : lv.road;
-  ctx.fillRect(0, GND - 10, W, H - GND + 10);
 
   const off = (bgOff * 0.25) % 400;
   for (let bx = -400; bx < W + 400; bx += 400) {
@@ -2531,13 +2595,7 @@ function drawBG() {
     drawGreetingBuildings(x, lv.loc);
   }
 
-  for (let i = 0; i < 3; i++) {
-    ctx.fillStyle = "#1a2030";
-    ctx.fillRect(LANES[i] - 42, GND - 4, 84, H - GND + 4);
-  }
-
-  ctx.fillStyle = "#22304a";
-  ctx.fillRect(0, GND - 5, W, 10);
+  drawRealRoad(timePeriod);
 }
 
 function drawSecretRouteBackground() {
