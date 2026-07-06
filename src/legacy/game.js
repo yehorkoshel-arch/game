@@ -3616,13 +3616,15 @@ function drawPlayer() {
     return;
   }
 
+  const onRoad = y >= GND - 1 && !pSlide;
+  const walkPhase = fr * (0.22 + Math.min(spd, 5) * 0.045);
+  const run = onRoad ? Math.sin(walkPhase) * 9 : Math.sin(fr * 0.18) * 5;
+
   // shadow
   ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.beginPath();
-  ctx.ellipse(x, y + 8, 14, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, GND + 6, onRoad ? 19 : 13, onRoad ? 5 : 4, 0, 0, Math.PI * 2);
   ctx.fill();
-
-  const run = Math.sin(fr * 0.3) * 8;
 
   if (pSlide) {
     // ── SLIDE pose ──────────────────────────────────────────
@@ -3808,10 +3810,25 @@ function drawPlayer() {
     drawAndriiWeapon(x, y, true);
   } else {
     // ── NORMAL / JUMP pose ───────────────────────────────────
-    // legs
+    // walking legs planted on the road
+    const leftFootX = x - 9 - run * 0.45;
+    const rightFootX = x + 8 + run * 0.45;
+    const leftKneeX = x - 8 + run * 0.2;
+    const rightKneeX = x + 8 - run * 0.2;
+    ctx.strokeStyle = sk.shorts || "#222";
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x - 7, y - 17);
+    ctx.lineTo(leftKneeX, y - 8 - Math.max(0, run) * 0.15);
+    ctx.lineTo(leftFootX, GND - 4);
+    ctx.moveTo(x + 7, y - 17);
+    ctx.lineTo(rightKneeX, y - 8 + Math.min(0, run) * 0.15);
+    ctx.lineTo(rightFootX, GND - 4);
+    ctx.stroke();
     ctx.fillStyle = sk.shoes || "#111";
-    ctx.fillRect(x - 10, y - 2, 7, 18 + run);
-    ctx.fillRect(x + 3, y - 2, 7, 18 - run);
+    ctx.fillRect(leftFootX - 8, GND - 6, 15, 7);
+    ctx.fillRect(rightFootX - 7, GND - 6, 15, 7);
 
     // shorts
     ctx.fillStyle = sk.shorts || "#222";
