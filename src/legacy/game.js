@@ -918,11 +918,13 @@ let pLane = 1,
   slideT = 0,
   puddleSlow = 0,
   magnetTimer = 0,
+  shieldCharges = 0,
   inv = 0,
   flash = 0;
 let obs = [],
   coins = [],
   magnets = [],
+  shields = [],
   cityGifts = [],
   parts = [],
   confetti = [],
@@ -2049,9 +2051,11 @@ function startLevel() {
   slideT = 0;
   puddleSlow = 0;
   magnetTimer = 0;
+  shieldCharges = 0;
   obs = [];
   coins = [];
   magnets = [];
+  shields = [];
   cityGifts = [];
   parts = [];
   confetti = [];
@@ -2171,6 +2175,10 @@ function spawnCoin() {
 function spawnMagnet() {
   const lane = Math.floor(Math.random() * 3);
   magnets.push({ x: W + 30, lane, y: GND - 36, phase: Math.random() * Math.PI * 2 });
+}
+function spawnShield() {
+  const lane = Math.floor(Math.random() * 3);
+  shields.push({ x: W + 30, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
 function spawnCityGift(secret = false) {
   if (secretRoute?.active || bossActive || gameState !== "run") return;
@@ -5155,6 +5163,64 @@ function drawMagnet(m) {
   ctx.restore();
 }
 
+function drawShieldItem(s) {
+  const x = s.x;
+  const y = s.y + Math.sin(fr * 0.12 + (s.phase || 0)) * 4;
+  ctx.save();
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 30);
+  glow.addColorStop(0, "rgba(88, 190, 255, 0.78)");
+  glow.addColorStop(1, "rgba(88, 190, 255, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#58beff";
+  ctx.strokeStyle = "#e7f8ff";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 20);
+  ctx.lineTo(x + 17, y - 12);
+  ctx.lineTo(x + 13, y + 12);
+  ctx.lineTo(x, y + 24);
+  ctx.lineTo(x - 13, y + 12);
+  ctx.lineTo(x - 17, y - 12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.beginPath();
+  ctx.moveTo(x, y - 13);
+  ctx.lineTo(x + 8, y - 8);
+  ctx.lineTo(x + 4, y + 7);
+  ctx.lineTo(x, y + 12);
+  ctx.lineTo(x - 4, y + 7);
+  ctx.lineTo(x - 8, y - 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPlayerShieldAura() {
+  if (shieldCharges <= 0 || gameState !== "run") return;
+  const x = LANES[pLane];
+  const pulse = 0.5 + Math.sin(fr * 0.14) * 0.12;
+  ctx.save();
+  ctx.globalAlpha = 0.45 + pulse * 0.25;
+  ctx.strokeStyle = "#58beff";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(x, pY - 28, 30 + pulse * 8, 48 + pulse * 8, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = "#58beff";
+  ctx.beginPath();
+  ctx.ellipse(x, pY - 28, 27 + pulse * 7, 45 + pulse * 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawCityGift(gift) {
   const bob = Math.sin(fr * 0.16 + gift.x * 0.04) * 3;
   const x = gift.x;
@@ -5430,6 +5496,18 @@ function hit(a, b) {
     a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
   );
 }
+function absorbShieldHit(x, y, color = "#58beff") {
+  if (shieldCharges <= 0) return false;
+  shieldCharges = 0;
+  inv = Math.max(inv, 46);
+  flash = Math.max(flash, 10);
+  addParts(x, y, color);
+  addParts(LANES[pLane], pY - 28, "#e7f8ff");
+  sfxHit();
+  showAndriiBubble("\u0429\u0438\u0442 \u0432\u0440\u044f\u0442\u0443\u0432\u0430\u0432!");
+  hudUp();
+  return true;
+}
 
 function drawParts() {
   parts = parts.filter((p) => {
@@ -5483,6 +5561,14 @@ function drawHUDCanvas() {
     ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "left";
     ctx.fillText("M", 101, 31);
+  }
+  if (shieldCharges > 0) {
+    ctx.fillStyle = "rgba(7,18,28,0.62)";
+    ctx.fillRect(10, 36, 54, 12);
+    ctx.fillStyle = "#58beff";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("SHIELD", 14, 46);
   }
 }
 
@@ -6410,6 +6496,7 @@ function update() {
     obs = [];
     coins = [];
     magnets = [];
+    shields = [];
     cityGifts = [];
     speakAndrii(["Ого! Машина перетворюється на трансформера!"]);
   }
@@ -6488,6 +6575,7 @@ function update() {
       obs = [];
       bullets = [];
       playerBullets = [];
+      shields = [];
       chaserX = -220;
       showAndriiBubble("\u0423\u0440\u0430! \u042f \u0434\u0456\u0441\u0442\u0430\u0432\u0441\u044f \u0434\u043e \u0448\u043a\u043e\u043b\u0438!");
       return;
@@ -6556,6 +6644,16 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    shieldCharges <= 0 &&
+    fr % 760 === 300 &&
+    totalDist > 100 &&
+    totalDist < FDIST - 180
+  )
+    spawnShield();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
     fr % 260 === 80 &&
     totalDist < FDIST - 80
   )
@@ -6588,6 +6686,7 @@ function update() {
     }
   });
   magnets.forEach((m) => (m.x -= spd));
+  shields.forEach((s) => (s.x -= spd));
   cityGifts.forEach((gift) => {
     gift.x += gift.vx - spd * 0.12;
     gift.giverX = (gift.giverX ?? gift.x) - spd * 0.12;
@@ -6726,6 +6825,7 @@ function update() {
   obs = obs.filter((o) => o.x > -80);
   coins = coins.filter((c) => !c.done && c.x > -20);
   magnets = magnets.filter((m) => m.x > -50);
+  shields = shields.filter((s) => s.x > -50);
   cityGifts = cityGifts.filter((gift) => gift.life > 0 && gift.x > -30);
 
   const pr = pRect(),
@@ -6738,6 +6838,17 @@ function update() {
     sfxCoin();
     addParts(m.x, m.y, "#62d6ff");
     showAndriiBubble("\u041c\u0430\u0433\u043d\u0456\u0442! \u041c\u043e\u043d\u0435\u0442\u0438 \u043b\u0435\u0442\u044f\u0442\u044c \u0434\u043e \u043c\u0435\u043d\u0435!");
+    return false;
+  });
+  shields = shields.filter((s) => {
+    if (s.lane !== pLane) return true;
+    const sr = { x: s.x - 22, y: s.y - 24, w: 44, h: 48 };
+    if (!hit(pr, sr)) return true;
+    shieldCharges = 1;
+    sfxCoin();
+    addParts(s.x, s.y, "#58beff");
+    showAndriiBubble("\u0429\u0438\u0442 \u0430\u043a\u0442\u0438\u0432\u043d\u0438\u0439!");
+    hudUp();
     return false;
   });
   cityGifts = cityGifts.filter((gift) => {
@@ -6764,6 +6875,7 @@ function update() {
             h: 8,
           };
     if (hit(pr, br) && inv === 0) {
+      if (absorbShieldHit(b.x, b.y, "#58beff")) return false;
       lives--;
       inv = 75;
       flash = 22;
@@ -6802,6 +6914,10 @@ function update() {
     if (pY < GND - 50 && o.type === "kiosk") return;
     if (pY < GND - 48 && o.type === "scooter") return;
     if (hit(pr, oRect(o)) && inv === 0) {
+      if (absorbShieldHit(o.x, GND - 28, "#58beff")) {
+        o.x = -100;
+        return;
+      }
       lives--;
       inv = 75;
       flash = 22;
@@ -6860,6 +6976,7 @@ function loop() {
   drawBG();
   drawSecretRouteEntrance();
   drawFinishLine();
+  shields.forEach(drawShieldItem);
   magnets.forEach(drawMagnet);
   coins.forEach(drawCoin);
   cityGifts.forEach(drawCityGift);
@@ -6869,6 +6986,7 @@ function loop() {
   drawSchoolPursuersScene();
   drawSchoolMarichkaScene();
   drawPlayer();
+  drawPlayerShieldAura();
   drawSecretTunnelForeground();
   drawParts();
   drawBullets();
