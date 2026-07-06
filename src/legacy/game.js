@@ -916,6 +916,7 @@ let pLane = 1,
   pVY = 0,
   pSlide = false,
   slideT = 0,
+  puddleSlow = 0,
   inv = 0,
   flash = 0;
 let obs = [],
@@ -2044,6 +2045,7 @@ function startLevel() {
   pVY = 0;
   pSlide = false;
   slideT = 0;
+  puddleSlow = 0;
   obs = [];
   coins = [];
   cityGifts = [];
@@ -2142,7 +2144,13 @@ const cv = document.getElementById("gc"),
 function spawnObs() {
   const lv = getLvl();
   const types = lv.obsTypes;
-  const type = types[Math.floor(Math.random() * types.length)];
+  const hazardChance = Math.min(0.14 + currentLevel * 0.012, 0.28);
+  const type =
+    Math.random() < hazardChance
+      ? Math.random() < 0.52
+        ? "puddle"
+        : "hole"
+      : types[Math.floor(Math.random() * types.length)];
   obs.push({
     x: W + 30,
     lane: Math.floor(Math.random() * 3),
@@ -4377,6 +4385,48 @@ function drawObs(o) {
   const x = o.x;
   if (o.type === "scooter") {
     drawScooterRider(o);
+  } else if (o.type === "hole") {
+    const y = GND + 3;
+    ctx.fillStyle = "rgba(0,0,0,0.34)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 1, 34, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const pit = ctx.createRadialGradient(x - 5, y - 2, 4, x, y, 34);
+    pit.addColorStop(0, "#080a0f");
+    pit.addColorStop(0.72, "#171b22");
+    pit.addColorStop(1, "#56515a");
+    ctx.fillStyle = pit;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 31, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#7c6d62";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x, y - 1, 32, 9, 0, 0.08, Math.PI * 1.92);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(190,180,164,0.5)";
+    ctx.fillRect(x - 27, y - 8, 8, 2);
+    ctx.fillRect(x + 14, y - 6, 11, 2);
+  } else if (o.type === "puddle") {
+    const y = GND + 4;
+    const shine = Math.sin(fr * 0.08 + x * 0.01) * 3;
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 3, 38, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const water = ctx.createLinearGradient(x - 36, y - 9, x + 36, y + 8);
+    water.addColorStop(0, "rgba(76, 190, 255, 0.38)");
+    water.addColorStop(0.5, "rgba(130, 225, 255, 0.64)");
+    water.addColorStop(1, "rgba(32, 100, 180, 0.42)");
+    ctx.fillStyle = water;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 36, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(205, 244, 255, 0.78)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x - 7 + shine, y - 2, 18, 3.5, -0.05, 0, Math.PI * 2);
+    ctx.stroke();
   } else if (o.type === "boss_dancer") {
     const gx = x;
     const gy = GND;
@@ -5054,7 +5104,12 @@ function pRect() {
   if (pSlide) return { x: x - 16, y: pY + 11, w: 32, h: 14 };
   return { x: x - 12, y: pY - 44, w: 24, h: 68 };
 }
+function isRoadHazard(type) {
+  return type === "hole" || type === "puddle";
+}
 function oRect(o) {
+  if (o.type === "hole") return { x: o.x - 32, y: GND - 8, w: 64, h: 18 };
+  if (o.type === "puddle") return { x: o.x - 36, y: GND - 7, w: 72, h: 16 };
   if (o.type === "scooter")
     return { x: o.x - 30, y: GND - 48, w: 60, h: 55 };
   if (o.type === "kiosk") return { x: o.x - 24, y: GND - 46, w: 48, h: 46 };
@@ -5943,6 +5998,10 @@ function update() {
   } else {
     spd = Math.min(spd, maxS);
   }
+  if (puddleSlow > 0) {
+    spd *= 0.68;
+    puddleSlow--;
+  }
   score = Math.round((fr * spd) / 10);
   const distanceStep = spd / 60;
   totalDist += distanceStep;
@@ -6287,11 +6346,12 @@ function update() {
       const isMinigunTarget =
         b.type === "minigun" &&
         currentLocation === 1 &&
-        o.type !== "boss_dancer";
+        o.type !== "boss_dancer" &&
+        !isRoadHazard(o.type);
       const isLvivObject =
         currentLocation === 1 &&
         (b.type === "minigun"
-          ? o.type !== "boss_dancer"
+          ? o.type !== "boss_dancer" && !isRoadHazard(o.type)
           : o.type === "kiosk" || o.type === "bollard");
       const laneMatches = isMinigunTarget || b.lane === o.lane;
       if (hitTarget || !laneMatches || (!isEnemy && !isLvivObject)) return true;
@@ -6368,6 +6428,18 @@ function update() {
 
   obs.forEach((o) => {
     if (o.lane !== pLane) return;
+    if (o.type === "puddle") {
+      if (!o.triggered && hit(pr, oRect(o))) {
+        o.triggered = true;
+        puddleSlow = Math.max(puddleSlow, 42);
+        pSlide = true;
+        slideT = Math.max(slideT, 20);
+        addParts(px, GND - 5, "#77dfff");
+        sfxLand();
+      }
+      return;
+    }
+    if (o.type === "hole" && pY < GND - 46) return;
     if (pSlide && o.type === "bollard") return;
     if (pY < GND - 50 && o.type === "kiosk") return;
     if (pY < GND - 48 && o.type === "scooter") return;
