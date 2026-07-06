@@ -2666,11 +2666,18 @@ function drawRealRoad(timePeriod) {
   const topHalf = 145;
   const bottomHalf = Math.max(W * 0.62, 390);
   const isNight = timePeriod === "time-night";
+  const isLvivRoad = currentLocation === 1;
 
   const road = ctx.createLinearGradient(0, horizonY, 0, bottomY);
-  road.addColorStop(0, isNight ? "#242a38" : "#3c4656");
-  road.addColorStop(0.55, isNight ? "#171d2a" : "#2b3340");
-  road.addColorStop(1, isNight ? "#0f1420" : "#1d2430");
+  if (isLvivRoad) {
+    road.addColorStop(0, isNight ? "#4b4036" : "#8b7a67");
+    road.addColorStop(0.56, isNight ? "#372f2a" : "#6d5f50");
+    road.addColorStop(1, isNight ? "#28221f" : "#4c4238");
+  } else {
+    road.addColorStop(0, isNight ? "#242a38" : "#3c4656");
+    road.addColorStop(0.55, isNight ? "#171d2a" : "#2b3340");
+    road.addColorStop(1, isNight ? "#0f1420" : "#1d2430");
+  }
   ctx.fillStyle = road;
   ctx.beginPath();
   ctx.moveTo(cx - topHalf, horizonY);
@@ -2692,27 +2699,69 @@ function drawRealRoad(timePeriod) {
   ctx.lineTo(cx + bottomHalf, bottomY);
   ctx.stroke();
 
-  ctx.strokeStyle = isNight ? "rgba(255, 241, 168, 0.72)" : "rgba(255, 239, 154, 0.94)";
-  ctx.lineCap = "round";
-  const dashOffset = (bgOff * 2.4) % 72;
-  for (let y = horizonY - 72 + dashOffset; y < bottomY + 72; y += 72) {
-    const y2 = Math.min(bottomY, y + 32);
-    if (y2 <= horizonY) continue;
-    const t1 = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
-    const t2 = Math.max(0, Math.min(1, (y2 - horizonY) / (bottomY - horizonY)));
-    const half1 = topHalf + (bottomHalf - topHalf) * t1;
-    const half2 = topHalf + (bottomHalf - topHalf) * t2;
-    ctx.lineWidth = 3 + t1 * 3;
-    for (const laneMark of [-1 / 3, 1 / 3]) {
+  if (isLvivRoad) {
+    const rowOffset = (bgOff * 1.45) % 34;
+    for (let y = horizonY - 34 + rowOffset; y < bottomY + 34; y += 22) {
+      const y2 = Math.min(bottomY, y + 18);
+      if (y2 <= horizonY) continue;
+      const t1 = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
+      const t2 = Math.max(0, Math.min(1, (y2 - horizonY) / (bottomY - horizonY)));
+      const half1 = topHalf + (bottomHalf - topHalf) * t1;
+      const half2 = topHalf + (bottomHalf - topHalf) * t2;
+      const stones = Math.max(8, Math.floor(10 + t1 * 15));
+      for (let s = 0; s < stones; s++) {
+        const fracA = -1 + (s / stones) * 2;
+        const fracB = -1 + ((s + 1) / stones) * 2;
+        const stagger = (Math.floor(y / 22) % 2) * (1 / stones);
+        const a = Math.max(-1, Math.min(1, fracA + stagger));
+        const b = Math.max(-1, Math.min(1, fracB + stagger));
+        const tone = (s + Math.floor(y / 22)) % 3;
+        ctx.fillStyle = tone === 0 ? "rgba(154,139,119,0.58)" : tone === 1 ? "rgba(105,93,80,0.52)" : "rgba(190,176,150,0.42)";
+        ctx.strokeStyle = isNight ? "rgba(27,23,21,0.45)" : "rgba(59,50,43,0.5)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx + half1 * a, y);
+        ctx.lineTo(cx + half1 * b, y);
+        ctx.lineTo(cx + half2 * b, y2);
+        ctx.lineTo(cx + half2 * a, y2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    ctx.strokeStyle = isNight ? "rgba(44, 37, 32, 0.7)" : "rgba(80, 68, 58, 0.72)";
+    ctx.lineWidth = 3;
+    for (const laneGroove of [-1 / 3, 1 / 3]) {
       ctx.beginPath();
-      ctx.moveTo(cx + half1 * laneMark, y);
-      ctx.lineTo(cx + half2 * laneMark, y2);
+      ctx.moveTo(cx + topHalf * laneGroove, horizonY);
+      ctx.lineTo(cx + bottomHalf * laneGroove, bottomY);
       ctx.stroke();
     }
+  } else {
+    ctx.strokeStyle = isNight ? "rgba(255, 241, 168, 0.72)" : "rgba(255, 239, 154, 0.94)";
+    ctx.lineCap = "round";
+    const dashOffset = (bgOff * 2.4) % 72;
+    for (let y = horizonY - 72 + dashOffset; y < bottomY + 72; y += 72) {
+      const y2 = Math.min(bottomY, y + 32);
+      if (y2 <= horizonY) continue;
+      const t1 = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
+      const t2 = Math.max(0, Math.min(1, (y2 - horizonY) / (bottomY - horizonY)));
+      const half1 = topHalf + (bottomHalf - topHalf) * t1;
+      const half2 = topHalf + (bottomHalf - topHalf) * t2;
+      ctx.lineWidth = 3 + t1 * 3;
+      for (const laneMark of [-1 / 3, 1 / 3]) {
+        ctx.beginPath();
+        ctx.moveTo(cx + half1 * laneMark, y);
+        ctx.lineTo(cx + half2 * laneMark, y2);
+        ctx.stroke();
+      }
+    }
+    ctx.lineCap = "butt";
   }
-  ctx.lineCap = "butt";
 
-  ctx.fillStyle = isNight ? "rgba(255, 255, 255, 0.035)" : "rgba(255, 255, 255, 0.055)";
+  ctx.fillStyle = isLvivRoad
+    ? isNight ? "rgba(255, 232, 188, 0.04)" : "rgba(255, 238, 199, 0.06)"
+    : isNight ? "rgba(255, 255, 255, 0.035)" : "rgba(255, 255, 255, 0.055)";
   for (let i = 0; i < 85; i++) {
     const y = horizonY + ((i * 47 + bgOff * 2.1) % (bottomY - horizonY));
     const t = (y - horizonY) / (bottomY - horizonY);
