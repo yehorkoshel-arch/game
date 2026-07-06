@@ -2593,6 +2593,126 @@ function drawRealRoad(timePeriod) {
   ctx.fillRect(0, GND - 3, W, 6);
 }
 
+function drawRoadSign(x, y, label, kind = "direction") {
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 5, 24, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#7b8794";
+  ctx.fillRect(x - 2, y - 2, 4, 46);
+  ctx.fillStyle = "#56616e";
+  ctx.fillRect(x - 4, y + 38, 8, 8);
+
+  if (kind === "repair") {
+    ctx.fillStyle = "#f2c94c";
+    ctx.beginPath();
+    ctx.moveTo(x, y - 44);
+    ctx.lineTo(x + 28, y - 16);
+    ctx.lineTo(x, y + 12);
+    ctx.lineTo(x - 28, y - 16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#1f2933";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = "#1f2933";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("!", x, y - 12);
+    ctx.font = "bold 6px sans-serif";
+    ctx.fillText(label, x, y + 1);
+  } else if (kind === "school") {
+    ctx.fillStyle = "#ffe8a3";
+    ctx.beginPath();
+    ctx.arc(x, y - 18, 24, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#1f2933";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = "#1f2933";
+    ctx.font = "bold 8px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x, y - 15);
+    ctx.fillStyle = "#2f80ed";
+    ctx.fillRect(x - 8, y - 10, 6, 8);
+    ctx.fillStyle = "#eb5757";
+    ctx.fillRect(x + 2, y - 10, 6, 8);
+  } else if (kind === "metro") {
+    ctx.fillStyle = "#1f5fbf";
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x - 25, y - 42, 50, 32, 6) : ctx.rect(x - 25, y - 42, 50, 32);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 18px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("M", x, y - 19);
+    ctx.font = "bold 7px sans-serif";
+    ctx.fillText(label, x, y - 34);
+  } else {
+    ctx.fillStyle = "#e8f4ff";
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x - 34, y - 41, 68, 27, 5) : ctx.rect(x - 34, y - 41, 68, 27);
+    ctx.fill();
+    ctx.strokeStyle = "#2f80ed";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = "#1f2933";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x, y - 23);
+  }
+
+  ctx.restore();
+}
+
+function drawTrafficLight(x, y) {
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.24)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 6, 18, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#5b6673";
+  ctx.fillRect(x - 3, y - 54, 6, 58);
+  ctx.fillStyle = "#1c2430";
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(x - 12, y - 83, 24, 42, 5) : ctx.rect(x - 12, y - 83, 24, 42);
+  ctx.fill();
+  const active = Math.floor(fr / 95) % 3;
+  const lights = [
+    ["#eb5757", y - 74],
+    ["#f2c94c", y - 62],
+    ["#27ae60", y - 50],
+  ];
+  lights.forEach(([color, cy], idx) => {
+    ctx.fillStyle = idx === active ? color : "rgba(255,255,255,0.16)";
+    ctx.beginPath();
+    ctx.arc(x, cy, 5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawRoadsideSigns() {
+  const locLabel = currentLocation === 1 ? "\u041b\u044c\u0432\u0456\u0432" : "\u041a\u0438\u0457\u0432";
+  const signs = [
+    { label: locLabel, kind: "direction", y: GND - 2, side: -1, gap: 0 },
+    { label: "\u0428\u043a\u043e\u043b\u0430", kind: "school", y: GND - 4, side: 1, gap: 210 },
+    { label: "\u0420\u0435\u043c\u043e\u043d\u0442", kind: "repair", y: GND - 1, side: -1, gap: 420 },
+    { label: "\u041c\u0435\u0442\u0440\u043e", kind: "metro", y: GND - 5, side: 1, gap: 620 },
+  ];
+  const off = (bgOff * 0.62) % 820;
+  for (const sign of signs) {
+    const x = W + 120 + sign.gap - off;
+    if (x < -90 || x > W + 100) continue;
+    drawRoadSign(x + sign.side * 18, sign.y, sign.label, sign.kind);
+  }
+
+  const lightX = W + 360 - ((bgOff * 0.54) % 920);
+  if (lightX > -70 && lightX < W + 80) drawTrafficLight(lightX, GND - 1);
+}
+
 function drawBG() {
   if (secretRoute && secretRoute.active && !secretRoute.entering) {
     drawSecretRouteBackground();
@@ -2614,6 +2734,7 @@ function drawBG() {
   }
 
   drawRealRoad(timePeriod);
+  drawRoadsideSigns();
 }
 
 function drawSecretRouteBackground() {
