@@ -8084,6 +8084,17 @@ function update() {
   )
     spawnMagnet();
   if (
+    currentLocation === 0 &&
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    chestnutTimer <= 0 &&
+    fr % 720 === 260 &&
+    totalDist > 110 &&
+    totalDist < FDIST - 170
+  )
+    spawnChestnut();
+  if (
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
@@ -8130,15 +8141,17 @@ function update() {
     const dx = tx - cx;
     const dy = ty - cy;
     const dist = Math.hypot(dx, dy);
-    if (magnetTimer > 0 && (dist < 190 || c.magneted)) {
+    if ((magnetTimer > 0 || chestnutTimer > 0) && (dist < 190 || c.magneted)) {
       c.magneted = true;
-      c.x = cx + dx * 0.16;
-      c.y += dy * 0.12;
+      const pull = chestnutTimer > 0 ? 0.2 : 0.16;
+      c.x = cx + dx * pull;
+      c.y += dy * (chestnutTimer > 0 ? 0.15 : 0.12);
     } else {
       c.magneted = false;
     }
   });
   magnets.forEach((m) => (m.x -= spd));
+  chestnuts.forEach((c) => (c.x -= spd));
   shields.forEach((s) => (s.x -= spd));
   superJumps.forEach((j) => (j.x -= spd));
   cityGifts.forEach((gift) => {
