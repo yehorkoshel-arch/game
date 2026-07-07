@@ -1156,6 +1156,7 @@ const SECRET_ROUTE_TYPES = [
     hint: "\u0421\u0435\u043a\u0440\u0435\u0442\u043d\u0438\u0439 \u0432\u0445\u0456\u0434 \u0443 \u043c\u0435\u0442\u0440\u043e",
     lane: 0,
     color: "#2f9b68",
+    shortcut: 180,
   },
   {
     id: "roofs",
@@ -1174,10 +1175,11 @@ const SECRET_ROUTE_TYPES = [
 ];
 
 function createSecretRoute() {
-  const type =
-    SECRET_ROUTE_TYPES[
-      (currentLevel + currentLocation * 2) % SECRET_ROUTE_TYPES.length
-    ];
+  const availableTypes =
+    currentLocation === 0
+      ? SECRET_ROUTE_TYPES.filter((route) => route.id === "metro")
+      : SECRET_ROUTE_TYPES.filter((route) => route.id !== "metro");
+  const type = availableTypes[currentLevel % availableTypes.length];
   return {
     ...type,
     offered: false,
@@ -1224,6 +1226,12 @@ function completeSecretRoute() {
   secretRoute.active = false;
   secretRoute.completed = true;
   spd = Math.max(secretRoute.resumeSpeed || 0, 0.1);
+  if (secretRoute.shortcut) {
+    totalDist = Math.min(
+      totalDist + secretRoute.shortcut,
+      Math.max(0, getFinishDistance() - FINISH_APPROACH_DISTANCE - 60),
+    );
+  }
   addQuestProgress("routes");
   runCoins += SECRET_ROUTE_REWARD;
   addParts(LANES[pLane], pY - 35, secretRoute.color);
@@ -3434,20 +3442,55 @@ function drawSecretRouteBackground() {
   const off = (bgOff * 0.7) % 160;
 
   if (route.id === "metro") {
-    ctx.fillStyle = "#10171d";
+    const tunnel = ctx.createLinearGradient(0, 0, 0, H);
+    tunnel.addColorStop(0, "#0b1018");
+    tunnel.addColorStop(0.42, "#17232c");
+    tunnel.addColorStop(1, "#080b10");
+    ctx.fillStyle = tunnel;
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#24323b";
-    ctx.fillRect(0, 60, W, 205);
+    ctx.fillRect(0, 58, W, 207);
+    ctx.fillStyle = "#19242d";
+    ctx.fillRect(0, 58, W, 24);
+    ctx.fillStyle = "#2f9b68";
+    ctx.fillRect(0, 82, W, 5);
     for (let x = -160 - off; x < W + 160; x += 160) {
       ctx.fillStyle = "#d8d0b8";
-      ctx.fillRect(x, 82, 104, 112);
+      ctx.fillRect(x, 86, 104, 108);
       ctx.fillStyle = "#1d5672";
-      ctx.fillRect(x + 12, 95, 80, 55);
+      ctx.fillRect(x + 12, 99, 80, 51);
+      ctx.fillStyle = "#9ed8ef";
+      ctx.fillRect(x + 18, 106, 68, 14);
+      ctx.fillStyle = "#0c2030";
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("\u041a\u0418\u0407\u0412", x + 52, 117);
+      ctx.textAlign = "left";
       ctx.fillStyle = "#f2c94c";
       ctx.fillRect(x + 18, 207, 70, 7);
+      ctx.fillStyle = "rgba(255,255,255,0.32)";
+      ctx.fillRect(x + 12, 158, 80, 4);
+      ctx.fillRect(x + 12, 169, 80, 4);
+    }
+    for (let x = -90 - ((bgOff * 1.4) % 260); x < W + 260; x += 260) {
+      ctx.fillStyle = "#26353f";
+      ctx.fillRect(x, GND - 66, 210, 46);
+      ctx.fillStyle = "#111820";
+      ctx.fillRect(x + 16, GND - 58, 54, 26);
+      ctx.fillRect(x + 82, GND - 58, 54, 26);
+      ctx.fillRect(x + 148, GND - 58, 42, 26);
+      ctx.fillStyle = "#2f9b68";
+      ctx.fillRect(x + 8, GND - 23, 194, 5);
+      ctx.fillStyle = "#ffd95c";
+      ctx.fillRect(x + 182, GND - 49, 10, 10);
     }
     ctx.fillStyle = "#101419";
     ctx.fillRect(0, GND - 8, W, H - GND + 8);
+    ctx.fillStyle = "#1b2229";
+    for (let s = 0; s < 9; s++) {
+      const sx = -80 + ((bgOff * 1.2 + s * 90) % (W + 160));
+      ctx.fillRect(sx, GND + 40, 55, 5);
+    }
     ctx.strokeStyle = "#8b969d";
     ctx.lineWidth = 4;
     for (let i = 0; i < 3; i++) {
@@ -3567,6 +3610,29 @@ function drawSecretRouteEntrance() {
   ctx.fillStyle = "#1e252c";
   for (let step = 0; step < 5; step++)
     ctx.fillRect(x - 34 + step * 4, y - 12 + step * 3, 68 - step * 8, 3);
+  if (secretRoute.id === "metro") {
+    ctx.fillStyle = "#10241e";
+    ctx.fillRect(x - 62, y - 108, 124, 26);
+    ctx.strokeStyle = near ? "#ffffff" : "#2f9b68";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x - 62, y - 108, 124, 26);
+    ctx.fillStyle = "#2f9b68";
+    ctx.beginPath();
+    ctx.arc(x - 44, y - 95, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("M", x - 44, y - 90);
+    ctx.fillStyle = "#e8fff4";
+    ctx.font = "bold 11px sans-serif";
+    ctx.fillText("\u041c\u0415\u0422\u0420\u041e", x + 15, y - 91);
+    ctx.fillStyle = "#2b3338";
+    ctx.fillRect(x - 48, y - 5, 96, 5);
+    ctx.fillStyle = "rgba(47,155,104,0.35)";
+    ctx.fillRect(x - 38, y - 33, 76, 4);
+    ctx.fillRect(x - 30, y - 47, 60, 4);
+  }
   ctx.fillStyle = secretRoute.color;
   ctx.beginPath();
   ctx.moveTo(x - 18, y - 70);
