@@ -4031,8 +4031,10 @@ function drawPlayer() {
   }
 
   const onRoad = y >= GND - 1 && !pSlide;
-  const walkPhase = fr * (0.22 + Math.min(spd, 5) * 0.045);
-  const run = onRoad ? Math.sin(walkPhase) * 9 : Math.sin(fr * 0.18) * 5;
+  const speedLevel = getPlayerUpgradeLevel("speed");
+  const walkPhase = fr * (0.22 + Math.min(spd, 5) * 0.045 + speedLevel * 0.035);
+  const runAmp = 9 + speedLevel * 1.8;
+  const run = onRoad ? Math.sin(walkPhase) * runAmp : Math.sin(fr * 0.18) * 5;
 
   // shadow
   ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -4229,6 +4231,23 @@ function drawPlayer() {
     const rightFootX = x + 8 + run * 0.45;
     const leftKneeX = x - 8 + run * 0.2;
     const rightKneeX = x + 8 - run * 0.2;
+    if (onRoad && speedLevel > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.18 + speedLevel * 0.08;
+      ctx.strokeStyle = speedLevel >= 3 ? "#fff36a" : "#8ee6ff";
+      ctx.lineWidth = 2 + speedLevel;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      for (let i = 0; i < speedLevel + 1; i++) {
+        const trail = 14 + i * 8;
+        ctx.moveTo(leftFootX - trail, GND - 4 - i);
+        ctx.lineTo(leftFootX - trail - 14, GND - 4 - i);
+        ctx.moveTo(rightFootX - trail, GND - 2 + i * 0.4);
+        ctx.lineTo(rightFootX - trail - 13, GND - 2 + i * 0.4);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
     ctx.strokeStyle = sk.shorts || "#222";
     ctx.lineWidth = 7;
     ctx.lineCap = "round";
