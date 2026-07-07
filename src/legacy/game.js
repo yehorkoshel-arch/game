@@ -7467,9 +7467,24 @@ function update() {
         coins.push({
           x: W + 25,
           lane,
-          y: secretRoute.id === "roofs" && lane === 1 ? GND - 70 : GND,
+          y:
+            secretRoute.id === "roofs" && lane === 1
+              ? GND - 70
+              : secretRoute.id === "metro" && lane !== 1
+                ? GND - 44
+                : GND,
           done: false,
         });
+      }
+      if (secretRoute.id === "metro" && secretRoute.timer % 84 === 24) {
+        for (let lane = 0; lane < 3; lane++) {
+          coins.push({
+            x: W + 35 + lane * 28,
+            lane,
+            y: lane === 1 ? GND - 18 : GND - 52,
+            done: false,
+          });
+        }
       }
       if (secretRoute.timer >= SECRET_ROUTE_DURATION) completeSecretRoute();
     }
