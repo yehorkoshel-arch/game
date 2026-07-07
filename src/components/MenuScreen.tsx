@@ -14,6 +14,10 @@ export function MenuScreen() {
         ✓
         <span id="questReadyBadge" className="quest-ready-badge">0</span>
       </button>
+      <button className="achievement-icon-btn" id="btnAchievementsOpen" title="Досягнення" type="button">
+        ★
+        <span id="achievementReadyBadge" className="quest-ready-badge">0</span>
+      </button>
       <div className="lang-bar">
         <button className="lbtn active" data-lang="uk" type="button">
           UA

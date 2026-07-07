@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { GameScreen } from './components/GameScreen';
+import { AchievementScreen } from './components/AchievementScreen';
 import { BackpackScreen } from './components/BackpackScreen';
 import { IntroScreen } from './components/IntroScreen';
 import { MenuScreen } from './components/MenuScreen';
@@ -17,6 +18,7 @@ export function App() {
       <h2 className="sr-only">Kyiv Runner</h2>
       <IntroScreen />
       <MenuScreen />
+      <AchievementScreen />
       <BackpackScreen />
       <QuestScreen />
       <ShopScreen />

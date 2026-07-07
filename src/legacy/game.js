@@ -74,6 +74,47 @@ let questClaimed =
   save.questClaimed && typeof save.questClaimed === "object"
     ? save.questClaimed
     : {};
+const ACHIEVEMENTS = [
+  {
+    id: "metro",
+    title: "\u041f\u0430\u0441\u0430\u0436\u0438\u0440 \u043c\u0435\u0442\u0440\u043e",
+    desc: "\u041f\u0440\u043e\u0439\u0434\u0438 \u0441\u0435\u043a\u0440\u0435\u0442\u043d\u0438\u0439 \u043c\u0430\u0440\u0448\u0440\u0443\u0442 \u043c\u0435\u0442\u0440\u043e",
+    target: 1,
+    icon: "M",
+  },
+  {
+    id: "trick3",
+    title: "\u041c\u0430\u0439\u0441\u0442\u0435\u0440 \u0442\u0440\u044e\u043a\u0456\u0432",
+    desc: "\u0417\u0440\u043e\u0431\u0438 TRICK x3",
+    target: 1,
+    icon: "x3",
+  },
+  {
+    id: "boss",
+    title: "\u0411\u043e\u0441 \u043f\u0435\u0440\u0435\u043c\u043e\u0436\u0435\u043d\u0438\u0439",
+    desc: "\u041f\u0435\u0440\u0435\u043c\u043e\u0436\u0438 \u043a\u0438\u0457\u0432\u0441\u044c\u043a\u043e\u0433\u043e \u0431\u043e\u0441\u0430",
+    target: 1,
+    icon: "B",
+  },
+  {
+    id: "coins1000",
+    title: "\u0421\u043a\u0430\u0440\u0431 \u0410\u043d\u0434\u0440\u0456\u044f",
+    desc: "\u0417\u0431\u0435\u0440\u0438 1000 \u043c\u043e\u043d\u0435\u0442 \u0437\u0430 \u0432\u0441\u044e \u0433\u0440\u0443",
+    target: 1000,
+    icon: "\u20b4",
+  },
+];
+const savedAchievementStats = save.achievementStats || {};
+let achievementStats = Object.fromEntries(
+  ACHIEVEMENTS.map((item) => [
+    item.id,
+    Math.max(0, Number(savedAchievementStats[item.id]) || 0),
+  ]),
+);
+let achievementSeen =
+  save.achievementSeen && typeof save.achievementSeen === "object"
+    ? save.achievementSeen
+    : {};
 let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
     ? save.settingDiff
     : "normal",
@@ -241,6 +282,8 @@ function saveGame() {
     tckSceneSeenLevels,
     questStats,
     questClaimed,
+    achievementStats,
+    achievementSeen,
     weaponUpgrades,
     playerUpgrades,
     backpackSlots,
@@ -1234,6 +1277,7 @@ function completeSecretRoute() {
     );
   }
   addQuestProgress("routes");
+  if (secretRoute.id === "metro") addAchievementProgress("metro");
   runCoins += SECRET_ROUTE_REWARD;
   addParts(LANES[pLane], pY - 35, secretRoute.color);
   sfxCoin();
@@ -1424,6 +1468,62 @@ function refreshQuestUI() {
   }
   updateQuestReadyBadge();
 }
+function getAchievementProgress(item) {
+  if (item.id === "coins1000")
+    return Math.min(item.target, Math.max(achievementStats[item.id] || 0, totalCoins));
+  return Math.min(item.target, Number(achievementStats[item.id]) || 0);
+}
+function addAchievementProgress(id, amount = 1) {
+  const item = ACHIEVEMENTS.find((achievement) => achievement.id === id);
+  if (!item) return;
+  achievementStats[id] = Math.min(
+    item.target,
+    Math.max(0, Number(achievementStats[id]) || 0) + amount,
+  );
+  updateAchievementReadyBadge();
+  const screen = document.getElementById("sAchievements");
+  if (screen?.classList.contains("active")) buildAchievements();
+}
+function getReadyAchievementCount() {
+  return ACHIEVEMENTS.filter((item) => {
+    const done = getAchievementProgress(item) >= item.target;
+    return done && !achievementSeen[item.id];
+  }).length;
+}
+function updateAchievementReadyBadge() {
+  const badge = document.getElementById("achievementReadyBadge");
+  if (!badge) return;
+  const count = getReadyAchievementCount();
+  badge.textContent = String(count);
+  badge.style.display = count > 0 ? "" : "none";
+}
+function buildAchievements() {
+  const list = document.getElementById("achievementList");
+  if (!list) return;
+  list.innerHTML = "";
+  ACHIEVEMENTS.forEach((item) => {
+    const progress = getAchievementProgress(item);
+    const done = progress >= item.target;
+    if (done) achievementSeen[item.id] = true;
+    const card = document.createElement("article");
+    card.className = "achievement-item" + (done ? " complete" : "");
+    card.innerHTML = `
+      <div class="achievement-icon">${item.icon}</div>
+      <div class="achievement-copy">
+        <div class="achievement-title">${item.title}</div>
+        <div class="achievement-desc">${item.desc}</div>
+        <div class="achievement-progress">
+          <div class="achievement-progress-fill" style="width:${(progress / item.target) * 100}%"></div>
+        </div>
+        <div class="achievement-count">${progress} / ${item.target}</div>
+      </div>
+      <div class="achievement-status">${done ? "\u041e\u0442\u0440\u0438\u043c\u0430\u043d\u043e" : "\u0412 \u043f\u0440\u043e\u0446\u0435\u0441\u0456"}</div>
+    `;
+    list.appendChild(card);
+  });
+  saveGame();
+  updateAchievementReadyBadge();
+}
 function buildQuests() {
   const list = document.getElementById("questList");
   if (!list) return;
@@ -1597,7 +1697,9 @@ document.querySelectorAll(".lbtn").forEach((b) => {
 function showScreen(id) {
   setActiveScreen(id);
   if (id === "sMenu") updateQuestReadyBadge();
+  if (id === "sMenu") updateAchievementReadyBadge();
   if (id === "sQuests") buildQuests();
+  if (id === "sAchievements") buildAchievements();
   if (id === "sBackpack") buildBackpack();
   if (settingSound) {
     if (id === "sMenu" || id === "sGame") {
@@ -2105,6 +2207,15 @@ document.getElementById("btnBackBackpack").onclick = () => {
 document.getElementById("btnQuestsOpen").onclick = () => {
   buildQuests();
   showScreen("sQuests");
+};
+document.getElementById("btnAchievementsOpen").onclick = () => {
+  buildAchievements();
+  showScreen("sAchievements");
+};
+document.getElementById("btnBackAchievements").onclick = () => {
+  saveGame();
+  syncCoins();
+  showScreen("sMenu");
 };
 document.getElementById("btnBackQuests").onclick = () => {
   saveGame();
@@ -6519,6 +6630,7 @@ function registerTrickCoinCombo() {
   trickComboStreak = trickComboTimer > 0 ? trickComboStreak + 1 : 1;
   trickComboTimer = 190;
   trickComboMult = trickComboStreak >= 2 ? 3 : 2;
+  if (trickComboMult >= 3) addAchievementProgress("trick3");
   trickJumpTimer = 0;
   trickSlideTimer = 0;
   showAndriiBubble(
@@ -7978,6 +8090,7 @@ function update() {
         addConfetti();
         addConfetti();
         addQuestProgress("bosses");
+        addAchievementProgress("boss");
         runCoins += 250;
         hudUp();
         syncCoins();
