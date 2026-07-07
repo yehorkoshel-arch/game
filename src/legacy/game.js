@@ -97,6 +97,7 @@ let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
     ? save.settingRobotVoiceLang
     : "uk",
   settingVib = typeof save.settingVib === "boolean" ? save.settingVib : false;
+let backpackSlots = Math.min(3, Math.max(2, Number(save.backpackSlots) || 2));
 const savedWeaponUpgrades =
   save.weaponUpgrades && typeof save.weaponUpgrades === "object"
     ? save.weaponUpgrades
@@ -228,6 +229,7 @@ function saveGame() {
     questClaimed,
     weaponUpgrades,
     playerUpgrades,
+    backpackSlots,
   });
 }
 
@@ -1567,6 +1569,7 @@ function showScreen(id) {
   setActiveScreen(id);
   if (id === "sMenu") updateQuestReadyBadge();
   if (id === "sQuests") buildQuests();
+  if (id === "sBackpack") buildBackpack();
   if (settingSound) {
     if (id === "sMenu" || id === "sGame") {
       startMusic();
@@ -1578,6 +1581,31 @@ function showScreen(id) {
 function syncCoins() {
   setText("menuCoins", totalCoins);
   setText("shopCoins", totalCoins);
+}
+function buildBackpack() {
+  const preview = document.getElementById("backpackSlotsPreview");
+  const info = document.getElementById("backpackInfo");
+  const button = document.getElementById("btnBackpackUpgrade");
+  if (!preview || !info || !button) return;
+  preview.innerHTML = "";
+  for (let i = 0; i < backpackSlots; i++) {
+    const slot = document.createElement("div");
+    slot.className = "backpack-slot";
+    slot.textContent = i === 0 ? "M" : i === 1 ? "S" : "J";
+    preview.appendChild(slot);
+  }
+  const price = 700;
+  info.textContent =
+    "\u0421\u043b\u043e\u0442\u0456\u0432: " +
+    backpackSlots +
+    " / 3   \u041c\u043e\u043d\u0435\u0442: " +
+    totalCoins +
+    "\u20b4";
+  button.textContent =
+    backpackSlots >= 3
+      ? "\u0420\u044e\u043a\u0437\u0430\u043a \u043c\u0430\u043a\u0441\u0438\u043c\u0430\u043b\u044c\u043d\u0438\u0439"
+      : "\u0412\u0456\u0434\u043a\u0440\u0438\u0442\u0438 3-\u0439 \u0441\u043b\u043e\u0442 - " + price + "\u20b4";
+  button.disabled = backpackSlots >= 3 || totalCoins < price;
 }
 
 function drawSkinPreview(canvas, sk) {
@@ -1990,6 +2018,25 @@ document.getElementById("btnShopOpen").onclick = () => {
   buildShop();
   syncCoins();
   showScreen("sShop");
+};
+document.getElementById("btnBackpackOpen").onclick = () => {
+  syncCoins();
+  showScreen("sBackpack");
+};
+document.getElementById("btnBackpackUpgrade").onclick = () => {
+  const price = 700;
+  if (backpackSlots >= 3 || totalCoins < price) return;
+  totalCoins -= price;
+  backpackSlots = 3;
+  syncCoins();
+  saveGame();
+  buildBackpack();
+  sfxCoin();
+};
+document.getElementById("btnBackBackpack").onclick = () => {
+  saveGame();
+  syncCoins();
+  showScreen("sMenu");
 };
 document.getElementById("btnQuestsOpen").onclick = () => {
   buildQuests();
@@ -6209,7 +6256,7 @@ function applyBackpackBonus(type) {
   return true;
 }
 function collectBackpackBonus(type, x, y, color) {
-  if (bonusBackpack.length < 2) {
+  if (bonusBackpack.length < backpackSlots) {
     bonusBackpack.push(type);
     sfxCoin();
     addParts(x, y, color);
@@ -6333,8 +6380,8 @@ function drawHUDCanvas() {
   ctx.font = "bold 10px sans-serif";
   ctx.textAlign = "left";
   ctx.fillText("BACKPACK  E", W - 136, 34);
-  for (let i = 0; i < 2; i++) {
-    const bx = W - 62 + i * 25;
+  for (let i = 0; i < backpackSlots; i++) {
+    const bx = W - 62 - Math.max(0, backpackSlots - 2) * 25 + i * 25;
     const by = 39;
     const type = bonusBackpack[i];
     ctx.fillStyle = type ? "rgba(255,215,0,0.22)" : "rgba(255,255,255,0.08)";

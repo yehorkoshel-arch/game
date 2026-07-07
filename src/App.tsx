@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { GameScreen } from './components/GameScreen';
+import { BackpackScreen } from './components/BackpackScreen';
 import { IntroScreen } from './components/IntroScreen';
 import { MenuScreen } from './components/MenuScreen';
 import { QuestScreen } from './components/QuestScreen';
@@ -16,6 +17,7 @@ export function App() {
       <h2 className="sr-only">Kyiv Runner</h2>
       <IntroScreen />
       <MenuScreen />
+      <BackpackScreen />
       <QuestScreen />
       <ShopScreen />
       <SettingsScreen />

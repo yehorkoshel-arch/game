@@ -41,6 +41,9 @@ export function MenuScreen() {
       <button className="mbtn mbtn-shop" id="btnShopOpen" type="button">
         МАГАЗИН
       </button>
+      <button className="mbtn mbtn-backpack" id="btnBackpackOpen" type="button">
+        {"\ud83c\udf92"} Рюкзак
+      </button>
       <div className="loc-tabs" id="locTabs">
         <button className="loc-tab active" data-loc="0" type="button">
           🇺🇦 Київ
