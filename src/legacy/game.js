@@ -1524,6 +1524,13 @@ function buildAchievements() {
   saveGame();
   updateAchievementReadyBadge();
 }
+function refreshCoinAchievements() {
+  achievementStats.coins1000 = Math.max(
+    Number(achievementStats.coins1000) || 0,
+    totalCoins,
+  );
+  updateAchievementReadyBadge();
+}
 function buildQuests() {
   const list = document.getElementById("questList");
   if (!list) return;
@@ -1710,6 +1717,7 @@ function showScreen(id) {
   }
 }
 function syncCoins() {
+  refreshCoinAchievements();
   setText("menuCoins", totalCoins);
   setText("shopCoins", totalCoins);
 }
