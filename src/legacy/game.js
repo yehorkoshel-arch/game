@@ -1129,6 +1129,7 @@ let tckScene = null;
 const W = 680,
   H = 420,
   GND = 270,
+  ROAD_RUN_Y = GND + 18,
   LANES = [150, 340, 530];
 
 function getAndriiWeapon(level = currentLevel, location = currentLocation) {
@@ -3087,6 +3088,44 @@ function drawRealRoad(timePeriod) {
   }
 }
 
+function drawRoadRunTrack() {
+  const roadY = ROAD_RUN_Y;
+  const isLvivRoad = currentLocation === 1;
+  ctx.save();
+  ctx.fillStyle = isLvivRoad
+    ? "rgba(255, 236, 190, 0.1)"
+    : "rgba(160, 210, 255, 0.08)";
+  ctx.beginPath();
+  ctx.moveTo(56, roadY - 22);
+  ctx.lineTo(W - 56, roadY - 22);
+  ctx.lineTo(W - 18, roadY + 38);
+  ctx.lineTo(18, roadY + 38);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = isLvivRoad
+    ? "rgba(255, 220, 160, 0.2)"
+    : "rgba(255, 255, 255, 0.18)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([18, 16]);
+  for (const lane of LANES) {
+    ctx.beginPath();
+    ctx.moveTo(lane, roadY - 28);
+    ctx.lineTo(lane, roadY + 42);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  const activeX = LANES[pLane];
+  const pulse = 0.45 + Math.sin(fr * 0.12) * 0.12;
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = isLvivRoad ? "rgba(255, 211, 120, 0.18)" : "rgba(98, 214, 255, 0.18)";
+  ctx.beginPath();
+  ctx.ellipse(activeX, roadY + 10, 70, 18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawRoadSign(x, y, label, kind = "direction") {
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -3432,6 +3471,7 @@ function drawBG() {
 
   drawLvivCoffeeScene();
   drawRealRoad(timePeriod);
+  drawRoadRunTrack();
   drawLvivTram();
   drawRoadsideSigns();
 }
@@ -4220,6 +4260,7 @@ function drawPlayer() {
 
   const onRoad = y >= GND - 1 && !pSlide;
   const speedLevel = getPlayerUpgradeLevel("speed");
+  const footY = pSlide || gameState === "schoolEnter" ? GND : ROAD_RUN_Y;
   const walkPhase = fr * (0.22 + Math.min(spd, 5) * 0.045 + speedLevel * 0.035);
   const runAmp = 9 + speedLevel * 1.8;
   const run = onRoad ? Math.sin(walkPhase) * runAmp : Math.sin(fr * 0.18) * 5;
@@ -4227,7 +4268,7 @@ function drawPlayer() {
   // shadow
   ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.beginPath();
-  ctx.ellipse(x, GND + 6, onRoad ? 19 : 13, onRoad ? 5 : 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, footY + 6, onRoad ? 22 : 14, onRoad ? 6 : 4, 0, 0, Math.PI * 2);
   ctx.fill();
 
   if (pSlide) {
@@ -4428,10 +4469,10 @@ function drawPlayer() {
       ctx.beginPath();
       for (let i = 0; i < speedLevel + 1; i++) {
         const trail = 14 + i * 8;
-        ctx.moveTo(leftFootX - trail, GND - 4 - i);
-        ctx.lineTo(leftFootX - trail - 14, GND - 4 - i);
-        ctx.moveTo(rightFootX - trail, GND - 2 + i * 0.4);
-        ctx.lineTo(rightFootX - trail - 13, GND - 2 + i * 0.4);
+        ctx.moveTo(leftFootX - trail, footY - 4 - i);
+        ctx.lineTo(leftFootX - trail - 14, footY - 4 - i);
+        ctx.moveTo(rightFootX - trail, footY - 2 + i * 0.4);
+        ctx.lineTo(rightFootX - trail - 13, footY - 2 + i * 0.4);
       }
       ctx.stroke();
       ctx.restore();
@@ -4442,14 +4483,14 @@ function drawPlayer() {
     ctx.beginPath();
     ctx.moveTo(x - 7, y - 17);
     ctx.lineTo(leftKneeX, y - 8 - Math.max(0, run) * 0.15);
-    ctx.lineTo(leftFootX, GND - 4);
+    ctx.lineTo(leftFootX, footY - 4);
     ctx.moveTo(x + 7, y - 17);
     ctx.lineTo(rightKneeX, y - 8 + Math.min(0, run) * 0.15);
-    ctx.lineTo(rightFootX, GND - 4);
+    ctx.lineTo(rightFootX, footY - 4);
     ctx.stroke();
     ctx.fillStyle = sk.shoes || "#111";
-    ctx.fillRect(leftFootX - 8, GND - 6, 15, 7);
-    ctx.fillRect(rightFootX - 7, GND - 6, 15, 7);
+    ctx.fillRect(leftFootX - 8, footY - 6, 15, 7);
+    ctx.fillRect(rightFootX - 7, footY - 6, 15, 7);
 
     // shorts
     ctx.fillStyle = sk.shorts || "#222";
