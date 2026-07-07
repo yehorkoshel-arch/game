@@ -1057,6 +1057,7 @@ let pLane = 1,
   magnetTimer = 0,
   superJumpTimer = 0,
   shieldCharges = 0,
+  bonusBackpack = [],
   inv = 0,
   flash = 0;
 let obs = [],
@@ -2101,13 +2102,22 @@ document.getElementById("cSlide").onclick = () => act("ArrowDown");
 document.getElementById("cFire").onclick = () => {
   if (!skipStoryScene()) fireAndriiWeapon();
 };
+document.getElementById("cBonus").onclick = () => {
+  if (!skipStoryScene()) activateBackpackBonus();
+};
 
 const keys = {};
 document.addEventListener("keydown", (e) => {
   if (
-    ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "KeyF"].includes(
-      e.code,
-    )
+    [
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowLeft",
+      "ArrowRight",
+      "Space",
+      "KeyF",
+      "KeyE",
+    ].includes(e.code)
   )
     e.preventDefault();
   if (!keys[e.code]) {
@@ -2169,6 +2179,7 @@ function act(c) {
     sfxStep(1);
   }
   if (c === "KeyF") fireAndriiWeapon();
+  if (c === "KeyE") activateBackpackBonus();
 }
 
 function fireAndriiWeapon() {
@@ -2321,6 +2332,7 @@ function startLevel() {
   magnetTimer = 0;
   superJumpTimer = 0;
   shieldCharges = getStartingShieldCharges();
+  bonusBackpack = [];
   obs = [];
   coins = [];
   magnets = [];
@@ -6163,6 +6175,67 @@ function absorbShieldHit(x, y, color = "#58beff") {
   hudUp();
   return true;
 }
+function getBonusLabel(type) {
+  if (type === "magnet") return "\u041c\u0430\u0433\u043d\u0456\u0442";
+  if (type === "shield") return "\u0429\u0438\u0442";
+  if (type === "jump") return "\u0421\u0443\u043f\u0435\u0440-\u0441\u0442\u0440\u0438\u0431\u043e\u043a";
+  return "\u0411\u043e\u043d\u0443\u0441";
+}
+function getBonusIcon(type) {
+  if (type === "magnet") return "M";
+  if (type === "shield") return "S";
+  if (type === "jump") return "J";
+  return "?";
+}
+function applyBackpackBonus(type) {
+  if (type === "magnet") {
+    magnetTimer = Math.max(magnetTimer, 520);
+    showAndriiBubble("\u041c\u0430\u0433\u043d\u0456\u0442! \u041c\u043e\u043d\u0435\u0442\u0438 \u043b\u0435\u0442\u044f\u0442\u044c \u0434\u043e \u043c\u0435\u043d\u0435!");
+  } else if (type === "shield") {
+    if (shieldCharges >= getMaxShieldCharges()) {
+      showAndriiBubble("\u0429\u0438\u0442 \u0432\u0436\u0435 \u0430\u043a\u0442\u0438\u0432\u043d\u0438\u0439!");
+      return false;
+    }
+    shieldCharges = Math.min(getMaxShieldCharges(), shieldCharges + 1);
+    showAndriiBubble("\u0429\u0438\u0442 \u0430\u043a\u0442\u0438\u0432\u043d\u0438\u0439!");
+  } else if (type === "jump") {
+    superJumpTimer = Math.max(superJumpTimer, 600);
+    showAndriiBubble("\u0421\u0443\u043f\u0435\u0440-\u0441\u0442\u0440\u0438\u0431\u043e\u043a!");
+  } else {
+    return false;
+  }
+  sfxCoin();
+  hudUp();
+  return true;
+}
+function collectBackpackBonus(type, x, y, color) {
+  if (bonusBackpack.length < 2) {
+    bonusBackpack.push(type);
+    sfxCoin();
+    addParts(x, y, color);
+    showAndriiBubble(
+      "\u0423 \u0440\u044e\u043a\u0437\u0430\u043a\u0443: " + getBonusLabel(type) + ". \u041d\u0430\u0442\u0438\u0441\u043d\u0438 E!",
+    );
+    hudUp();
+    return;
+  }
+  addParts(x, y, color);
+  applyBackpackBonus(type);
+}
+function activateBackpackBonus() {
+  if (gameState !== "run" || bonusBackpack.length === 0) {
+    showAndriiBubble("\u0420\u044e\u043a\u0437\u0430\u043a \u043f\u043e\u0440\u043e\u0436\u043d\u0456\u0439");
+    return;
+  }
+  for (let i = 0; i < bonusBackpack.length; i++) {
+    if (applyBackpackBonus(bonusBackpack[i])) {
+      bonusBackpack.splice(i, 1);
+      hudUp();
+      return;
+    }
+  }
+  showAndriiBubble("\u0411\u043e\u043d\u0443\u0441 \u0437\u0430\u0440\u0430\u0437 \u043d\u0435 \u043f\u043e\u0442\u0440\u0456\u0431\u0435\u043d");
+}
 function getCoinComboMult() {
   if (coinCombo >= 16) return 4;
   if (coinCombo >= 10) return 3;
@@ -6254,6 +6327,30 @@ function drawHUDCanvas() {
     ctx.textAlign = "left";
     ctx.fillText("JUMP", 101, 61);
   }
+  ctx.fillStyle = "rgba(7,18,28,0.7)";
+  ctx.fillRect(W - 142, 22, 132, 34);
+  ctx.fillStyle = "#cde7ff";
+  ctx.font = "bold 10px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("BACKPACK  E", W - 136, 34);
+  for (let i = 0; i < 2; i++) {
+    const bx = W - 62 + i * 25;
+    const by = 39;
+    const type = bonusBackpack[i];
+    ctx.fillStyle = type ? "rgba(255,215,0,0.22)" : "rgba(255,255,255,0.08)";
+    ctx.fillRect(bx, by, 20, 14);
+    ctx.strokeStyle = type ? "#ffd700" : "rgba(200,220,255,0.28)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx, by, 20, 14);
+    if (type) {
+      ctx.fillStyle =
+        type === "magnet" ? "#62d6ff" : type === "shield" ? "#58beff" : "#fff36a";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(getBonusIcon(type), bx + 10, by + 11);
+    }
+  }
+  ctx.textAlign = "left";
   if (coinComboTimer > 0 && coinCombo > 1) {
     const pulse = 0.75 + Math.sin(fr * 0.22) * 0.25;
     ctx.globalAlpha = pulse;
@@ -7545,32 +7642,21 @@ function update() {
     if (m.lane !== pLane) return true;
     const mr = { x: m.x - 22, y: m.y - 24, w: 44, h: 48 };
     if (!hit(pr, mr)) return true;
-    magnetTimer = Math.max(magnetTimer, 520);
-    sfxCoin();
-    addParts(m.x, m.y, "#62d6ff");
-    showAndriiBubble("\u041c\u0430\u0433\u043d\u0456\u0442! \u041c\u043e\u043d\u0435\u0442\u0438 \u043b\u0435\u0442\u044f\u0442\u044c \u0434\u043e \u043c\u0435\u043d\u0435!");
+    collectBackpackBonus("magnet", m.x, m.y, "#62d6ff");
     return false;
   });
   shields = shields.filter((s) => {
     if (s.lane !== pLane) return true;
     const sr = { x: s.x - 22, y: s.y - 24, w: 44, h: 48 };
     if (!hit(pr, sr)) return true;
-    shieldCharges = Math.min(getMaxShieldCharges(), shieldCharges + 1);
-    sfxCoin();
-    addParts(s.x, s.y, "#58beff");
-    showAndriiBubble("\u0429\u0438\u0442 \u0430\u043a\u0442\u0438\u0432\u043d\u0438\u0439!");
-    hudUp();
+    collectBackpackBonus("shield", s.x, s.y, "#58beff");
     return false;
   });
   superJumps = superJumps.filter((j) => {
     if (j.lane !== pLane) return true;
     const jr = { x: j.x - 22, y: j.y - 25, w: 44, h: 50 };
     if (!hit(pr, jr)) return true;
-    superJumpTimer = Math.max(superJumpTimer, 600);
-    sfxCoin();
-    addParts(j.x, j.y, "#fff36a");
-    showAndriiBubble("\u0421\u0443\u043f\u0435\u0440-\u0441\u0442\u0440\u0438\u0431\u043e\u043a!");
-    hudUp();
+    collectBackpackBonus("jump", j.x, j.y, "#fff36a");
     return false;
   });
   cityGifts = cityGifts.filter((gift) => {
