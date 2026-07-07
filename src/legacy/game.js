@@ -6393,28 +6393,34 @@ function absorbShieldHit(x, y, color = "#58beff") {
   return true;
 }
 function getBonusLabel(type) {
+  type = getBackpackBonusType(type);
   if (type === "magnet") return "\u041c\u0430\u0433\u043d\u0456\u0442";
   if (type === "shield") return "\u0429\u0438\u0442";
   if (type === "jump") return "\u0421\u0443\u043f\u0435\u0440-\u0441\u0442\u0440\u0438\u0431\u043e\u043a";
   return "\u0411\u043e\u043d\u0443\u0441";
 }
 function getBonusIcon(type) {
+  type = getBackpackBonusType(type);
   if (type === "magnet") return "M";
   if (type === "shield") return "S";
   if (type === "jump") return "J";
   return "?";
 }
+function getBackpackBonusType(item) {
+  return String(item || "").replace(/^stock:/, "");
+}
 function fillBackpackFromInventory() {
   bonusBackpack = [];
   const order = ["shield", "magnet", "jump"];
   for (const type of order) {
-    while (bonusBackpack.length < backpackSlots && bonusInventory[type] > 0) {
-      bonusBackpack.push(type);
-      bonusInventory[type]--;
+    const available = Math.max(0, Number(bonusInventory[type]) || 0);
+    for (let count = 0; count < available && bonusBackpack.length < backpackSlots; count++) {
+      bonusBackpack.push("stock:" + type);
     }
   }
 }
 function applyBackpackBonus(type) {
+  type = getBackpackBonusType(type);
   if (type === "magnet") {
     magnetTimer = Math.max(magnetTimer, 520);
     showAndriiBubble("\u041c\u0430\u0433\u043d\u0456\u0442! \u041c\u043e\u043d\u0435\u0442\u0438 \u043b\u0435\u0442\u044f\u0442\u044c \u0434\u043e \u043c\u0435\u043d\u0435!");
@@ -6455,7 +6461,13 @@ function activateBackpackBonus() {
     return;
   }
   for (let i = 0; i < bonusBackpack.length; i++) {
-    if (applyBackpackBonus(bonusBackpack[i])) {
+    const item = bonusBackpack[i];
+    if (applyBackpackBonus(item)) {
+      const type = getBackpackBonusType(item);
+      if (String(item).startsWith("stock:")) {
+        bonusInventory[type] = Math.max(0, (bonusInventory[type] || 0) - 1);
+        saveGame();
+      }
       bonusBackpack.splice(i, 1);
       hudUp();
       return;
@@ -6595,8 +6607,9 @@ function drawHUDCanvas() {
     ctx.lineWidth = 1;
     ctx.strokeRect(bx, by, 20, 14);
     if (type) {
+      const bonusType = getBackpackBonusType(type);
       ctx.fillStyle =
-        type === "magnet" ? "#62d6ff" : type === "shield" ? "#58beff" : "#fff36a";
+        bonusType === "magnet" ? "#62d6ff" : bonusType === "shield" ? "#58beff" : "#fff36a";
       ctx.font = "bold 10px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText(getBonusIcon(type), bx + 10, by + 11);
