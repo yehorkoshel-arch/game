@@ -6862,6 +6862,18 @@ function drawHUDCanvas() {
     ctx.textAlign = "left";
     ctx.fillText("JUMP", 101, 61);
   }
+  if (chestnutTimer > 0) {
+    const cw = 86;
+    const remain = Math.max(0, Math.min(1, chestnutTimer / 600));
+    ctx.fillStyle = "rgba(42,25,10,0.68)";
+    ctx.fillRect(10, 66, cw, 9);
+    ctx.fillStyle = "#d78a3d";
+    ctx.fillRect(10, 66, cw * remain, 9);
+    ctx.fillStyle = "#ffd45c";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("CHESTNUT x2", 101, 75);
+  }
   ctx.fillStyle = "rgba(7,18,28,0.7)";
   ctx.fillRect(W - 142, 22, 132, 34);
   ctx.fillStyle = "#cde7ff";
@@ -7912,6 +7924,7 @@ function update() {
     obs = [];
     coins = [];
     magnets = [];
+    chestnuts = [];
     shields = [];
     superJumps = [];
     cityGifts = [];
@@ -7994,6 +8007,7 @@ function update() {
       playerBullets = [];
       shields = [];
       superJumps = [];
+      chestnuts = [];
       chaserX = -220;
       showAndriiBubble("\u0423\u0440\u0430! \u042f \u0434\u0456\u0441\u0442\u0430\u0432\u0441\u044f \u0434\u043e \u0448\u043a\u043e\u043b\u0438!");
       return;
@@ -8293,6 +8307,7 @@ function update() {
   obs = obs.filter((o) => o.x > -80);
   coins = coins.filter((c) => !c.done && c.x > -20);
   magnets = magnets.filter((m) => m.x > -50);
+  chestnuts = chestnuts.filter((c) => c.x > -50);
   shields = shields.filter((s) => s.x > -50);
   superJumps = superJumps.filter((j) => j.x > -50);
   cityGifts = cityGifts.filter((gift) => gift.life > 0 && gift.x > -30);
@@ -8304,6 +8319,18 @@ function update() {
     const mr = { x: m.x - 22, y: m.y - 24, w: 44, h: 48 };
     if (!hit(pr, mr)) return true;
     collectBackpackBonus("magnet", m.x, m.y, "#62d6ff");
+    return false;
+  });
+  chestnuts = chestnuts.filter((c) => {
+    if (c.lane !== pLane) return true;
+    const cr = { x: c.x - 24, y: c.y - 26, w: 48, h: 52 };
+    if (!hit(pr, cr)) return true;
+    chestnutTimer = Math.max(chestnutTimer, 600);
+    magnetTimer = Math.max(magnetTimer, 260);
+    sfxCoin();
+    addParts(c.x, c.y, "#ffd45c");
+    showAndriiBubble("\u041a\u0438\u0457\u0432\u0441\u044c\u043a\u0438\u0439 \u043a\u0430\u0448\u0442\u0430\u043d! \u041c\u043e\u043d\u0435\u0442\u0438 x2!");
+    hudUp();
     return false;
   });
   shields = shields.filter((s) => {
@@ -8420,9 +8447,10 @@ function update() {
         1,
       );
       const dangerMult = dangerPct > 0.45 ? 2 : 1;
+      const chestnutMult = chestnutTimer > 0 ? 2 : 1;
       const comboMult = registerCoinCombo();
       const trickMult = registerTrickCoinCombo();
-      const mult = dangerMult * comboMult * trickMult;
+      const mult = dangerMult * comboMult * trickMult * chestnutMult;
       addQuestProgress("coins", mult);
       runCoins += mult;
       c.done = true;
@@ -8436,6 +8464,9 @@ function update() {
       }
       if (trickMult > 1) {
         addParts(coinX, coinY - 34, "#62d6ff");
+      }
+      if (chestnutMult > 1) {
+        addParts(coinX, coinY - 44, "#8b4a24");
       }
       return false;
     }
@@ -8461,6 +8492,7 @@ function loop() {
   drawFinishLine();
   superJumps.forEach(drawSuperJumpItem);
   shields.forEach(drawShieldItem);
+  chestnuts.forEach(drawChestnutPower);
   magnets.forEach(drawMagnet);
   coins.forEach(drawCoin);
   cityGifts.forEach(drawCityGift);
