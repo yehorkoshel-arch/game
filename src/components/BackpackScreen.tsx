@@ -13,6 +13,7 @@ export function BackpackScreen() {
         <div className="backpack-info" id="backpackInfo">
           Слотів: 2 / 3
         </div>
+        <div className="backpack-store" id="backpackStore" />
         <button className="mbtn mbtn-play" id="btnBackpackUpgrade" type="button">
           Відкрити 3-й слот
         </button>

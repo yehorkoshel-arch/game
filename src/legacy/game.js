@@ -98,6 +98,20 @@ let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
     : "uk",
   settingVib = typeof save.settingVib === "boolean" ? save.settingVib : false;
 let backpackSlots = Math.min(3, Math.max(2, Number(save.backpackSlots) || 2));
+const savedBonusInventory =
+  save.bonusInventory && typeof save.bonusInventory === "object"
+    ? save.bonusInventory
+    : {};
+let bonusInventory = {
+  magnet: Math.max(0, Number(savedBonusInventory.magnet) || 0),
+  shield: Math.max(0, Number(savedBonusInventory.shield) || 0),
+  jump: Math.max(0, Number(savedBonusInventory.jump) || 0),
+};
+const BACKPACK_BONUS_STORE = [
+  { type: "magnet", price: 120, color: "#62d6ff" },
+  { type: "shield", price: 150, color: "#58beff" },
+  { type: "jump", price: 140, color: "#fff36a" },
+];
 const savedWeaponUpgrades =
   save.weaponUpgrades && typeof save.weaponUpgrades === "object"
     ? save.weaponUpgrades
@@ -230,6 +244,7 @@ function saveGame() {
     weaponUpgrades,
     playerUpgrades,
     backpackSlots,
+    bonusInventory,
   });
 }
 
@@ -1049,7 +1064,12 @@ let gameState = "idle",
   totalDist = 0,
   coinCombo = 0,
   coinComboTimer = 0,
-  coinComboMult = 1;
+  coinComboMult = 1,
+  trickJumpTimer = 0,
+  trickSlideTimer = 0,
+  trickComboTimer = 0,
+  trickComboMult = 1,
+  trickComboStreak = 0;
 let pLane = 1,
   pY = 270,
   pVY = 0,
@@ -1586,7 +1606,8 @@ function buildBackpack() {
   const preview = document.getElementById("backpackSlotsPreview");
   const info = document.getElementById("backpackInfo");
   const button = document.getElementById("btnBackpackUpgrade");
-  if (!preview || !info || !button) return;
+  const store = document.getElementById("backpackStore");
+  if (!preview || !info || !button || !store) return;
   preview.innerHTML = "";
   for (let i = 0; i < backpackSlots; i++) {
     const slot = document.createElement("div");
@@ -1606,6 +1627,26 @@ function buildBackpack() {
       ? "\u0420\u044e\u043a\u0437\u0430\u043a \u043c\u0430\u043a\u0441\u0438\u043c\u0430\u043b\u044c\u043d\u0438\u0439"
       : "\u0412\u0456\u0434\u043a\u0440\u0438\u0442\u0438 3-\u0439 \u0441\u043b\u043e\u0442 - " + price + "\u20b4";
   button.disabled = backpackSlots >= 3 || totalCoins < price;
+  store.innerHTML = "";
+  BACKPACK_BONUS_STORE.forEach((item) => {
+    const card = document.createElement("button");
+    card.className = "backpack-buy";
+    card.type = "button";
+    card.dataset.bonus = item.type;
+    card.style.borderColor = item.color;
+    card.innerHTML =
+      '<span class="backpack-buy-icon">' +
+      getBonusIcon(item.type) +
+      '</span><span class="backpack-buy-name">' +
+      getBonusLabel(item.type) +
+      '</span><span class="backpack-buy-count">x' +
+      (bonusInventory[item.type] || 0) +
+      '</span><span class="backpack-buy-price">' +
+      item.price +
+      "\u20b4</span>";
+    card.disabled = totalCoins < item.price;
+    store.appendChild(card);
+  });
 }
 
 function drawSkinPreview(canvas, sk) {
@@ -2033,6 +2074,20 @@ document.getElementById("btnBackpackUpgrade").onclick = () => {
   buildBackpack();
   sfxCoin();
 };
+document.getElementById("backpackStore").onclick = (event) => {
+  const button = event.target.closest(".backpack-buy");
+  if (!button) return;
+  const item = BACKPACK_BONUS_STORE.find(
+    (bonus) => bonus.type === button.dataset.bonus,
+  );
+  if (!item || totalCoins < item.price) return;
+  totalCoins -= item.price;
+  bonusInventory[item.type] = (bonusInventory[item.type] || 0) + 1;
+  syncCoins();
+  saveGame();
+  buildBackpack();
+  sfxCoin();
+};
 document.getElementById("btnBackBackpack").onclick = () => {
   saveGame();
   syncCoins();
@@ -2208,6 +2263,7 @@ function act(c) {
   if (secretRoute && secretRoute.entering) return;
   if ((c === "ArrowUp" || c === "Space") && pY >= GND - 2) {
     pVY = getJumpPower();
+    noteTrick("jump");
     addQuestProgress("jumps");
     sfxJump();
   }
@@ -2215,6 +2271,7 @@ function act(c) {
     if (tryEnterSecretRoute()) return;
     pSlide = true;
     slideT = 44;
+    noteTrick("slide");
     addQuestProgress("slides");
   }
   if (c === "ArrowLeft" && pLane > 0) {
@@ -2370,6 +2427,11 @@ function startLevel() {
   coinCombo = 0;
   coinComboTimer = 0;
   coinComboMult = 1;
+  trickJumpTimer = 0;
+  trickSlideTimer = 0;
+  trickComboTimer = 0;
+  trickComboMult = 1;
+  trickComboStreak = 0;
   pLane = 1;
   pY = GND;
   pVY = 0;
@@ -2379,7 +2441,7 @@ function startLevel() {
   magnetTimer = 0;
   superJumpTimer = 0;
   shieldCharges = getStartingShieldCharges();
-  bonusBackpack = [];
+  fillBackpackFromInventory();
   obs = [];
   coins = [];
   magnets = [];
@@ -2420,6 +2482,7 @@ function startLevel() {
   bubbleText = "";
   bubbleTimer = 0;
   gameState = "run";
+  saveGame();
   updateFireControl();
   hudUp();
   if (!loopActive) {
@@ -6234,6 +6297,16 @@ function getBonusIcon(type) {
   if (type === "jump") return "J";
   return "?";
 }
+function fillBackpackFromInventory() {
+  bonusBackpack = [];
+  const order = ["shield", "magnet", "jump"];
+  for (const type of order) {
+    while (bonusBackpack.length < backpackSlots && bonusInventory[type] > 0) {
+      bonusBackpack.push(type);
+      bonusInventory[type]--;
+    }
+  }
+}
 function applyBackpackBonus(type) {
   if (type === "magnet") {
     magnetTimer = Math.max(magnetTimer, 520);
@@ -6299,6 +6372,31 @@ function resetCoinCombo() {
   coinCombo = 0;
   coinComboTimer = 0;
   coinComboMult = 1;
+}
+function noteTrick(kind) {
+  if (kind === "jump") trickJumpTimer = 190;
+  if (kind === "slide") trickSlideTimer = 190;
+}
+function registerTrickCoinCombo() {
+  if (trickJumpTimer <= 0 || trickSlideTimer <= 0) return 1;
+  trickComboStreak = trickComboTimer > 0 ? trickComboStreak + 1 : 1;
+  trickComboTimer = 190;
+  trickComboMult = trickComboStreak >= 2 ? 3 : 2;
+  trickJumpTimer = 0;
+  trickSlideTimer = 0;
+  showAndriiBubble(
+    trickComboMult === 3
+      ? "\u0422\u0440\u044e\u043a-\u043a\u043e\u043c\u0431\u043e x3!"
+      : "\u0422\u0440\u044e\u043a-\u043a\u043e\u043c\u0431\u043e x2!",
+  );
+  return trickComboMult;
+}
+function resetTrickCombo() {
+  trickJumpTimer = 0;
+  trickSlideTimer = 0;
+  trickComboTimer = 0;
+  trickComboMult = 1;
+  trickComboStreak = 0;
 }
 
 function drawParts() {
@@ -6407,6 +6505,17 @@ function drawHUDCanvas() {
     ctx.font = "bold 13px sans-serif";
     ctx.textAlign = "left";
     ctx.fillText("COMBO x" + coinComboMult + "  " + coinCombo, 16, 80);
+    ctx.globalAlpha = 1;
+  }
+  if (trickComboTimer > 0 && trickComboMult > 1) {
+    const pulse = 0.74 + Math.sin(fr * 0.26) * 0.26;
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = "rgba(5,24,38,0.76)";
+    ctx.fillRect(10, 88, 118, 18);
+    ctx.fillStyle = "#62d6ff";
+    ctx.font = "bold 13px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("TRICK x" + trickComboMult, 16, 102);
     ctx.globalAlpha = 1;
   }
 }
@@ -7428,6 +7537,15 @@ function update() {
     coinComboTimer--;
     if (coinComboTimer <= 0) resetCoinCombo();
   }
+  if (trickJumpTimer > 0) trickJumpTimer--;
+  if (trickSlideTimer > 0) trickSlideTimer--;
+  if (trickComboTimer > 0) {
+    trickComboTimer--;
+    if (trickComboTimer <= 0) {
+      trickComboMult = 1;
+      trickComboStreak = 0;
+    }
+  }
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
   if (lightningFlash > 0) lightningFlash--;
@@ -7732,6 +7850,7 @@ function update() {
     if (hit(pr, br) && inv === 0) {
       if (absorbShieldHit(b.x, b.y, "#58beff")) return false;
       resetCoinCombo();
+      resetTrickCombo();
       lives--;
       inv = getDamageInvulnerabilityTime();
       flash = 22;
@@ -7775,6 +7894,7 @@ function update() {
         return;
       }
       resetCoinCombo();
+      resetTrickCombo();
       lives--;
       inv = getDamageInvulnerabilityTime();
       flash = 22;
@@ -7804,7 +7924,8 @@ function update() {
       );
       const dangerMult = dangerPct > 0.45 ? 2 : 1;
       const comboMult = registerCoinCombo();
-      const mult = dangerMult * comboMult;
+      const trickMult = registerTrickCoinCombo();
+      const mult = dangerMult * comboMult * trickMult;
       addQuestProgress("coins", mult);
       runCoins += mult;
       c.done = true;
@@ -7815,6 +7936,9 @@ function update() {
       }
       if (comboMult > 1) {
         addParts(coinX, c.y - 38, "#fff36a");
+      }
+      if (trickMult > 1) {
+        addParts(coinX, c.y - 48, "#62d6ff");
       }
       return false;
     }
