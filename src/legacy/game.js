@@ -3591,6 +3591,92 @@ function drawLvivCoffeeScene() {
   }
 }
 
+function drawKyivMaidanScene() {
+  if (currentLocation !== 0) return;
+  const off = (bgOff * 0.18) % 760;
+  for (let base = -760; base < W + 760; base += 760) {
+    const x = base - off;
+    ctx.save();
+
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath();
+    ctx.ellipse(x + 350, GND + 2, 238, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#d7c89d";
+    ctx.fillRect(x + 58, GND - 156, 168, 156);
+    ctx.fillStyle = "#c7b47d";
+    ctx.fillRect(x + 76, GND - 188, 132, 32);
+    ctx.fillStyle = "#f5e8bd";
+    ctx.font = "bold 14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("\u0425\u0420\u0415\u0429\u0410\u0422\u0418\u041a", x + 142, GND - 166);
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#4b6f8a";
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 4; col++) {
+        const wx = x + 84 + col * 30;
+        const wy = GND - 132 + row * 34;
+        ctx.fillRect(wx, wy, 18, 22);
+        ctx.fillStyle = "rgba(255,235,150,0.72)";
+        ctx.fillRect(wx + 2, wy + 2, 14, 18);
+        ctx.fillStyle = "#4b6f8a";
+      }
+    }
+
+    ctx.fillStyle = "#cfd9e3";
+    ctx.fillRect(x + 392, GND - 132, 158, 132);
+    ctx.fillStyle = "#9faec0";
+    ctx.beginPath();
+    ctx.moveTo(x + 382, GND - 132);
+    ctx.lineTo(x + 471, GND - 178);
+    ctx.lineTo(x + 560, GND - 132);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#214d89";
+    ctx.font = "bold 13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("\u041c\u0410\u0419\u0414\u0410\u041d", x + 471, GND - 112);
+    ctx.textAlign = "left";
+
+    for (const fx of [x + 270, x + 620]) {
+      ctx.strokeStyle = "#2b3340";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(fx, GND);
+      ctx.lineTo(fx, GND - 118);
+      ctx.stroke();
+      ctx.fillStyle = "#0057b7";
+      ctx.fillRect(fx + 4, GND - 116, 34, 11);
+      ctx.fillStyle = "#ffd700";
+      ctx.fillRect(fx + 4, GND - 105, 34, 11);
+    }
+
+    const fountainX = x + 326;
+    ctx.fillStyle = "rgba(120,190,230,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(fountainX, GND - 4, 78, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#87d8ff";
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 7; i++) {
+      const arc = -0.8 + i * 0.27;
+      const top = Math.sin(fr * 0.08 + i) * 5;
+      ctx.beginPath();
+      ctx.moveTo(fountainX, GND - 9);
+      ctx.quadraticCurveTo(
+        fountainX + Math.cos(arc) * 34,
+        GND - 70 + top,
+        fountainX + Math.cos(arc) * 64,
+        GND - 14,
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+}
+
 function drawBG() {
   if (secretRoute && secretRoute.active && !secretRoute.entering) {
     drawSecretRouteBackground();
@@ -3613,6 +3699,7 @@ function drawBG() {
   }
 
   drawLvivCoffeeScene();
+  drawKyivMaidanScene();
   drawRealRoad(timePeriod);
   drawRoadRunTrack();
   drawLvivTram();
@@ -7926,6 +8013,7 @@ function update() {
     if (slideT <= 0) pSlide = false;
   }
   if (magnetTimer > 0) magnetTimer--;
+  if (chestnutTimer > 0) chestnutTimer--;
   if (superJumpTimer > 0) superJumpTimer--;
   if (coinComboTimer > 0) {
     coinComboTimer--;
