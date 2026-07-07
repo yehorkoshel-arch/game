@@ -2206,14 +2206,28 @@ document.getElementById("togVib").onclick = () => {
   settingVib = !settingVib;
   buildSettings();
 };
-document.getElementById("cLeft").onclick = () => act("ArrowLeft");
-document.getElementById("cRight").onclick = () => act("ArrowRight");
-document.getElementById("cJump").onclick = () => act("ArrowUp");
-document.getElementById("cSlide").onclick = () => act("ArrowDown");
+document.getElementById("cLeft").onclick = () => {
+  focusApp();
+  act("ArrowLeft");
+};
+document.getElementById("cRight").onclick = () => {
+  focusApp();
+  act("ArrowRight");
+};
+document.getElementById("cJump").onclick = () => {
+  focusApp();
+  act("ArrowUp");
+};
+document.getElementById("cSlide").onclick = () => {
+  focusApp();
+  act("ArrowDown");
+};
 document.getElementById("cFire").onclick = () => {
+  focusApp();
   if (!skipStoryScene()) fireAndriiWeapon();
 };
 document.getElementById("cBonus").onclick = () => {
+  focusApp();
   if (!skipStoryScene()) activateBackpackBonus();
 };
 
@@ -2231,7 +2245,8 @@ document.addEventListener("keydown", (e) => {
     ].includes(e.code)
   )
     e.preventDefault();
-  if (!keys[e.code]) {
+  const oneShotAction = e.code === "KeyF" || e.code === "KeyE";
+  if (!keys[e.code] || (oneShotAction && !e.repeat)) {
     keys[e.code] = true;
     act(e.code);
   }
@@ -8051,7 +8066,8 @@ function update() {
   coins = coins.filter((c) => {
     if (!c.magneted && c.lane !== pLane) return true;
     const coinX = c.x ?? LANES[c.lane];
-    const cr = { x: coinX - 8, y: c.y - 22, w: 16, h: 16 };
+    const coinY = c.y - 14;
+    const cr = { x: coinX - 18, y: coinY - 26, w: 36, h: 52 };
     if (hit(pr, cr)) {
       const dangerPct = Math.min(
         Math.max((chaserX + 100) / (LANES[0] - 80), 0),
@@ -8065,15 +8081,15 @@ function update() {
       runCoins += mult;
       c.done = true;
       sfxCoin();
-      addParts(coinX, c.y - 14, "#ffd700");
+      addParts(coinX, coinY, "#ffd700");
       if (mult === 2) {
-        addParts(coinX, c.y - 28, "#ff69b4");
+        addParts(coinX, coinY - 14, "#ff69b4");
       }
       if (comboMult > 1) {
-        addParts(coinX, c.y - 38, "#fff36a");
+        addParts(coinX, coinY - 24, "#fff36a");
       }
       if (trickMult > 1) {
-        addParts(coinX, c.y - 48, "#62d6ff");
+        addParts(coinX, coinY - 34, "#62d6ff");
       }
       return false;
     }
