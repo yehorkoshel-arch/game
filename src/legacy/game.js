@@ -4243,6 +4243,9 @@ function drawPlayer() {
   const sk = getSkin();
   let x = LANES[pLane],
     y = pY;
+  if (gameState !== "schoolEnter" && !pSlide) {
+    y += ROAD_RUN_Y - GND;
+  }
   ctx.save();
   if (secretRoute && secretRoute.entering) {
     const progress = Math.min(secretRoute.transitionTimer / 48, 1);
@@ -4275,7 +4278,7 @@ function drawPlayer() {
 
   const onRoad = y >= GND - 1 && !pSlide;
   const speedLevel = getPlayerUpgradeLevel("speed");
-  const footY = pSlide || gameState === "schoolEnter" ? GND : ROAD_RUN_Y;
+  const footY = y;
   const walkPhase = fr * (0.22 + Math.min(spd, 5) * 0.045 + speedLevel * 0.035);
   const runAmp = 9 + speedLevel * 1.8;
   const run = onRoad ? Math.sin(walkPhase) * runAmp : Math.sin(fr * 0.18) * 5;
