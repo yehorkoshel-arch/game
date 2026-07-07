@@ -6135,6 +6135,43 @@ function drawMagnet(m) {
   ctx.restore();
 }
 
+function drawChestnutPower(c) {
+  const x = c.x;
+  const y = c.y + Math.sin(fr * 0.13 + (c.phase || 0)) * 4;
+  ctx.save();
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 31);
+  glow.addColorStop(0, "rgba(255, 210, 94, 0.75)");
+  glow.addColorStop(1, "rgba(255, 210, 94, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, 31, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#8b4a24";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 2, 14, 16, -0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#5b2d17";
+  ctx.beginPath();
+  ctx.ellipse(x + 3, y + 4, 8, 11, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#f6d28c";
+  ctx.beginPath();
+  ctx.arc(x - 6, y - 5, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#2f6b3f";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x + 2, y - 13);
+  ctx.quadraticCurveTo(x + 16, y - 25, x + 25, y - 12);
+  ctx.stroke();
+  ctx.fillStyle = "#ffd45c";
+  ctx.font = "bold 9px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("x2", x, y + 27);
+  ctx.restore();
+}
+
 function drawShieldItem(s) {
   const x = s.x;
   const y = s.y + Math.sin(fr * 0.12 + (s.phase || 0)) * 4;
