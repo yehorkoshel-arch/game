@@ -6656,6 +6656,81 @@ function drawHUDCanvas() {
     ctx.fillText("TRICK x" + trickComboMult, 16, 102);
     ctx.globalAlpha = 1;
   }
+  drawLevelMiniMap();
+}
+
+function drawLevelMiniMap() {
+  if (gameState !== "run" && gameState !== "schoolEnter") return;
+  const FDIST = getFinishDistance();
+  const x = 188;
+  const y = 25;
+  const w = 304;
+  const h = 28;
+  const progress = Math.max(0, Math.min(1, totalDist / FDIST));
+
+  ctx.save();
+  ctx.fillStyle = "rgba(7,18,28,0.72)";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, 7);
+  else ctx.fillRect(x, y, w, h);
+  ctx.fill();
+
+  const barX = x + 18;
+  const barY = y + 14;
+  const barW = w - 36;
+  ctx.strokeStyle = "rgba(200,220,255,0.28)";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(barX, barY);
+  ctx.lineTo(barX + barW, barY);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#62d6ff";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(barX, barY);
+  ctx.lineTo(barX + barW * progress, barY);
+  ctx.stroke();
+  ctx.lineCap = "butt";
+
+  function mark(pct, label, color, radius = 5) {
+    const mx = barX + barW * Math.max(0, Math.min(1, pct));
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(mx, barY, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#eaf2ff";
+    ctx.font = "bold 9px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(label, mx, y + 9);
+  }
+
+  if (secretRoute && !secretRoute.missed) {
+    const routePct = secretRoute.completed
+      ? Math.min(1, (totalDist - 10) / FDIST)
+      : secretRoute.active
+        ? progress
+        : secretRoute.nextOfferPct;
+    mark(
+      routePct,
+      secretRoute.id === "metro" ? "M" : secretRoute.id === "roofs" ? "D" : "P",
+      secretRoute.color,
+      secretRoute.active ? 6 : 5,
+    );
+  }
+
+  const isKyivFinalBoss =
+    currentLocation === 0 && currentLevel === LEVELS_KYIV.length - 1;
+  if (isKyivFinalBoss && !bossDefeated) {
+    mark((FDIST - 240) / FDIST, "B", "#ff5c5c", bossActive ? 7 : 5);
+  }
+
+  mark(1, "F", "#ffd700", finishActive ? 7 : 5);
+  mark(progress, "A", "#ffffff", 6);
+
+  ctx.textAlign = "left";
+  ctx.restore();
 }
 
 function drawWinOverlay() {
