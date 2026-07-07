@@ -1120,6 +1120,7 @@ let pLane = 1,
   slideT = 0,
   puddleSlow = 0,
   magnetTimer = 0,
+  chestnutTimer = 0,
   superJumpTimer = 0,
   shieldCharges = 0,
   bonusBackpack = [],
@@ -1128,6 +1129,7 @@ let pLane = 1,
 let obs = [],
   coins = [],
   magnets = [],
+  chestnuts = [],
   shields = [],
   superJumps = [],
   cityGifts = [],
@@ -2582,12 +2584,14 @@ function startLevel() {
   slideT = 0;
   puddleSlow = 0;
   magnetTimer = 0;
+  chestnutTimer = 0;
   superJumpTimer = 0;
   shieldCharges = getStartingShieldCharges();
   fillBackpackFromInventory();
   obs = [];
   coins = [];
   magnets = [];
+  chestnuts = [];
   shields = [];
   superJumps = [];
   cityGifts = [];
@@ -2715,6 +2719,11 @@ function spawnCoin() {
 function spawnMagnet() {
   const lane = Math.floor(Math.random() * 3);
   magnets.push({ x: W + 30, lane, y: GND - 36, phase: Math.random() * Math.PI * 2 });
+}
+function spawnChestnut() {
+  if (currentLocation !== 0) return;
+  const lane = Math.floor(Math.random() * 3);
+  chestnuts.push({ x: W + 35, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
 function spawnShield() {
   const lane = Math.floor(Math.random() * 3);
