@@ -106,6 +106,46 @@ let weaponUpgrades = {
   damage: Boolean(savedWeaponUpgrades.damage),
   laser: Boolean(savedWeaponUpgrades.laser),
 };
+const savedPlayerUpgrades =
+  save.playerUpgrades && typeof save.playerUpgrades === "object"
+    ? save.playerUpgrades
+    : {};
+let playerUpgrades = {
+  speed: Math.min(3, Math.max(0, Number(savedPlayerUpgrades.speed) || 0)),
+  jump: Math.min(3, Math.max(0, Number(savedPlayerUpgrades.jump) || 0)),
+  weapon: Math.min(3, Math.max(0, Number(savedPlayerUpgrades.weapon) || 0)),
+  defense: Math.min(3, Math.max(0, Number(savedPlayerUpgrades.defense) || 0)),
+};
+const PLAYER_UPGRADES = [
+  {
+    id: "speed",
+    icon: ">>",
+    name: "\u0428\u0432\u0438\u0434\u043a\u0456 \u043d\u043e\u0433\u0438",
+    desc: "\u0410\u043d\u0434\u0440\u0456\u0439 \u0431\u0456\u0436\u0438\u0442\u044c \u0442\u0440\u043e\u0445\u0438 \u0448\u0432\u0438\u0434\u0448\u0435 \u043d\u0430 \u043a\u043e\u0436\u043d\u043e\u043c\u0443 \u0440\u0456\u0432\u043d\u0456",
+    prices: [180, 360, 620],
+  },
+  {
+    id: "jump",
+    icon: "^",
+    name: "\u0412\u0438\u0449\u0438\u0439 \u0441\u0442\u0440\u0438\u0431\u043e\u043a",
+    desc: "\u041b\u0435\u0433\u0448\u0435 \u043f\u0435\u0440\u0435\u0441\u0442\u0440\u0438\u0431\u0443\u0432\u0430\u0442\u0438 \u044f\u043c\u0438, \u0441\u043a\u0443\u0442\u0435\u0440\u0438 \u0456 \u043f\u0435\u0440\u0435\u0448\u043a\u043e\u0434\u0438",
+    prices: [160, 340, 580],
+  },
+  {
+    id: "weapon",
+    icon: "x2",
+    name: "\u041c\u0430\u0439\u0441\u0442\u0435\u0440 \u0437\u0431\u0440\u043e\u0457",
+    desc: "\u041a\u0443\u043b\u0456 \u043b\u0435\u0442\u044f\u0442\u044c \u0448\u0432\u0438\u0434\u0448\u0435, \u0430 \u0431\u043e\u0441\u0438 \u043e\u0442\u0440\u0438\u043c\u0443\u044e\u0442\u044c \u0431\u0456\u043b\u044c\u0448\u0435 \u0443\u0440\u043e\u043d\u0443",
+    prices: [220, 460, 760],
+  },
+  {
+    id: "defense",
+    icon: "[]",
+    name: "\u0417\u0430\u0445\u0438\u0441\u0442",
+    desc: "\u041d\u0430 \u0441\u0442\u0430\u0440\u0442\u0456 \u0440\u0456\u0432\u043d\u044f \u0410\u043d\u0434\u0440\u0456\u0439 \u043c\u0430\u0454 \u0437\u0430\u0440\u044f\u0434\u0438 \u0449\u0438\u0442\u0430",
+    prices: [200, 430, 720],
+  },
+];
 const WEAPON_UPGRADES = [
   {
     id: "fireRate",
@@ -126,6 +166,44 @@ const WEAPON_UPGRADES = [
     price: 900,
   },
 ];
+function getPlayerUpgradeLevel(id) {
+  return Math.min(3, Math.max(0, Number(playerUpgrades[id]) || 0));
+}
+function getSpeedUpgradeMult() {
+  return 1 + getPlayerUpgradeLevel("speed") * 0.04;
+}
+function getJumpPower() {
+  if (superJumpTimer > 0) return -22 - getPlayerUpgradeLevel("jump") * 0.5;
+  return -16 - getPlayerUpgradeLevel("jump") * 1.1;
+}
+function getWeaponMasteryLevel() {
+  return getPlayerUpgradeLevel("weapon");
+}
+function getWeaponCooldown(base, fastBase) {
+  const upgradedBase = weaponUpgrades.fireRate ? fastBase : base;
+  return Math.max(5, upgradedBase - getWeaponMasteryLevel());
+}
+function getBulletSpeedBonus() {
+  return getWeaponMasteryLevel() * 0.8;
+}
+function getBulletDamage(type) {
+  const mastery = getWeaponMasteryLevel();
+  if (type === "bossblaster") return (weaponUpgrades.damage ? 3 : 2) + mastery;
+  if (type === "laser") return 2 + mastery;
+  return (weaponUpgrades.damage ? 2 : 1) + mastery;
+}
+function getStartingShieldCharges() {
+  const defense = getPlayerUpgradeLevel("defense");
+  if (defense >= 3) return 2;
+  if (defense >= 2) return 1;
+  return 0;
+}
+function getMaxShieldCharges() {
+  return getPlayerUpgradeLevel("defense") >= 3 ? 2 : 1;
+}
+function getDamageInvulnerabilityTime() {
+  return 75 + getPlayerUpgradeLevel("defense") * 12;
+}
 function saveGame() {
   saveGameSave({
     lang,
@@ -149,6 +227,7 @@ function saveGame() {
     questStats,
     questClaimed,
     weaponUpgrades,
+    playerUpgrades,
   });
 }
 
@@ -1801,6 +1880,50 @@ function buildShop() {
     };
     grid.appendChild(div);
   });
+  const playerUpgradesTitle = document.createElement("div");
+  playerUpgradesTitle.className = "shop-section-title";
+  playerUpgradesTitle.textContent = "\u041f\u0440\u043e\u043a\u0430\u0447\u043a\u0430 \u0410\u043d\u0434\u0440\u0456\u044f";
+  grid.appendChild(playerUpgradesTitle);
+  PLAYER_UPGRADES.forEach((upgrade) => {
+    const level = getPlayerUpgradeLevel(upgrade.id);
+    const maxed = level >= upgrade.prices.length;
+    const price = maxed ? 0 : upgrade.prices[level];
+    const div = document.createElement("div");
+    div.className = "sitem upgrade" + (maxed ? " owned" : "");
+    const icon = document.createElement("div");
+    icon.className = "sitem-upgrade-icon";
+    icon.textContent = upgrade.icon;
+    const nm = document.createElement("div");
+    nm.className = "sitem-name";
+    nm.textContent = upgrade.name;
+    const desc = document.createElement("div");
+    desc.className = "sitem-desc";
+    desc.textContent = upgrade.desc;
+    const lvl = document.createElement("div");
+    lvl.className = "sitem-desc";
+    lvl.textContent = "\u0420\u0456\u0432\u0435\u043d\u044c " + level + " / " + upgrade.prices.length;
+    const pr = document.createElement("div");
+    pr.className = maxed ? "sitem-owned" : "sitem-price";
+    pr.textContent = maxed ? "\u041c\u0430\u043a\u0441\u0438\u043c\u0443\u043c" : price + "\u20b4";
+    div.appendChild(icon);
+    div.appendChild(nm);
+    div.appendChild(desc);
+    div.appendChild(lvl);
+    div.appendChild(pr);
+    div.onclick = () => {
+      const current = getPlayerUpgradeLevel(upgrade.id);
+      if (current >= upgrade.prices.length) return;
+      const nextPrice = upgrade.prices[current];
+      if (totalCoins < nextPrice) return;
+      totalCoins -= nextPrice;
+      playerUpgrades[upgrade.id] = current + 1;
+      syncCoins();
+      saveGame();
+      buildShop();
+      sfxCoin();
+    };
+    grid.appendChild(div);
+  });
   const upgradesTitle = document.createElement("div");
   upgradesTitle.className = "shop-section-title";
   upgradesTitle.textContent = "\u041f\u043e\u043a\u0440\u0430\u0449\u0435\u043d\u043d\u044f \u0437\u0431\u0440\u043e\u0457";
@@ -2027,7 +2150,7 @@ function act(c) {
   if (gameState !== "run") return;
   if (secretRoute && secretRoute.entering) return;
   if ((c === "ArrowUp" || c === "Space") && pY >= GND - 2) {
-    pVY = superJumpTimer > 0 ? -22 : -16;
+    pVY = getJumpPower();
     addQuestProgress("jumps");
     sfxJump();
   }
@@ -2057,13 +2180,14 @@ function fireAndriiWeapon() {
   const x = LANES[pLane] + 24;
   const y = pSlide ? pY - 12 : pY - 34;
   if (weapon === "minigun") {
-    fireCooldown = weaponUpgrades.fireRate ? 8 : 12;
+    fireCooldown = getWeaponCooldown(12, 8);
+    const speedBonus = getBulletSpeedBonus();
     for (let i = 0; i < 9; i++) {
       playerBullets.push({
         x: x + i * 8,
         y: y - 4 + (i % 3) * 3,
         lane: i % 3,
-        vx: 13.5 + i * 0.7,
+        vx: 13.5 + speedBonus + i * 0.7,
         life: 50,
         type: "minigun",
       });
@@ -2073,7 +2197,7 @@ function fireAndriiWeapon() {
         x,
         y: y - 9,
         lane: pLane,
-        vx: 19,
+        vx: 19 + speedBonus,
         life: 34,
         type: "laser",
       });
@@ -2084,12 +2208,13 @@ function fireAndriiWeapon() {
   }
 
   if (weapon === "bossblaster") {
-    fireCooldown = weaponUpgrades.fireRate ? 7 : 10;
+    fireCooldown = getWeaponCooldown(10, 7);
+    const speedBonus = getBulletSpeedBonus();
     playerBullets.push({
       x,
       y: pY - 34,
       lane: pLane,
-      vx: 15,
+      vx: 15 + speedBonus,
       life: 50,
       type: "bossblaster",
     });
@@ -2098,7 +2223,7 @@ function fireAndriiWeapon() {
         x,
         y: pY - 44,
         lane: pLane,
-        vx: 20,
+        vx: 20 + speedBonus,
         life: 38,
         type: "laser",
       });
@@ -2107,13 +2232,14 @@ function fireAndriiWeapon() {
     return;
   }
 
-  fireCooldown = weaponUpgrades.fireRate ? 11 : 16;
+  fireCooldown = getWeaponCooldown(16, 11);
+  const speedBonus = getBulletSpeedBonus();
   for (let i = 0; i < 3; i++) {
     playerBullets.push({
       x: x + i * 12,
       y: y - i * 2,
       lane: pLane,
-      vx: 11 + i * 0.9,
+      vx: 11 + speedBonus + i * 0.9,
       life: 46,
       type: "machinegun",
     });
@@ -2123,7 +2249,7 @@ function fireAndriiWeapon() {
       x,
       y: y - 8,
       lane: pLane,
-      vx: 18,
+      vx: 18 + speedBonus,
       life: 34,
       type: "laser",
     });
@@ -2180,7 +2306,7 @@ function startLevel() {
   score = 0;
   runCoins = 0;
   lives = settingLives;
-  spd = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP);
+  spd = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * getSpeedUpgradeMult();
   fr = 0;
   totalDist = 0;
   coinCombo = 0;
@@ -2194,7 +2320,7 @@ function startLevel() {
   puddleSlow = 0;
   magnetTimer = 0;
   superJumpTimer = 0;
-  shieldCharges = 0;
+  shieldCharges = getStartingShieldCharges();
   obs = [];
   coins = [];
   magnets = [];
@@ -6008,7 +6134,7 @@ function hit(a, b) {
 }
 function absorbShieldHit(x, y, color = "#58beff") {
   if (shieldCharges <= 0) return false;
-  shieldCharges = 0;
+  shieldCharges = Math.max(0, shieldCharges - 1);
   inv = Math.max(inv, 46);
   flash = Math.max(flash, 10);
   addParts(x, y, color);
@@ -6091,11 +6217,11 @@ function drawHUDCanvas() {
   }
   if (shieldCharges > 0) {
     ctx.fillStyle = "rgba(7,18,28,0.62)";
-    ctx.fillRect(10, 36, 54, 12);
+    ctx.fillRect(10, 36, shieldCharges > 1 ? 66 : 54, 12);
     ctx.fillStyle = "#58beff";
     ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("SHIELD", 14, 46);
+    ctx.fillText(shieldCharges > 1 ? "SHIELD x" + shieldCharges : "SHIELD", 14, 46);
   }
   if (superJumpTimer > 0) {
     const jw = 86;
@@ -6929,8 +7055,9 @@ function update() {
   const lv = getLvl();
   const FDIST = getFinishDistance();
   const diffMult = { easy: 0.75, normal: 1.0, hard: 1.4 }[settingDiff] || 1.0;
-  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult;
-  const maxS = lv.maxSpd * diffMult;
+  const speedUpgradeMult = getSpeedUpgradeMult();
+  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult * speedUpgradeMult;
+  const maxS = lv.maxSpd * diffMult * speedUpgradeMult;
   const accel = 0.0012 * diffMult * (1 + currentLevel * 0.15);
   const pct = Math.min(totalDist / FDIST, 1);
   if (pct < 0.5) {
@@ -7326,7 +7453,7 @@ function update() {
       b.x < bossX + 60
     ) {
       hitTarget = true;
-      bossHp -= b.type === "bossblaster" ? (weaponUpgrades.damage ? 3 : 2) : weaponUpgrades.damage ? 2 : 1;
+      bossHp -= getBulletDamage(b.type);
       bossFlash = 5;
       addParts(bossX - 25, GND - 95, "#8cffd8");
       sfxHit();
@@ -7409,7 +7536,7 @@ function update() {
     if (s.lane !== pLane) return true;
     const sr = { x: s.x - 22, y: s.y - 24, w: 44, h: 48 };
     if (!hit(pr, sr)) return true;
-    shieldCharges = 1;
+    shieldCharges = Math.min(getMaxShieldCharges(), shieldCharges + 1);
     sfxCoin();
     addParts(s.x, s.y, "#58beff");
     showAndriiBubble("\u0429\u0438\u0442 \u0430\u043a\u0442\u0438\u0432\u043d\u0438\u0439!");
@@ -7454,7 +7581,7 @@ function update() {
       if (absorbShieldHit(b.x, b.y, "#58beff")) return false;
       resetCoinCombo();
       lives--;
-      inv = 75;
+      inv = getDamageInvulnerabilityTime();
       flash = 22;
       sfxHit();
       addParts(px, pY - 30, "#ff6600");
@@ -7497,7 +7624,7 @@ function update() {
       }
       resetCoinCombo();
       lives--;
-      inv = 75;
+      inv = getDamageInvulnerabilityTime();
       flash = 22;
       sfxHit();
       addParts(px, pY - 20, "#ff4444");
