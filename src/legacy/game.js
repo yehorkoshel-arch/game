@@ -1158,6 +1158,7 @@ let secretRoute = null;
 const BOSS_MAX_HP = 18;
 const SECRET_ROUTE_DURATION = 520;
 const SECRET_ROUTE_REWARD = 30;
+const LEVEL_MISSION_REWARD = 50;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
@@ -1170,6 +1171,10 @@ let finishX = 9999,
   schoolExitTimer = 0,
   winTimer = 0,
   levelClearTimer = 0;
+let levelMissions = [],
+  levelMissionStats = {},
+  levelMissionReward = 0,
+  levelMissionRewardClaimed = false;
 let tckScene = null;
 const W = 680,
   H = 420,
@@ -1279,6 +1284,8 @@ function completeSecretRoute() {
     );
   }
   addQuestProgress("routes");
+  addLevelMissionProgress("route");
+  if (secretRoute.id === "metro") addLevelMissionProgress("metro");
   if (secretRoute.id === "metro") addAchievementProgress("metro");
   runCoins += SECRET_ROUTE_REWARD;
   addParts(LANES[pLane], pY - 35, secretRoute.color);
@@ -1333,6 +1340,68 @@ function updateQuestReadyBadge() {
   const count = getReadyQuestCount();
   badge.textContent = String(count);
   badge.style.display = count > 0 ? "" : "none";
+}
+function makeLevelMissions() {
+  const hasMetro = currentLocation === 0;
+  const coinTarget = currentLevel >= 3 ? 28 : currentLevel >= 1 ? 22 : 18;
+  const missions = [
+    {
+      id: "coins",
+      title: `Збери ${coinTarget} монет`,
+      target: coinTarget,
+      unit: "",
+    },
+    {
+      id: hasMetro ? "metro" : "route",
+      title: hasMetro ? "Пройди метро" : "Пройди секретний тунель",
+      target: 1,
+      unit: "",
+    },
+  ];
+  if (currentLevel >= 1) {
+    missions.push({
+      id: "trick2",
+      title: "Зроби TRICK x2",
+      target: 1,
+      unit: "",
+    });
+  } else {
+    missions.push({
+      id: "distance",
+      title: "Пробіжи 250 метрів",
+      target: 250,
+      unit: "м",
+    });
+  }
+  return missions;
+}
+function resetLevelMissions() {
+  levelMissions = makeLevelMissions();
+  levelMissionStats = Object.fromEntries(levelMissions.map((mission) => [mission.id, 0]));
+  levelMissionReward = 0;
+  levelMissionRewardClaimed = false;
+}
+function addLevelMissionProgress(id, amount = 1) {
+  const mission = levelMissions.find((item) => item.id === id);
+  if (!mission || levelMissionRewardClaimed) return;
+  levelMissionStats[id] = Math.min(
+    mission.target,
+    (Number(levelMissionStats[id]) || 0) + amount,
+  );
+}
+function getLevelMissionProgress(mission) {
+  return Math.min(mission.target, Number(levelMissionStats[mission.id]) || 0);
+}
+function getCompletedLevelMissions() {
+  return levelMissions.filter((mission) => getLevelMissionProgress(mission) >= mission.target);
+}
+function claimLevelMissionReward() {
+  if (levelMissionRewardClaimed) return 0;
+  const reward = getCompletedLevelMissions().length * LEVEL_MISSION_REWARD;
+  levelMissionReward = reward;
+  levelMissionRewardClaimed = true;
+  if (reward > 0) runCoins += reward;
+  return reward;
 }
 function getMenuTimeOfDay(date = new Date()) {
   if (settingTimeOfDay === "morning")
@@ -1578,6 +1647,7 @@ document.getElementById("app").addEventListener("pointerdown", () => {
   focusApp();
   unlockGameAudio();
   beginIntroAfterGesture();
+  if (gameState === "missionIntro") beginLevelRun();
 });
 function buildLevelBar() {
   const bar = document.getElementById("lvlBar");
@@ -2404,6 +2474,10 @@ function act(c) {
     }
     return;
   }
+  if (gameState === "missionIntro") {
+    beginLevelRun();
+    return;
+  }
   if (gameState !== "run") return;
   if (secretRoute && secretRoute.entering) return;
   if ((c === "ArrowUp" || c === "Space") && pY >= GND - 2) {
@@ -2622,13 +2696,14 @@ function startLevel() {
   bossSpecialCooldown = 0;
   bossFlash = 0;
   secretRoute = createSecretRoute();
+  resetLevelMissions();
   winTimer = 0;
   levelClearTimer = 0;
   andriiFirstObs = false;
   andriiCooldown = 0;
   bubbleText = "";
   bubbleTimer = 0;
-  gameState = "run";
+  gameState = "missionIntro";
   saveGame();
   updateFireControl();
   hudUp();
@@ -2637,6 +2712,12 @@ function startLevel() {
     loop();
   }
   // Андрій кричить на старті з затримкою
+}
+
+function beginLevelRun() {
+  if (gameState !== "missionIntro") return;
+  focusApp();
+  gameState = "run";
   startVoiceTimer = setTimeout(() => {
     startVoiceTimer = null;
     if (gameState === "run") speakAndrii(ANDRII_START);
@@ -6607,6 +6688,15 @@ function drawLevelClearOverlay() {
     W / 2,
     H / 2 + 40,
   );
+  if (levelMissionReward > 0) {
+    ctx.fillStyle = "#6bcb77";
+    ctx.font = "13px sans-serif";
+    ctx.fillText(
+      `+${levelMissionReward}₴ за місії (${getCompletedLevelMissions().length}/${levelMissions.length})`,
+      W / 2,
+      H / 2 + 58,
+    );
+  }
   // press to continue
   if (levelClearTimer > LEVEL_CLEAR_INPUT_DELAY) {
     const remaining = Math.max(
@@ -6618,7 +6708,7 @@ function drawLevelClearOverlay() {
     ctx.fillText(
       (L.restart || "Press any key") + " · " + remaining + "s",
       W / 2,
-      H / 2 + 68,
+      H / 2 + (levelMissionReward > 0 ? 82 : 68),
     );
   }
   ctx.textAlign = "left";
@@ -6771,6 +6861,7 @@ function registerTrickCoinCombo() {
   trickComboStreak = trickComboTimer > 0 ? trickComboStreak + 1 : 1;
   trickComboTimer = 190;
   trickComboMult = trickComboStreak >= 2 ? 3 : 2;
+  if (trickComboMult >= 2) addLevelMissionProgress("trick2");
   if (trickComboMult >= 3) addAchievementProgress("trick3");
   trickJumpTimer = 0;
   trickSlideTimer = 0;
@@ -6922,6 +7013,7 @@ function drawHUDCanvas() {
     ctx.globalAlpha = 1;
   }
   drawLevelMiniMap();
+  drawLevelMissionHud();
 }
 
 function drawLevelMiniMap() {
@@ -6995,6 +7087,85 @@ function drawLevelMiniMap() {
   mark(progress, "A", "#ffffff", 6);
 
   ctx.textAlign = "left";
+  ctx.restore();
+}
+
+function drawLevelMissionHud() {
+  if (!levelMissions.length) return;
+  const x = 188;
+  const y = 58;
+  const w = 304;
+  const rowH = 15;
+  ctx.save();
+  ctx.fillStyle = "rgba(7,18,28,0.68)";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, 18 + levelMissions.length * rowH, 7);
+  else ctx.fillRect(x, y, w, 18 + levelMissions.length * rowH);
+  ctx.fillStyle = "#ffd700";
+  ctx.font = "bold 10px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("Місії рівня", x + 10, y + 13);
+  levelMissions.forEach((mission, index) => {
+    const done = getLevelMissionProgress(mission) >= mission.target;
+    const progress = Math.floor(getLevelMissionProgress(mission));
+    const label =
+      mission.target > 1
+        ? `${mission.title}: ${progress}/${mission.target}${mission.unit || ""}`
+        : mission.title;
+    ctx.fillStyle = done ? "#6bcb77" : "#d8e7ff";
+    ctx.font = "10px sans-serif";
+    ctx.fillText((done ? "✓ " : "• ") + label, x + 10, y + 30 + index * rowH);
+  });
+  ctx.restore();
+}
+
+function drawLevelMissionIntroOverlay() {
+  const lvNames = getLevelNames(currentLocation, lang);
+  ctx.save();
+  ctx.fillStyle = "rgba(5,10,20,0.76)";
+  ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffd700";
+  ctx.font = "bold 28px sans-serif";
+  ctx.fillText("Місії рівня", W / 2, 92);
+  ctx.fillStyle = "#d8e7ff";
+  ctx.font = "14px sans-serif";
+  ctx.fillText(
+    `Рівень ${currentLevel + 1}: ${lvNames[currentLevel] || ""}`,
+    W / 2,
+    118,
+  );
+
+  const cardX = W / 2 - 205;
+  const cardY = 142;
+  const cardW = 410;
+  ctx.fillStyle = "rgba(15,24,42,0.92)";
+  ctx.strokeStyle = "rgba(255,215,0,0.42)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(cardX, cardY, cardW, 126, 10);
+  else ctx.rect(cardX, cardY, cardW, 126);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.textAlign = "left";
+  levelMissions.forEach((mission, index) => {
+    const y = cardY + 30 + index * 33;
+    ctx.fillStyle = "#6bcb77";
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillText(`${index + 1}.`, cardX + 24, y);
+    ctx.fillStyle = "#f2f7ff";
+    ctx.font = "bold 15px sans-serif";
+    ctx.fillText(mission.title, cardX + 54, y);
+    ctx.fillStyle = "#ffd700";
+    ctx.font = "12px sans-serif";
+    ctx.fillText(`+${LEVEL_MISSION_REWARD} монет`, cardX + 290, y);
+  });
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#aabbcc";
+  ctx.font = "13px sans-serif";
+  ctx.fillText("Натисни будь-яку кнопку, щоб почати", W / 2, 300);
   ctx.restore();
 }
 
@@ -7728,6 +7899,7 @@ function completeLevelAfterSchool() {
   addQuestProgress("levels");
   addQuestProgress("finishes");
   runCoins += lv.bonusCoins;
+  claimLevelMissionReward();
   totalCoins += runCoins;
   if (isFinalLevel) {
     if (currentLocation === 0) progressKyiv = getLevels().length;
@@ -7754,6 +7926,7 @@ function update() {
     updateTckScene();
     return;
   }
+  if (gameState === "missionIntro") return;
   if (gameState === "win") {
     winTimer++;
     if (winTimer === 1) {
@@ -7823,6 +7996,7 @@ function update() {
   const distanceStep = spd / 60;
   totalDist += distanceStep;
   addQuestProgress("distance", distanceStep);
+  addLevelMissionProgress("distance", distanceStep);
   if (fr % 120 === 0) saveGame();
 
   if (
@@ -8452,6 +8626,7 @@ function update() {
       const trickMult = registerTrickCoinCombo();
       const mult = dangerMult * comboMult * trickMult * chestnutMult;
       addQuestProgress("coins", mult);
+      addLevelMissionProgress("coins", mult);
       runCoins += mult;
       c.done = true;
       sfxCoin();
@@ -8522,6 +8697,7 @@ function loop() {
     drawConfetti();
     drawLevelClearOverlay();
   }
+  if (gameState === "missionIntro") drawLevelMissionIntroOverlay();
   if (gameState === "idle" || gameState === "over") drawOverlay();
   update();
   loopActive = false;
