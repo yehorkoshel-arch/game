@@ -2792,6 +2792,17 @@ function spawnObs() {
     wheelPhase: Math.random() * Math.PI * 2,
   });
 }
+function spawnCrosswalk() {
+  const green = Math.random() < 0.58;
+  obs.push({
+    x: W + 50,
+    lane: 1,
+    type: "crosswalk",
+    green,
+    rewarded: false,
+    phase: Math.random() * Math.PI * 2,
+  });
+}
 function spawnCoin() {
   const l = Math.floor(Math.random() * 3),
     hi = Math.random() < 0.35;
@@ -5681,6 +5692,74 @@ function drawObs(o) {
   const x = o.x;
   if (o.type === "scooter") {
     drawScooterRider(o);
+  } else if (o.type === "crosswalk") {
+    const y = GND + 6;
+    const pulse = 0.75 + Math.sin(fr * 0.12 + (o.phase || 0)) * 0.25;
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 18, 150, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let i = -3; i <= 3; i++) {
+      const stripeX = x + i * 34;
+      const farW = 13;
+      const nearW = 22;
+      ctx.fillStyle = o.green
+        ? "rgba(225, 255, 242, 0.82)"
+        : "rgba(235, 238, 255, 0.72)";
+      ctx.beginPath();
+      ctx.moveTo(stripeX - farW, y - 34);
+      ctx.lineTo(stripeX + farW, y - 34);
+      ctx.lineTo(stripeX + nearW, y + 32);
+      ctx.lineTo(stripeX - nearW, y + 32);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(80, 120, 180, 0.08)";
+      ctx.fillRect(stripeX - nearW + 3, y + 20, nearW * 2 - 6, 3);
+    }
+
+    ctx.strokeStyle = o.green
+      ? "rgba(90, 255, 170, 0.65)"
+      : "rgba(255, 88, 104, 0.66)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 150, y - 38);
+    ctx.lineTo(x + 150, y - 38);
+    ctx.moveTo(x - 168, y + 34);
+    ctx.lineTo(x + 168, y + 34);
+    ctx.stroke();
+
+    const poleX = x + 138;
+    ctx.fillStyle = "#29344b";
+    ctx.fillRect(poleX - 3, y - 104, 6, 92);
+    ctx.fillStyle = "rgba(7, 13, 26, 0.9)";
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(poleX - 16, y - 122, 32, 58, 6);
+      ctx.fill();
+    } else {
+      ctx.fillRect(poleX - 16, y - 122, 32, 58);
+    }
+    ctx.fillStyle = o.green ? "rgba(70, 255, 138, 0.28)" : "rgba(255, 68, 80, 0.24)";
+    ctx.beginPath();
+    ctx.arc(poleX, y - (o.green ? 78 : 108), 18 + pulse * 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = o.green ? "#55ff91" : "#ff4d5d";
+    ctx.beginPath();
+    ctx.arc(poleX, y - (o.green ? 78 : 108), 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = o.green ? "#273044" : "#31171e";
+    ctx.beginPath();
+    ctx.arc(poleX, y - (o.green ? 108 : 78), 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = o.green ? "#55ff91" : "#ff6c7b";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(o.green ? "+10" : "СТРИБАЙ", poleX, y - 132);
+    ctx.textAlign = "left";
+    ctx.restore();
   } else if (o.type === "hole") {
     const y = GND + 3;
     ctx.fillStyle = "rgba(0,0,0,0.34)";
@@ -6738,11 +6817,13 @@ function pRect() {
   return { x: x - 12, y: pY - 44, w: 24, h: 68 };
 }
 function isRoadHazard(type) {
-  return type === "hole" || type === "puddle";
+  return type === "hole" || type === "puddle" || type === "crosswalk";
 }
 function oRect(o) {
   if (o.type === "hole") return { x: o.x - 32, y: GND - 8, w: 64, h: 18 };
   if (o.type === "puddle") return { x: o.x - 36, y: GND - 7, w: 72, h: 16 };
+  if (o.type === "crosswalk")
+    return { x: o.x - 145, y: GND - 42, w: 290, h: 82 };
   if (o.type === "scooter")
     return { x: o.x - 30, y: GND - 48, w: 60, h: 55 };
   if (o.type === "kiosk") return { x: o.x - 24, y: GND - 46, w: 48, h: 46 };
@@ -8275,6 +8356,15 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    fr % 540 === 160 &&
+    totalDist > 90 &&
+    totalDist < FDIST - 150
+  )
+    spawnCrosswalk();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
     fr % 110 === 0 &&
     totalDist < FDIST - 50
   )
@@ -8597,6 +8687,30 @@ function update() {
         sfxLand();
       }
       return;
+    }
+    if (o.type === "crosswalk") {
+      if (!hit(pr, oRect(o))) return;
+      if (o.green) {
+        if (!o.rewarded) {
+          o.rewarded = true;
+          runCoins += 10;
+          addQuestProgress("coins", 10);
+          addLevelMissionProgress("coins", 10);
+          addParts(px, GND - 24, "#55ff91");
+          sfxCoin();
+          showAndriiBubble("Зелений! +10 монет");
+          hudUp();
+        }
+        return;
+      }
+      if (pY < GND - 42) {
+        if (!o.rewarded) {
+          o.rewarded = true;
+          addParts(px, GND - 36, "#ffd700");
+          showAndriiBubble("Вчасний стрибок!");
+        }
+        return;
+      }
     }
     if (o.type === "hole" && pY < GND - 46) return;
     if (pSlide && o.type === "bollard") return;
