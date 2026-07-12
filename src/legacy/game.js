@@ -3170,11 +3170,11 @@ function drawGreetingBuildings(x, location) {
 }
 
 function drawRealRoad(timePeriod) {
-  const horizonY = GND - 22;
-  const bottomY = H + 8;
+  const horizonY = GND - 112;
+  const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 145;
-  const bottomHalf = Math.max(W * 0.62, 390);
+  const topHalf = 34;
+  const bottomHalf = Math.max(W * 0.72, 460);
   const isNight = timePeriod === "time-night";
   const isLvivRoad = currentLocation === 1;
 
@@ -3280,8 +3280,12 @@ function drawRealRoad(timePeriod) {
     ctx.fillRect(x, y, 1 + t * 2, 1 + t * 1.4);
   }
 
-  ctx.fillStyle = isNight ? "rgba(9, 12, 20, 0.35)" : "rgba(17, 22, 31, 0.18)";
-  ctx.fillRect(0, GND - 3, W, 6);
+  const horizonShade = ctx.createLinearGradient(0, horizonY - 18, 0, horizonY + 28);
+  horizonShade.addColorStop(0, "rgba(15, 18, 38, 0)");
+  horizonShade.addColorStop(0.55, isNight ? "rgba(16, 18, 34, 0.18)" : "rgba(45, 50, 75, 0.12)");
+  horizonShade.addColorStop(1, "rgba(15, 18, 38, 0)");
+  ctx.fillStyle = horizonShade;
+  ctx.fillRect(0, horizonY - 18, W, 46);
 
   if (isStormWeather()) {
     const wet = ctx.createLinearGradient(0, horizonY, 0, bottomY);
@@ -3313,39 +3317,52 @@ function drawRealRoad(timePeriod) {
 }
 
 function drawRoadRunTrack() {
-  const roadY = ROAD_RUN_Y;
   const isLvivRoad = currentLocation === 1;
+  const horizonY = GND - 112;
+  const bottomY = H + 18;
+  const cx = W / 2;
+  const topHalf = 34;
+  const bottomHalf = Math.max(W * 0.72, 460);
+  const roadAt = (t, laneRatio) => {
+    const half = topHalf + (bottomHalf - topHalf) * t;
+    const y = horizonY + (bottomY - horizonY) * t;
+    return { x: cx + half * laneRatio, y, half };
+  };
   ctx.save();
-  ctx.fillStyle = isLvivRoad
-    ? "rgba(255, 236, 190, 0.1)"
-    : "rgba(160, 210, 255, 0.08)";
+  ctx.fillStyle = isLvivRoad ? "rgba(255, 236, 190, 0.06)" : "rgba(160, 210, 255, 0.06)";
   ctx.beginPath();
-  ctx.moveTo(56, roadY - 22);
-  ctx.lineTo(W - 56, roadY - 22);
-  ctx.lineTo(W - 18, roadY + 38);
-  ctx.lineTo(18, roadY + 38);
+  ctx.moveTo(cx - topHalf * 0.98, horizonY);
+  ctx.lineTo(cx + topHalf * 0.98, horizonY);
+  ctx.lineTo(cx + bottomHalf * 0.92, bottomY);
+  ctx.lineTo(cx - bottomHalf * 0.92, bottomY);
   ctx.closePath();
   ctx.fill();
 
   ctx.strokeStyle = isLvivRoad
-    ? "rgba(255, 220, 160, 0.2)"
-    : "rgba(255, 255, 255, 0.18)";
-  ctx.lineWidth = 2;
-  ctx.setLineDash([18, 16]);
-  for (const lane of LANES) {
+    ? "rgba(255, 220, 160, 0.18)"
+    : "rgba(220, 238, 255, 0.2)";
+  ctx.lineCap = "round";
+  ctx.setLineDash([24, 22]);
+  for (const laneRatio of [-1 / 3, 1 / 3]) {
     ctx.beginPath();
-    ctx.moveTo(lane, roadY - 28);
-    ctx.lineTo(lane, roadY + 42);
+    for (let step = 0; step <= 18; step++) {
+      const t = 0.04 + step * 0.052;
+      const p = roadAt(t, laneRatio);
+      if (step === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+      ctx.lineWidth = 1 + t * 3.4;
+    }
     ctx.stroke();
   }
   ctx.setLineDash([]);
 
-  const activeX = LANES[pLane];
+  const activeRatio = [-2 / 3, 0, 2 / 3][pLane] || 0;
+  const active = roadAt(0.72, activeRatio);
   const pulse = 0.45 + Math.sin(fr * 0.12) * 0.12;
   ctx.globalAlpha = pulse;
   ctx.fillStyle = isLvivRoad ? "rgba(255, 211, 120, 0.18)" : "rgba(98, 214, 255, 0.18)";
   ctx.beginPath();
-  ctx.ellipse(activeX, roadY + 10, 70, 18, 0, 0, Math.PI * 2);
+  ctx.ellipse(active.x, ROAD_RUN_Y + 10, 70, 18, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
