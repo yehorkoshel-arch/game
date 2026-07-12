@@ -1314,6 +1314,9 @@ const GAME_COPY = {
     trafficGreen: "Зелений! +10 монет",
     trafficJump: "Вчасний стрибок!",
     trafficCarJump: "Перестрибнув машину!",
+    greenCrosswalks: "Пройди 2 переходи на зелене",
+    jumpCars: "Перестрибни 2 машини",
+    missionSummary: (reward, done, total) => `+${reward}₴ за місії (${done}/${total})`,
     jumpShort: "СТРИБАЙ",
     skipScene: "Натисни будь-яку кнопку, щоб пропустити сцену",
     signs: { school: "Школа", repair: "Ремонт", metro: "Метро" },
@@ -1330,6 +1333,9 @@ const GAME_COPY = {
     trafficGreen: "Green light! +10 coins",
     trafficJump: "Perfect jump!",
     trafficCarJump: "Jumped over the car!",
+    greenCrosswalks: "Take 2 green crossings",
+    jumpCars: "Jump over 2 cars",
+    missionSummary: (reward, done, total) => `+${reward} coins for missions (${done}/${total})`,
     jumpShort: "JUMP",
     skipScene: "Press any button to skip the scene",
     signs: { school: "School", repair: "Roadwork", metro: "Metro" },
@@ -1346,6 +1352,9 @@ const GAME_COPY = {
     trafficGreen: "Grün! +10 Münzen",
     trafficJump: "Perfekter Sprung!",
     trafficCarJump: "Über das Auto!",
+    greenCrosswalks: "2 grüne Übergänge",
+    jumpCars: "Spring über 2 Autos",
+    missionSummary: (reward, done, total) => `+${reward} Münzen für Missionen (${done}/${total})`,
     jumpShort: "SPRUNG",
     skipScene: "Taste drücken, um zu überspringen",
     signs: { school: "Schule", repair: "Baustelle", metro: "Metro" },
@@ -1362,6 +1371,9 @@ const GAME_COPY = {
     trafficGreen: "Vert ! +10 pièces",
     trafficJump: "Saut parfait !",
     trafficCarJump: "Voiture franchie !",
+    greenCrosswalks: "Passe 2 feux verts",
+    jumpCars: "Saute 2 voitures",
+    missionSummary: (reward, done, total) => `+${reward} pièces de missions (${done}/${total})`,
     jumpShort: "SAUTE",
     skipScene: "Appuie pour passer la scène",
     signs: { school: "École", repair: "Travaux", metro: "Métro" },
@@ -1378,6 +1390,9 @@ const GAME_COPY = {
     trafficGreen: "¡Verde! +10 monedas",
     trafficJump: "¡Salto perfecto!",
     trafficCarJump: "¡Saltaste el coche!",
+    greenCrosswalks: "Cruza 2 pasos en verde",
+    jumpCars: "Salta 2 coches",
+    missionSummary: (reward, done, total) => `+${reward} monedas por misiones (${done}/${total})`,
     jumpShort: "SALTA",
     skipScene: "Pulsa para saltar la escena",
     signs: { school: "Escuela", repair: "Obras", metro: "Metro" },
@@ -1445,19 +1460,33 @@ function makeLevelMissions() {
       unit: "",
     },
   ];
-  if (currentLevel >= 1) {
-    missions.push({
-      id: "trick2",
-      title: gt("trick2"),
-      target: 1,
-      unit: "",
-    });
-  } else {
+  if (currentLevel === 0) {
     missions.push({
       id: "distance",
       title: gt("runMeters"),
       target: 250,
       unit: "м",
+    });
+  } else if (currentLevel % 3 === 1) {
+    missions.push({
+      id: "greenCrosswalks",
+      title: gt("greenCrosswalks"),
+      target: 2,
+      unit: "",
+    });
+  } else if (currentLevel % 3 === 2) {
+    missions.push({
+      id: "trafficCars",
+      title: gt("jumpCars"),
+      target: 2,
+      unit: "",
+    });
+  } else {
+    missions.push({
+      id: "trick2",
+      title: gt("trick2"),
+      target: 1,
+      unit: "",
     });
   }
   return missions;
@@ -6977,7 +7006,12 @@ function drawLevelClearOverlay() {
     ctx.fillStyle = "#6bcb77";
     ctx.font = "13px sans-serif";
     ctx.fillText(
-      `+${levelMissionReward}₴ за місії (${getCompletedLevelMissions().length}/${levelMissions.length})`,
+      gt(
+        "missionSummary",
+        levelMissionReward,
+        getCompletedLevelMissions().length,
+        levelMissions.length,
+      ),
       W / 2,
       H / 2 + 58,
     );
@@ -8901,6 +8935,7 @@ function update() {
           runCoins += 10;
           addQuestProgress("coins", 10);
           addLevelMissionProgress("coins", 10);
+          addLevelMissionProgress("greenCrosswalks");
           addParts(px, GND - 24, "#55ff91");
           sfxCoin();
           showAndriiBubble(gt("trafficGreen"));
@@ -8924,6 +8959,7 @@ function update() {
     if (pY < GND - 64 && o.type === "traffic_car") {
       if (!o.rewarded && Math.abs(o.x - px) < 40) {
         o.rewarded = true;
+        addLevelMissionProgress("trafficCars");
         addParts(px, GND - 55, "#9fd8ff");
         showAndriiBubble(gt("trafficCarJump"));
       }
