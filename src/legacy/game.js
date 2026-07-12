@@ -2803,6 +2803,31 @@ function spawnCrosswalk() {
     phase: Math.random() * Math.PI * 2,
   });
 }
+function spawnTrafficCar() {
+  const lane = Math.floor(Math.random() * 3);
+  const palette =
+    currentLocation === 1
+      ? [
+          ["#7c2d3c", "#f7d9b5"],
+          ["#255b76", "#d8efff"],
+          ["#5f6d3a", "#fff1ba"],
+        ]
+      : [
+          ["#1f3158", "#9fd8ff"],
+          ["#202638", "#d7e7ff"],
+          ["#3a2455", "#ffc6f1"],
+        ];
+  const colors = palette[(currentLevel + lane + fr) % palette.length];
+  obs.push({
+    x: W + 70,
+    lane,
+    type: "traffic_car",
+    vx: 0.55 + Math.random() * 0.95,
+    body: colors[0],
+    glass: colors[1],
+    phase: Math.random() * Math.PI * 2,
+  });
+}
 function spawnCoin() {
   const l = Math.floor(Math.random() * 3),
     hi = Math.random() < 0.35;
@@ -5692,6 +5717,82 @@ function drawObs(o) {
   const x = o.x;
   if (o.type === "scooter") {
     drawScooterRider(o);
+  } else if (o.type === "traffic_car") {
+    const y = GND - 22;
+    const bob = Math.sin(fr * 0.12 + (o.phase || 0)) * 1.5;
+    const isLvivRoad = currentLocation === 1;
+    ctx.save();
+
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    ctx.beginPath();
+    ctx.ellipse(x, GND + 7, 48, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (isStormWeather()) {
+      const shine = ctx.createLinearGradient(x - 62, GND + 8, x + 62, GND + 18);
+      shine.addColorStop(0, "rgba(96, 180, 255, 0)");
+      shine.addColorStop(0.5, "rgba(158, 222, 255, 0.26)");
+      shine.addColorStop(1, "rgba(96, 180, 255, 0)");
+      ctx.fillStyle = shine;
+      ctx.beginPath();
+      ctx.ellipse(x, GND + 14, 62, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = o.body || (isLvivRoad ? "#7c2d3c" : "#1f3158");
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - 43, y - 12 + bob, 86, 28, 8);
+    else ctx.rect(x - 43, y - 12 + bob, 86, 28);
+    ctx.fill();
+
+    ctx.fillStyle = o.body || "#24344f";
+    ctx.beginPath();
+    ctx.moveTo(x - 25, y - 12 + bob);
+    ctx.lineTo(x - 12, y - 32 + bob);
+    ctx.lineTo(x + 18, y - 32 + bob);
+    ctx.lineTo(x + 34, y - 12 + bob);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = o.glass || "#9fd8ff";
+    ctx.globalAlpha = 0.86;
+    ctx.beginPath();
+    ctx.moveTo(x - 16, y - 15 + bob);
+    ctx.lineTo(x - 7, y - 28 + bob);
+    ctx.lineTo(x + 12, y - 28 + bob);
+    ctx.lineTo(x + 23, y - 15 + bob);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = "#101521";
+    for (const wx of [-27, 27]) {
+      ctx.beginPath();
+      ctx.arc(x + wx, y + 17 + bob, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#6d7d91";
+      ctx.beginPath();
+      ctx.arc(x + wx, y + 17 + bob, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#101521";
+    }
+
+    ctx.fillStyle = "#fff1a8";
+    ctx.fillRect(x - 45, y - 2 + bob, 8, 6);
+    ctx.fillRect(x + 37, y - 2 + bob, 8, 6);
+    if (isStormWeather() || getMenuTimeOfDay().className === "time-night") {
+      ctx.fillStyle = "rgba(255, 241, 168, 0.18)";
+      ctx.beginPath();
+      ctx.moveTo(x - 43, y + 1 + bob);
+      ctx.lineTo(x - 94, y - 10 + bob);
+      ctx.lineTo(x - 94, y + 16 + bob);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.fillRect(x - 28, y - 8 + bob, 28, 2);
+    ctx.restore();
   } else if (o.type === "crosswalk") {
     const y = GND + 6;
     const pulse = 0.75 + Math.sin(fr * 0.12 + (o.phase || 0)) * 0.25;
@@ -6817,13 +6918,20 @@ function pRect() {
   return { x: x - 12, y: pY - 44, w: 24, h: 68 };
 }
 function isRoadHazard(type) {
-  return type === "hole" || type === "puddle" || type === "crosswalk";
+  return (
+    type === "hole" ||
+    type === "puddle" ||
+    type === "crosswalk" ||
+    type === "traffic_car"
+  );
 }
 function oRect(o) {
   if (o.type === "hole") return { x: o.x - 32, y: GND - 8, w: 64, h: 18 };
   if (o.type === "puddle") return { x: o.x - 36, y: GND - 7, w: 72, h: 16 };
   if (o.type === "crosswalk")
     return { x: o.x - 145, y: GND - 42, w: 290, h: 82 };
+  if (o.type === "traffic_car")
+    return { x: o.x - 42, y: GND - 58, w: 84, h: 62 };
   if (o.type === "scooter")
     return { x: o.x - 30, y: GND - 48, w: 60, h: 55 };
   if (o.type === "kiosk") return { x: o.x - 24, y: GND - 46, w: 48, h: 46 };
@@ -8365,6 +8473,15 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    fr % 680 === 260 &&
+    totalDist > 120 &&
+    totalDist < FDIST - 170
+  )
+    spawnTrafficCar();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
     fr % 110 === 0 &&
     totalDist < FDIST - 50
   )
@@ -8716,6 +8833,14 @@ function update() {
     if (pSlide && o.type === "bollard") return;
     if (pY < GND - 50 && o.type === "kiosk") return;
     if (pY < GND - 48 && o.type === "scooter") return;
+    if (pY < GND - 64 && o.type === "traffic_car") {
+      if (!o.rewarded && Math.abs(o.x - px) < 40) {
+        o.rewarded = true;
+        addParts(px, GND - 55, "#9fd8ff");
+        showAndriiBubble("Перестрибнув машину!");
+      }
+      return;
+    }
     if (hit(pr, oRect(o)) && inv === 0) {
       if (absorbShieldHit(o.x, GND - 28, "#58beff")) {
         o.x = -100;
