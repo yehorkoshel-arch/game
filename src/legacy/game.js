@@ -1301,6 +1301,93 @@ function completeSecretRoute() {
 function t() {
   return LANGS[lang];
 }
+const GAME_COPY = {
+  uk: {
+    collectCoins: (count) => `Збери ${count} монет`,
+    passMetro: "Пройди метро",
+    passRoute: "Пройди секретний тунель",
+    trick2: "Зроби TRICK x2",
+    runMeters: "Пробіжи 250 метрів",
+    levelMissions: "Місії рівня",
+    missionReward: (count) => `+${count} монет`,
+    startMissions: "Натисни будь-яку кнопку, щоб почати",
+    trafficGreen: "Зелений! +10 монет",
+    trafficJump: "Вчасний стрибок!",
+    trafficCarJump: "Перестрибнув машину!",
+    jumpShort: "СТРИБАЙ",
+    skipScene: "Натисни будь-яку кнопку, щоб пропустити сцену",
+    signs: { school: "Школа", repair: "Ремонт", metro: "Метро" },
+  },
+  en: {
+    collectCoins: (count) => `Collect ${count} coins`,
+    passMetro: "Take the metro",
+    passRoute: "Take the secret tunnel",
+    trick2: "Do TRICK x2",
+    runMeters: "Run 250 meters",
+    levelMissions: "Level missions",
+    missionReward: (count) => `+${count} coins`,
+    startMissions: "Press any button to start",
+    trafficGreen: "Green light! +10 coins",
+    trafficJump: "Perfect jump!",
+    trafficCarJump: "Jumped over the car!",
+    jumpShort: "JUMP",
+    skipScene: "Press any button to skip the scene",
+    signs: { school: "School", repair: "Roadwork", metro: "Metro" },
+  },
+  de: {
+    collectCoins: (count) => `Sammle ${count} Münzen`,
+    passMetro: "Nimm die Metro",
+    passRoute: "Geheimer Tunnel",
+    trick2: "Mach TRICK x2",
+    runMeters: "Laufe 250 Meter",
+    levelMissions: "Level-Missionen",
+    missionReward: (count) => `+${count} Münzen`,
+    startMissions: "Taste drücken zum Start",
+    trafficGreen: "Grün! +10 Münzen",
+    trafficJump: "Perfekter Sprung!",
+    trafficCarJump: "Über das Auto!",
+    jumpShort: "SPRUNG",
+    skipScene: "Taste drücken, um zu überspringen",
+    signs: { school: "Schule", repair: "Baustelle", metro: "Metro" },
+  },
+  fr: {
+    collectCoins: (count) => `Ramasse ${count} pièces`,
+    passMetro: "Prends le métro",
+    passRoute: "Tunnel secret",
+    trick2: "Fais TRICK x2",
+    runMeters: "Cours 250 mètres",
+    levelMissions: "Missions du niveau",
+    missionReward: (count) => `+${count} pièces`,
+    startMissions: "Appuie pour commencer",
+    trafficGreen: "Vert ! +10 pièces",
+    trafficJump: "Saut parfait !",
+    trafficCarJump: "Voiture franchie !",
+    jumpShort: "SAUTE",
+    skipScene: "Appuie pour passer la scène",
+    signs: { school: "École", repair: "Travaux", metro: "Métro" },
+  },
+  es: {
+    collectCoins: (count) => `Recoge ${count} monedas`,
+    passMetro: "Toma el metro",
+    passRoute: "Túnel secreto",
+    trick2: "Haz TRICK x2",
+    runMeters: "Corre 250 metros",
+    levelMissions: "Misiones del nivel",
+    missionReward: (count) => `+${count} monedas`,
+    startMissions: "Pulsa para empezar",
+    trafficGreen: "¡Verde! +10 monedas",
+    trafficJump: "¡Salto perfecto!",
+    trafficCarJump: "¡Saltaste el coche!",
+    jumpShort: "SALTA",
+    skipScene: "Pulsa para saltar la escena",
+    signs: { school: "Escuela", repair: "Obras", metro: "Metro" },
+  },
+};
+function gt(key, ...args) {
+  const pack = GAME_COPY[lang] || GAME_COPY.uk;
+  const value = pack[key] ?? GAME_COPY.uk[key];
+  return typeof value === "function" ? value(...args) : value;
+}
 function updateFireControl() {
   const weapon = getAndriiWeapon(currentLevel, currentLocation);
   const fireButton = document.getElementById("cFire");
@@ -1347,13 +1434,13 @@ function makeLevelMissions() {
   const missions = [
     {
       id: "coins",
-      title: `Збери ${coinTarget} монет`,
+      title: gt("collectCoins", coinTarget),
       target: coinTarget,
       unit: "",
     },
     {
       id: hasMetro ? "metro" : "route",
-      title: hasMetro ? "Пройди метро" : "Пройди секретний тунель",
+      title: hasMetro ? gt("passMetro") : gt("passRoute"),
       target: 1,
       unit: "",
     },
@@ -1361,14 +1448,14 @@ function makeLevelMissions() {
   if (currentLevel >= 1) {
     missions.push({
       id: "trick2",
-      title: "Зроби TRICK x2",
+      title: gt("trick2"),
       target: 1,
       unit: "",
     });
   } else {
     missions.push({
       id: "distance",
-      title: "Пробіжи 250 метрів",
+      title: gt("runMeters"),
       target: 250,
       unit: "м",
     });
@@ -3506,11 +3593,12 @@ function drawTrafficLight(x, y) {
 
 function drawRoadsideSigns() {
   const locLabel = currentLocation === 1 ? "\u041b\u044c\u0432\u0456\u0432" : "\u041a\u0438\u0457\u0432";
+  const signText = gt("signs");
   const signs = [
     { label: locLabel, kind: "direction", y: GND - 2, side: -1, gap: 0 },
-    { label: "\u0428\u043a\u043e\u043b\u0430", kind: "school", y: GND - 4, side: 1, gap: 210 },
-    { label: "\u0420\u0435\u043c\u043e\u043d\u0442", kind: "repair", y: GND - 1, side: -1, gap: 420 },
-    { label: "\u041c\u0435\u0442\u0440\u043e", kind: "metro", y: GND - 5, side: 1, gap: 620 },
+    { label: signText.school, kind: "school", y: GND - 4, side: 1, gap: 210 },
+    { label: signText.repair, kind: "repair", y: GND - 1, side: -1, gap: 420 },
+    { label: signText.metro, kind: "metro", y: GND - 5, side: 1, gap: 620 },
   ];
   const off = (bgOff * 0.62) % 820;
   for (const sign of signs) {
@@ -5858,7 +5946,7 @@ function drawObs(o) {
     ctx.fillStyle = o.green ? "#55ff91" : "#ff6c7b";
     ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(o.green ? "+10" : "СТРИБАЙ", poleX, y - 132);
+    ctx.fillText(o.green ? "+10" : gt("jumpShort"), poleX, y - 132);
     ctx.textAlign = "left";
     ctx.restore();
   } else if (o.type === "hole") {
@@ -7310,7 +7398,7 @@ function drawLevelMissionHud() {
   ctx.fillStyle = "#ffd700";
   ctx.font = "bold 10px sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText("Місії рівня", x + 10, y + 13);
+  ctx.fillText(gt("levelMissions"), x + 10, y + 13);
   levelMissions.forEach((mission, index) => {
     const done = getLevelMissionProgress(mission) >= mission.target;
     const progress = Math.floor(getLevelMissionProgress(mission));
@@ -7333,7 +7421,7 @@ function drawLevelMissionIntroOverlay() {
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffd700";
   ctx.font = "bold 28px sans-serif";
-  ctx.fillText("Місії рівня", W / 2, 92);
+  ctx.fillText(gt("levelMissions"), W / 2, 92);
   ctx.fillStyle = "#d8e7ff";
   ctx.font = "14px sans-serif";
   ctx.fillText(
@@ -7365,13 +7453,13 @@ function drawLevelMissionIntroOverlay() {
     ctx.fillText(mission.title, cardX + 54, y);
     ctx.fillStyle = "#ffd700";
     ctx.font = "12px sans-serif";
-    ctx.fillText(`+${LEVEL_MISSION_REWARD} монет`, cardX + 290, y);
+    ctx.fillText(gt("missionReward", LEVEL_MISSION_REWARD), cardX + 290, y);
   });
 
   ctx.textAlign = "center";
   ctx.fillStyle = "#aabbcc";
   ctx.font = "13px sans-serif";
-  ctx.fillText("Натисни будь-яку кнопку, щоб почати", W / 2, 300);
+  ctx.fillText(gt("startMissions"), W / 2, 300);
   ctx.restore();
 }
 
@@ -8095,7 +8183,7 @@ function drawTckScene() {
   ctx.fillStyle = "#aabbcc";
   ctx.font = "12px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Натисни будь-яку кнопку, щоб пропустити сцену", W / 2, H - 13);
+  ctx.fillText(gt("skipScene"), W / 2, H - 13);
   ctx.textAlign = "left";
 }
 
@@ -8815,7 +8903,7 @@ function update() {
           addLevelMissionProgress("coins", 10);
           addParts(px, GND - 24, "#55ff91");
           sfxCoin();
-          showAndriiBubble("Зелений! +10 монет");
+          showAndriiBubble(gt("trafficGreen"));
           hudUp();
         }
         return;
@@ -8824,7 +8912,7 @@ function update() {
         if (!o.rewarded) {
           o.rewarded = true;
           addParts(px, GND - 36, "#ffd700");
-          showAndriiBubble("Вчасний стрибок!");
+          showAndriiBubble(gt("trafficJump"));
         }
         return;
       }
@@ -8837,7 +8925,7 @@ function update() {
       if (!o.rewarded && Math.abs(o.x - px) < 40) {
         o.rewarded = true;
         addParts(px, GND - 55, "#9fd8ff");
-        showAndriiBubble("Перестрибнув машину!");
+        showAndriiBubble(gt("trafficCarJump"));
       }
       return;
     }
