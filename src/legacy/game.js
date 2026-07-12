@@ -1145,6 +1145,7 @@ let fireCooldown = 0;
 let lightningFlash = 0,
   nextLightning = 240;
 let startVoiceTimer = null;
+let robotRadioCooldown = 0;
 let bossActive = false,
   bossDefeated = false,
   bossTransform = 0,
@@ -1317,6 +1318,12 @@ const GAME_COPY = {
     greenCrosswalks: "Пройди 2 переходи на зелене",
     jumpCars: "Перестрибни 2 машини",
     missionSummary: (reward, done, total) => `+${reward}₴ за місії (${done}/${total})`,
+    robotronName: "Роботрон",
+    radioStart: "Роботрон на зв'язку. Допоможи Андрію добігти до фінішу.",
+    radioCar: "Увага! Машина попереду.",
+    radioCrosswalkGreen: "Зелений сигнал. Можна бігти.",
+    radioCrosswalkRed: "Червоний сигнал. Готуйся стрибати.",
+    radioStorm: "Дощ посилюється. Дорога слизька.",
     jumpShort: "СТРИБАЙ",
     skipScene: "Натисни будь-яку кнопку, щоб пропустити сцену",
     signs: { school: "Школа", repair: "Ремонт", metro: "Метро" },
@@ -1336,6 +1343,12 @@ const GAME_COPY = {
     greenCrosswalks: "Take 2 green crossings",
     jumpCars: "Jump over 2 cars",
     missionSummary: (reward, done, total) => `+${reward} coins for missions (${done}/${total})`,
+    robotronName: "Robotron",
+    radioStart: "Robotron online. Help Andrii reach the finish.",
+    radioCar: "Warning! Car ahead.",
+    radioCrosswalkGreen: "Green signal. You can run.",
+    radioCrosswalkRed: "Red signal. Get ready to jump.",
+    radioStorm: "Rain is getting stronger. The road is slippery.",
     jumpShort: "JUMP",
     skipScene: "Press any button to skip the scene",
     signs: { school: "School", repair: "Roadwork", metro: "Metro" },
@@ -1355,6 +1368,12 @@ const GAME_COPY = {
     greenCrosswalks: "2 grüne Übergänge",
     jumpCars: "Spring über 2 Autos",
     missionSummary: (reward, done, total) => `+${reward} Münzen für Missionen (${done}/${total})`,
+    robotronName: "Robotron",
+    radioStart: "Robotron online. Hilf Andrii bis ins Ziel.",
+    radioCar: "Achtung! Auto voraus.",
+    radioCrosswalkGreen: "Grünes Signal. Du kannst laufen.",
+    radioCrosswalkRed: "Rotes Signal. Spring gleich.",
+    radioStorm: "Der Regen wird stärker. Die Straße ist glatt.",
     jumpShort: "SPRUNG",
     skipScene: "Taste drücken, um zu überspringen",
     signs: { school: "Schule", repair: "Baustelle", metro: "Metro" },
@@ -1374,6 +1393,12 @@ const GAME_COPY = {
     greenCrosswalks: "Passe 2 feux verts",
     jumpCars: "Saute 2 voitures",
     missionSummary: (reward, done, total) => `+${reward} pièces de missions (${done}/${total})`,
+    robotronName: "Robotron",
+    radioStart: "Robotron en ligne. Aide Andrii à atteindre l'arrivée.",
+    radioCar: "Attention ! Voiture devant.",
+    radioCrosswalkGreen: "Feu vert. Tu peux courir.",
+    radioCrosswalkRed: "Feu rouge. Prépare-toi à sauter.",
+    radioStorm: "La pluie augmente. La route glisse.",
     jumpShort: "SAUTE",
     skipScene: "Appuie pour passer la scène",
     signs: { school: "École", repair: "Travaux", metro: "Métro" },
@@ -1393,6 +1418,12 @@ const GAME_COPY = {
     greenCrosswalks: "Cruza 2 pasos en verde",
     jumpCars: "Salta 2 coches",
     missionSummary: (reward, done, total) => `+${reward} monedas por misiones (${done}/${total})`,
+    robotronName: "Robotron",
+    radioStart: "Robotron en línea. Ayuda a Andrii a llegar a la meta.",
+    radioCar: "¡Atención! Coche adelante.",
+    radioCrosswalkGreen: "Semáforo verde. Puedes correr.",
+    radioCrosswalkRed: "Semáforo rojo. Prepárate para saltar.",
+    radioStorm: "La lluvia aumenta. La carretera resbala.",
     jumpShort: "SALTA",
     skipScene: "Pulsa para saltar la escena",
     signs: { school: "Escuela", repair: "Obras", metro: "Metro" },
@@ -1402,6 +1433,14 @@ function gt(key, ...args) {
   const pack = GAME_COPY[lang] || GAME_COPY.uk;
   const value = pack[key] ?? GAME_COPY.uk[key];
   return typeof value === "function" ? value(...args) : value;
+}
+function robotRadio(key, cooldown = 360) {
+  if (gameState !== "run" || robotRadioCooldown > 0) return;
+  const text = gt(key);
+  if (!text) return;
+  robotRadioCooldown = cooldown;
+  showAndriiBubble(gt("robotronName") + ": " + text);
+  speakAndWait(text, settingRobotVoiceLang);
 }
 function updateFireControl() {
   const weapon = getAndriiWeapon(currentLevel, currentLocation);
@@ -2740,8 +2779,9 @@ function startLevel() {
   cancelSpeech();
   if (startVoiceTimer) {
     clearTimeout(startVoiceTimer);
-    startVoiceTimer = null;
   }
+  startVoiceTimer = null;
+  robotRadioCooldown = 0;
   currentLevel = getPlayableLevel(currentLevel);
   const tckSceneKey = currentLocation + ":" + currentLevel;
   if (currentLocation === 0 && currentLevel === 0 && !marichkaProjectSceneSeen) {
@@ -2838,6 +2878,7 @@ function beginLevelRun() {
     startVoiceTimer = null;
     if (gameState === "run") speakAndrii(ANDRII_START);
   }, 800);
+  setTimeout(() => robotRadio("radioStart", 460), 1700);
 }
 
 function restartLevel() {
@@ -2918,6 +2959,7 @@ function spawnCrosswalk() {
     rewarded: false,
     phase: Math.random() * Math.PI * 2,
   });
+  robotRadio(green ? "radioCrosswalkGreen" : "radioCrosswalkRed", 360);
 }
 function spawnTrafficCar() {
   const lane = Math.floor(Math.random() * 3);
@@ -2943,6 +2985,7 @@ function spawnTrafficCar() {
     glass: colors[1],
     phase: Math.random() * Math.PI * 2,
   });
+  robotRadio("radioCar", 360);
 }
 function spawnCoin() {
   const l = Math.floor(Math.random() * 3),
@@ -8546,9 +8589,11 @@ function update() {
   }
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
+  if (robotRadioCooldown > 0) robotRadioCooldown--;
   if (lightningFlash > 0) lightningFlash--;
   if (isStormWeather()) {
     if (fr % 22 === 0) sfxRainLayer();
+    if (fr % 920 === 360) robotRadio("radioStorm", 620);
     nextLightning--;
     if (nextLightning <= 0) {
       lightningFlash = 18;
