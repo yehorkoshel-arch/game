@@ -3832,9 +3832,9 @@ function drawRealRoad(timePeriod) {
   const horizonY = GND - 112;
   const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 170;
-  const bottomHalf = Math.max(W * 0.47, 320);
-  const laneEdgeRatios = [-0.34, 0.34];
+  const topHalf = 205;
+  const bottomHalf = Math.max(W * 0.36, 245);
+  const laneEdgeRatios = [-0.31, 0.31];
   const isNight = timePeriod === "time-night";
   const isLvivRoad = currentLocation === 1;
 
@@ -3938,8 +3938,8 @@ function drawRealRoad(timePeriod) {
       ((i * 47 - bgOff * 2.1 + (bottomY - horizonY) * 4) %
         (bottomY - horizonY));
     const t = (y - horizonY) / (bottomY - horizonY);
-    const half = topHalf + (bottomHalf - topHalf) * t;
-    const x = cx - half + ((i * 83) % Math.max(1, half * 2));
+    const roadWidth = bottomHalf * 1.82;
+    const x = cx - roadWidth / 2 + ((i * 83) % roadWidth);
     ctx.fillRect(x, y, 1 + t * 2, 1 + t * 1.4);
   }
 
@@ -3973,11 +3973,11 @@ function drawRealRoad(timePeriod) {
         ((i * 53 - bgOff * 1.8 + (bottomY - horizonY) * 4) %
           (bottomY - horizonY));
       const t = (y - horizonY) / (bottomY - horizonY);
-      const half = topHalf + (bottomHalf - topHalf) * t;
-      const x = cx - half * 0.7 + ((i * 91) % Math.max(1, half * 1.4));
+      const roadWidth = bottomHalf * 1.2;
+      const x = cx - roadWidth / 2 + ((i * 91) % roadWidth);
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x + 28 + t * 36, y + 2);
+      ctx.lineTo(x, y + 18 + t * 26);
       ctx.stroke();
     }
   }
@@ -3988,10 +3988,10 @@ function drawRoadRunTrack() {
   const horizonY = GND - 112;
   const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 170;
-  const bottomHalf = Math.max(W * 0.47, 320);
-  const laneRatios = [-0.52, 0, 0.52];
-  const laneEdgeRatios = [-0.34, 0.34];
+  const topHalf = 205;
+  const bottomHalf = Math.max(W * 0.36, 245);
+  const laneRatios = [-0.48, 0, 0.48];
+  const laneEdgeRatios = [-0.31, 0.31];
   const roadAt = (t, laneRatio) => {
     const half = topHalf + (bottomHalf - topHalf) * t;
     const y = horizonY + (bottomY - horizonY) * t;
@@ -4039,9 +4039,9 @@ function getPerspectiveLanePoint(lane = pLane, t = 0.78) {
   const horizonY = GND - 112;
   const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 170;
-  const bottomHalf = Math.max(W * 0.47, 320);
-  const laneRatios = [-0.52, 0, 0.52];
+  const topHalf = 205;
+  const bottomHalf = Math.max(W * 0.36, 245);
+  const laneRatios = [-0.48, 0, 0.48];
   const safeT = Math.max(0, Math.min(1, t));
   const half = topHalf + (bottomHalf - topHalf) * safeT;
   return {
@@ -6133,9 +6133,9 @@ function drawMarichkaRemodel(x, y, options = {}) {
 function drawChaser() {
   if (gameState === "win" || gameState === "schoolEnter") return;
   const dangerPct = Math.min(Math.max((chaserX + 100) / (LANES[0] - 80), 0), 1);
-  const chasePoint = getPerspectiveLanePoint(pLane, 0.58 + dangerPct * 0.18);
+  const chasePoint = getPerspectiveLanePoint(pLane, 0.82 + dangerPct * 0.08);
   const cx = chasePoint.x;
-  const cy = chasePoint.y + 12;
+  const cy = Math.min(H - 18, chasePoint.y + 24);
   const lp = Math.sin(fr * 0.32) * 10;
 
   // небезпечна зона — аура рожева коли близько
@@ -6147,7 +6147,7 @@ function drawChaser() {
     ctx.fill();
   }
   ctx.save();
-  const scale = 0.78 + dangerPct * 0.18;
+  const scale = 0.58 + dangerPct * 0.16;
   ctx.translate(cx, cy);
   ctx.scale(scale, scale);
   ctx.translate(-cx, -cy);
