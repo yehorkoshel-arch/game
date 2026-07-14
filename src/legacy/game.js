@@ -6182,9 +6182,9 @@ function drawMarichkaRemodel(x, y, options = {}) {
 function drawChaser() {
   if (gameState === "win" || gameState === "schoolEnter") return;
   const dangerPct = Math.min(Math.max((chaserX + 100) / (LANES[0] - 80), 0), 1);
-  const chasePoint = getPerspectiveLanePoint(pLane, 0.82 + dangerPct * 0.08);
+  const chasePoint = getPerspectiveLanePoint(pLane, 0.43 + dangerPct * 0.05);
   const cx = chasePoint.x;
-  const cy = Math.min(H - 18, chasePoint.y + 24);
+  const cy = GND + 8 + dangerPct * 8;
   const lp = Math.sin(fr * 0.32) * 10;
 
   // небезпечна зона — аура рожева коли близько
@@ -6196,7 +6196,7 @@ function drawChaser() {
     ctx.fill();
   }
   ctx.save();
-  const scale = 0.58 + dangerPct * 0.16;
+  const scale = 0.74 + dangerPct * 0.12;
   ctx.translate(cx, cy);
   ctx.scale(scale, scale);
   ctx.translate(-cx, -cy);
