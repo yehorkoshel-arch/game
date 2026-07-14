@@ -45,4 +45,5 @@ export const VOICE_CLIPS = {
   "Попереду машина тримайся уважно": "/game/audio/voice/marichka_hint_car_01.mp3",
   "Монети попереду не пропусти": "/game/audio/voice/marichka_hint_coin_01.mp3",
   "До школи вже близько": "/game/audio/voice/marichka_hint_finish_01.mp3",
+  "Андрію дзвоник скоро": "/game/audio/voice/marichka_hint_bell_01.mp3",
 };

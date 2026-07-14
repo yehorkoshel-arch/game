@@ -405,5 +405,11 @@
     "group": "marichka",
     "speaker": "Марічка",
     "text": "До школи вже близько"
+  },
+  {
+    "id": "marichka_hint_bell_01",
+    "group": "marichka",
+    "speaker": "Марічка",
+    "text": "Андрію дзвоник скоро"
   }
 ]

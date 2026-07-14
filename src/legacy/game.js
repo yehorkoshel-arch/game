@@ -1244,6 +1244,26 @@ function sfxWin() {
   });
 }
 
+function sfxSchoolBell() {
+  const c = getSfxCtx();
+  if (!c) return;
+  const now = c.currentTime;
+  [0, 0.22, 0.44].forEach((delay) => {
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(1320, now + delay);
+    osc.frequency.exponentialRampToValueAtTime(880, now + delay + 0.18);
+    gain.gain.setValueAtTime(0.001, now + delay);
+    gain.gain.exponentialRampToValueAtTime(0.2, now + delay + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.34);
+    osc.connect(gain);
+    gain.connect(c.destination);
+    osc.start(now + delay);
+    osc.stop(now + delay + 0.36);
+  });
+}
+
 function sfxGameOver() {
   const c = getSfxCtx();
   if (!c) return;
@@ -1354,8 +1374,15 @@ const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
 const FINISH_APPROACH_DISTANCE = 10;
+const SCHOOL_BELL_FRAMES = 30 * 60;
+const SCHOOL_BELL_REWARD = 75;
 let finishX = 9999,
   finishActive = false,
+  schoolBellActive = false,
+  schoolBellTimer = 0,
+  schoolBellRewardEarned = false,
+  schoolBellRewardClaimed = false,
+  schoolBellWarningSpoken = false,
   schoolEnterTimer = 0,
   schoolDialogueStep = 0,
   schoolDialogueDone = false,
@@ -3150,6 +3177,11 @@ function startLevel() {
   flash = 0;
   finishX = 9999;
   finishActive = false;
+  schoolBellActive = false;
+  schoolBellTimer = 0;
+  schoolBellRewardEarned = false;
+  schoolBellRewardClaimed = false;
+  schoolBellWarningSpoken = false;
   schoolEnterTimer = 0;
   schoolDialogueStep = 0;
   schoolDialogueDone = false;
@@ -7701,6 +7733,21 @@ function drawHUDCanvas() {
     ctx.textAlign = "left";
     ctx.fillText("CHESTNUT x2", 101, 75);
   }
+  if (schoolBellActive && (gameState === "run" || gameState === "schoolEnter")) {
+    const remain = Math.max(0, Math.ceil(schoolBellTimer / 60));
+    const pct = Math.max(0, Math.min(1, schoolBellTimer / SCHOOL_BELL_FRAMES));
+    const bx = W / 2 - 72;
+    const by = 22;
+    ctx.fillStyle = "rgba(20,24,38,0.74)";
+    ctx.fillRect(bx, by, 144, 24);
+    ctx.fillStyle = pct > 0.25 ? "#ffd45c" : "#ff6b6b";
+    ctx.fillRect(bx + 6, by + 17, 132 * pct, 3);
+    ctx.fillStyle = "#fff6cf";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("ДЗВОНИК " + remain + "с  +" + SCHOOL_BELL_REWARD + "₴", W / 2, by + 14);
+    ctx.textAlign = "left";
+  }
   ctx.fillStyle = "rgba(7,18,28,0.7)";
   ctx.fillRect(W - 142, 22, 132, 34);
   ctx.fillStyle = "#cde7ff";
@@ -8068,6 +8115,7 @@ const MARICHKA_LINES_BY_LANG = {
     carHint: "\u041f\u043e\u043f\u0435\u0440\u0435\u0434\u0443 \u043c\u0430\u0448\u0438\u043d\u0430, \u0442\u0440\u0438\u043c\u0430\u0439\u0441\u044f \u0443\u0432\u0430\u0436\u043d\u043e!",
     coinHint: "\u041c\u043e\u043d\u0435\u0442\u0438 \u043f\u043e\u043f\u0435\u0440\u0435\u0434\u0443, \u043d\u0435 \u043f\u0440\u043e\u043f\u0443\u0441\u0442\u0438!",
     finishHint: "\u0414\u043e \u0448\u043a\u043e\u043b\u0438 \u0432\u0436\u0435 \u0431\u043b\u0438\u0437\u044c\u043a\u043e!",
+    bellHint: "\u0410\u043d\u0434\u0440\u0456\u044e, \u0434\u0437\u0432\u043e\u043d\u0438\u043a \u0441\u043a\u043e\u0440\u043e!",
     thanks:
       "\u0414\u044f\u043a\u0443\u044e, \u041c\u0430\u0440\u0456\u0447\u043a\u043e! \u0422\u0438 \u043c\u0435\u043d\u0435 \u0432\u0440\u044f\u0442\u0443\u0432\u0430\u043b\u0430.",
   },
@@ -8082,6 +8130,7 @@ const MARICHKA_LINES_BY_LANG = {
     carHint: "Car ahead, stay sharp!",
     coinHint: "Coins ahead, do not miss them!",
     finishHint: "The school is close now!",
+    bellHint: "Andrii, the bell is coming soon!",
     thanks: "Thank you, Marichka! You saved me.",
   },
   de: {
@@ -8095,6 +8144,7 @@ const MARICHKA_LINES_BY_LANG = {
     carHint: "Auto voraus, bleib aufmerksam!",
     coinHint: "Münzen voraus, verpasse sie nicht!",
     finishHint: "Die Schule ist schon nah!",
+    bellHint: "Andrii, die Glocke läutet gleich!",
     thanks: "Danke, Marichka! Du hast mich gerettet.",
   },
   fr: {
@@ -8108,6 +8158,7 @@ const MARICHKA_LINES_BY_LANG = {
     carHint: "Voiture devant, reste attentif !",
     coinHint: "Des pièces devant, ne les rate pas !",
     finishHint: "L'école est toute proche !",
+    bellHint: "Andrii, la sonnerie arrive bientôt !",
     thanks: "Merci, Marichka ! Tu m'as sauvé.",
   },
   es: {
@@ -8121,6 +8172,7 @@ const MARICHKA_LINES_BY_LANG = {
     carHint: "¡Coche adelante, mantente atento!",
     coinHint: "¡Monedas adelante, no las pierdas!",
     finishHint: "¡La escuela ya está cerca!",
+    bellHint: "¡Andrii, la campana sonará pronto!",
     thanks: "¡Gracias, Marichka! Me salvaste.",
   },
 };
@@ -8698,6 +8750,10 @@ function completeLevelAfterSchool() {
   const isFinalLevel = currentLevel >= getLevels().length - 1;
   addQuestProgress("levels");
   addQuestProgress("finishes");
+  if (schoolBellRewardEarned && !schoolBellRewardClaimed) {
+    runCoins += SCHOOL_BELL_REWARD;
+    schoolBellRewardClaimed = true;
+  }
   runCoins += lv.bonusCoins;
   claimLevelMissionReward();
   totalCoins += runCoins;
@@ -8968,11 +9024,28 @@ function update() {
   ) {
     finishActive = true;
     finishX = W + 100;
+    schoolBellActive = true;
+    schoolBellTimer = SCHOOL_BELL_FRAMES;
+    schoolBellRewardEarned = false;
+    schoolBellRewardClaimed = false;
+    schoolBellWarningSpoken = false;
     speakMarichkaHint("finishHint", 760);
   }
   if (finishActive) {
+    if (schoolBellActive && schoolBellTimer > 0) schoolBellTimer--;
+    if (
+      schoolBellActive &&
+      !schoolBellWarningSpoken &&
+      schoolBellTimer > 0 &&
+      schoolBellTimer <= 10 * 60
+    ) {
+      schoolBellWarningSpoken = true;
+      speakMarichkaHint("bellHint", 520);
+    }
     finishX -= spd;
     if (finishX < W / 2) {
+      schoolBellRewardEarned = schoolBellActive && schoolBellTimer > 0;
+      schoolBellActive = false;
       gameState = "schoolEnter";
       schoolEnterTimer = 0;
       schoolDialogueStep = 0;
@@ -8988,6 +9061,7 @@ function update() {
       postcardItems = [];
       chaserX = -220;
       showAndriiBubble("\u0423\u0440\u0430! \u042f \u0434\u0456\u0441\u0442\u0430\u0432\u0441\u044f \u0434\u043e \u0448\u043a\u043e\u043b\u0438!");
+      sfxSchoolBell();
       return;
     }
   }
