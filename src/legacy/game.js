@@ -3832,9 +3832,9 @@ function drawRealRoad(timePeriod) {
   const horizonY = GND - 112;
   const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 34;
-  const bottomHalf = Math.max(W * 0.72, 460);
-  const laneEdgeRatios = [-0.39, 0.39];
+  const topHalf = 170;
+  const bottomHalf = Math.max(W * 0.47, 320);
+  const laneEdgeRatios = [-0.34, 0.34];
   const isNight = timePeriod === "time-night";
   const isLvivRoad = currentLocation === 1;
 
@@ -3988,10 +3988,10 @@ function drawRoadRunTrack() {
   const horizonY = GND - 112;
   const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 34;
-  const bottomHalf = Math.max(W * 0.72, 460);
-  const laneRatios = [-0.56, 0, 0.56];
-  const laneEdgeRatios = [-0.39, 0.39];
+  const topHalf = 170;
+  const bottomHalf = Math.max(W * 0.47, 320);
+  const laneRatios = [-0.52, 0, 0.52];
+  const laneEdgeRatios = [-0.34, 0.34];
   const roadAt = (t, laneRatio) => {
     const half = topHalf + (bottomHalf - topHalf) * t;
     const y = horizonY + (bottomY - horizonY) * t;
@@ -4039,9 +4039,9 @@ function getPerspectiveLanePoint(lane = pLane, t = 0.78) {
   const horizonY = GND - 112;
   const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 34;
-  const bottomHalf = Math.max(W * 0.72, 460);
-  const laneRatios = [-0.56, 0, 0.56];
+  const topHalf = 170;
+  const bottomHalf = Math.max(W * 0.47, 320);
+  const laneRatios = [-0.52, 0, 0.52];
   const safeT = Math.max(0, Math.min(1, t));
   const half = topHalf + (bottomHalf - topHalf) * safeT;
   return {
