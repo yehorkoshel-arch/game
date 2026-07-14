@@ -3090,6 +3090,26 @@ function spawnCityGift(secret = false) {
       : "\u0411\u0456\u0436\u0438, \u0410\u043d\u0434\u0440\u0456\u044e!",
   );
 }
+function getPostcardPool() {
+  return CITY_POSTCARDS.filter(
+    (card) => (card.loc === currentLocation || card.loc === 2) && !postcards[card.id],
+  );
+}
+function spawnPostcard() {
+  if (secretRoute?.active || bossActive || gameState !== "run") return;
+  const pool = getPostcardPool();
+  if (!pool.length) return;
+  const card = pool[(Math.random() * pool.length) | 0];
+  const lane = Math.floor(Math.random() * 3);
+  postcardItems.push({
+    x: W + 45,
+    y: GND - 52,
+    lane,
+    cardId: card.id,
+    phase: Math.random() * Math.PI * 2,
+  });
+  robotRadio("radioPostcard", 420);
+}
 function addParts(x, y, col) {
   for (let i = 0; i < 7; i++)
     parts.push({
@@ -6899,6 +6919,39 @@ function drawCityGift(gift) {
   ctx.textAlign = "center";
   ctx.fillText("+" + gift.value, x, y + 4);
   ctx.textAlign = "left";
+  ctx.restore();
+}
+
+function drawPostcardItem(item) {
+  const card = CITY_POSTCARDS.find((entry) => entry.id === item.cardId);
+  if (!card) return;
+  const x = item.x;
+  const y = item.y + Math.sin(fr * 0.12 + item.phase) * 5;
+  ctx.save();
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 30);
+  glow.addColorStop(0, card.color + "cc");
+  glow.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.translate(x, y);
+  ctx.rotate(Math.sin(fr * 0.05 + item.phase) * 0.08);
+  ctx.fillStyle = "#f8f1d0";
+  ctx.strokeStyle = card.color;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(-18, -13, 36, 26, 4);
+  else ctx.rect(-18, -13, 36, 26);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = card.color;
+  ctx.fillRect(-14, -9, 28, 8);
+  ctx.fillStyle = "#21304a";
+  ctx.font = "bold 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(card.icon, 0, 9);
   ctx.restore();
 }
 
