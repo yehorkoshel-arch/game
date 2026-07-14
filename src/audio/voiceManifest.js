@@ -41,4 +41,8 @@ export const VOICE_CLIPS = {
   "Андрію зачекай ти забув проєкт я тебе наздожену": "/game/audio/voice/marichka_project_03.mp3",
   "Андрію зачекай ти забув свій проєкт": "/game/audio/voice/marichka_school_01.mp3",
   "Біжи Андрію біжи": "/game/audio/voice/marichka_run_01.mp3",
+  "Стрибай попереду перешкода": "/game/audio/voice/marichka_hint_jump_01.mp3",
+  "Попереду машина тримайся уважно": "/game/audio/voice/marichka_hint_car_01.mp3",
+  "Монети попереду не пропусти": "/game/audio/voice/marichka_hint_coin_01.mp3",
+  "До школи вже близько": "/game/audio/voice/marichka_hint_finish_01.mp3",
 };

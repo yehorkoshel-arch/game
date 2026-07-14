@@ -381,5 +381,29 @@
     "group": "marichka",
     "speaker": "Марічка",
     "text": "Біжи Андрію біжи"
+  },
+  {
+    "id": "marichka_hint_jump_01",
+    "group": "marichka",
+    "speaker": "Марічка",
+    "text": "Стрибай попереду перешкода"
+  },
+  {
+    "id": "marichka_hint_car_01",
+    "group": "marichka",
+    "speaker": "Марічка",
+    "text": "Попереду машина тримайся уважно"
+  },
+  {
+    "id": "marichka_hint_coin_01",
+    "group": "marichka",
+    "speaker": "Марічка",
+    "text": "Монети попереду не пропусти"
+  },
+  {
+    "id": "marichka_hint_finish_01",
+    "group": "marichka",
+    "speaker": "Марічка",
+    "text": "До школи вже близько"
   }
 ]

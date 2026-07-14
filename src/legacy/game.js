@@ -8064,6 +8064,10 @@ const MARICHKA_LINES_BY_LANG = {
     school:
       "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u0441\u0432\u0456\u0439 \u043f\u0440\u043e\u0454\u043a\u0442.",
     run: "\u0411\u0456\u0436\u0438, \u0410\u043d\u0434\u0440\u0456\u044e, \u0431\u0456\u0436\u0438!",
+    jumpHint: "\u0421\u0442\u0440\u0438\u0431\u0430\u0439, \u043f\u043e\u043f\u0435\u0440\u0435\u0434\u0443 \u043f\u0435\u0440\u0435\u0448\u043a\u043e\u0434\u0430!",
+    carHint: "\u041f\u043e\u043f\u0435\u0440\u0435\u0434\u0443 \u043c\u0430\u0448\u0438\u043d\u0430, \u0442\u0440\u0438\u043c\u0430\u0439\u0441\u044f \u0443\u0432\u0430\u0436\u043d\u043e!",
+    coinHint: "\u041c\u043e\u043d\u0435\u0442\u0438 \u043f\u043e\u043f\u0435\u0440\u0435\u0434\u0443, \u043d\u0435 \u043f\u0440\u043e\u043f\u0443\u0441\u0442\u0438!",
+    finishHint: "\u0414\u043e \u0448\u043a\u043e\u043b\u0438 \u0432\u0436\u0435 \u0431\u043b\u0438\u0437\u044c\u043a\u043e!",
     thanks:
       "\u0414\u044f\u043a\u0443\u044e, \u041c\u0430\u0440\u0456\u0447\u043a\u043e! \u0422\u0438 \u043c\u0435\u043d\u0435 \u0432\u0440\u044f\u0442\u0443\u0432\u0430\u043b\u0430.",
   },
@@ -8074,6 +8078,10 @@ const MARICHKA_LINES_BY_LANG = {
     project3: "Andrii, wait! You forgot your project! I will catch up with you!",
     school: "Andrii, wait! You forgot your project.",
     run: "Run, Andrii, run!",
+    jumpHint: "Jump, there is an obstacle ahead!",
+    carHint: "Car ahead, stay sharp!",
+    coinHint: "Coins ahead, do not miss them!",
+    finishHint: "The school is close now!",
     thanks: "Thank you, Marichka! You saved me.",
   },
   de: {
@@ -8083,6 +8091,10 @@ const MARICHKA_LINES_BY_LANG = {
     project3: "Andrii, warte! Du hast dein Projekt vergessen! Ich hole dich ein!",
     school: "Andrii, warte! Du hast dein Projekt vergessen.",
     run: "Lauf, Andrii, lauf!",
+    jumpHint: "Spring, vor dir ist ein Hindernis!",
+    carHint: "Auto voraus, bleib aufmerksam!",
+    coinHint: "Münzen voraus, verpasse sie nicht!",
+    finishHint: "Die Schule ist schon nah!",
     thanks: "Danke, Marichka! Du hast mich gerettet.",
   },
   fr: {
@@ -8092,6 +8104,10 @@ const MARICHKA_LINES_BY_LANG = {
     project3: "Andrii, attends ! Tu as oublié ton projet ! Je vais te rattraper !",
     school: "Andrii, attends ! Tu as oublié ton projet.",
     run: "Cours, Andrii, cours !",
+    jumpHint: "Saute, il y a un obstacle devant !",
+    carHint: "Voiture devant, reste attentif !",
+    coinHint: "Des pièces devant, ne les rate pas !",
+    finishHint: "L'école est toute proche !",
     thanks: "Merci, Marichka ! Tu m'as sauvé.",
   },
   es: {
@@ -8101,6 +8117,10 @@ const MARICHKA_LINES_BY_LANG = {
     project3: "¡Andrii, espera! ¡Olvidaste tu proyecto! ¡Te alcanzaré!",
     school: "¡Andrii, espera! Olvidaste tu proyecto.",
     run: "¡Corre, Andrii, corre!",
+    jumpHint: "¡Salta, hay un obstáculo adelante!",
+    carHint: "¡Coche adelante, mantente atento!",
+    coinHint: "¡Monedas adelante, no las pierdas!",
+    finishHint: "¡La escuela ya está cerca!",
     thanks: "¡Gracias, Marichka! Me salvaste.",
   },
 };
@@ -8948,6 +8968,7 @@ function update() {
   ) {
     finishActive = true;
     finishX = W + 100;
+    speakMarichkaHint("finishHint", 760);
   }
   if (finishActive) {
     finishX -= spd;
@@ -9017,6 +9038,27 @@ function update() {
   if (!bossActive && !secretRoute?.active && chaserX < LANES[0] - 100)
     chaserX += 0.5 + (spd - 2.8) * 0.1;
   if (chaserX > -10 && chaserX < LANES[0] - 130) speakMarichkaSupport();
+  const laneObstacle = obs.find(
+    (o) =>
+      o.lane === pLane &&
+      o.x > LANES[pLane] + 110 &&
+      o.x < LANES[pLane] + 230 &&
+      ["traffic_car", "hole", "kiosk", "scooter", "bollard"].includes(o.type),
+  );
+  if (laneObstacle) {
+    speakMarichkaHint(
+      laneObstacle.type === "traffic_car" ? "carHint" : "jumpHint",
+      680,
+    );
+  }
+  const visibleCoin = coins.find(
+    (c) =>
+      c.lane === pLane &&
+      !c.done &&
+      (c.x ?? LANES[c.lane]) > LANES[pLane] + 100 &&
+      (c.x ?? LANES[c.lane]) < LANES[pLane] + 260,
+  );
+  if (visibleCoin && coinCombo === 0) speakMarichkaHint("coinHint", 620);
   if (andriiCooldown > 0) andriiCooldown--;
 
   // перший ворог на екрані — Андрій реагує
@@ -9647,6 +9689,15 @@ function speakMarichkaSupport() {
   marichkaVoiceCooldown = 900;
   bubbleText = getMarichkaLine("name") + ": " + text;
   bubbleTimer = 170;
+  speakAndWait(text, settingRobotVoiceLang);
+}
+function speakMarichkaHint(key, cooldown = 640) {
+  if (marichkaVoiceCooldown > 0 || bubbleTimer > 0 || gameState !== "run") return;
+  const text = getMarichkaLine(key);
+  if (!text) return;
+  marichkaVoiceCooldown = cooldown;
+  bubbleText = getMarichkaLine("name") + ": " + text;
+  bubbleTimer = 160;
   speakAndWait(text, settingRobotVoiceLang);
 }
 
