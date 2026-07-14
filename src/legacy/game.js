@@ -466,11 +466,36 @@ const RAIN_NOTES = [
   [12, 0.5], [9, 0.5], [7, 0.5], [5, 0.5],
   [2, 1], [-3, 1],
 ];
-const MUSIC_TRACKS = [MELODY_NOTES, MARCH_NOTES, RAIN_NOTES];
+const BOSS_NOTES = [
+  [0, 0.5], [0, 0.5], [6, 0.5], [0, 0.5],
+  [10, 0.5], [6, 0.5], [3, 0.5], [0, 0.5],
+  [-2, 0.5], [-2, 0.5], [5, 0.5], [-2, 0.5],
+  [8, 0.5], [5, 0.5], [2, 0.5], [-2, 0.5],
+  [0, 0.25], [3, 0.25], [6, 0.25], [10, 0.25],
+  [12, 0.5], [10, 0.5], [6, 1],
+];
+const MUSIC_TRACKS = [MELODY_NOTES, MARCH_NOTES, RAIN_NOTES, BOSS_NOTES];
 function getMusicTrackIndex(track = settingMusicTrack) {
   if (track === "march") return 1;
   if (track === "rain") return 2;
   return 0;
+}
+function getActiveMusicTrackIndex() {
+  return bossActive ? 3 : getMusicTrackIndex();
+}
+function resetMusicPattern() {
+  melodyIdx = 0;
+  bassIdx = 0;
+  chordIdx = 0;
+  drumStep = 0;
+  lyricIdx = 0;
+}
+function forceMusicTrackRefresh() {
+  if (!musicPlaying || !audioCtx) return;
+  musicTrackIdx = getActiveMusicTrackIndex();
+  resetMusicPattern();
+  nextNoteTime = audioCtx.currentTime + 0.04;
+  showLyric();
 }
 const MARCH_LYRICS_BY_LANG = {
   uk: [
@@ -617,6 +642,16 @@ const RAIN_LYRICS_BY_LANG = {
 function getRainLyrics() {
   return RAIN_LYRICS_BY_LANG[lang] || RAIN_LYRICS_BY_LANG.uk;
 }
+const BOSS_LYRICS_BY_LANG = {
+  uk: ["Бос-тема", "Трансформер близько", "Тримай бластер", "Фінальна битва"],
+  en: ["Boss theme", "Transformer ahead", "Keep the blaster ready", "Final fight"],
+  de: ["Boss-Thema", "Transformer voraus", "Blaster bereit", "Finaler Kampf"],
+  fr: ["Thème du boss", "Transformeur devant", "Blaster prêt", "Combat final"],
+  es: ["Tema del jefe", "Transformador adelante", "Bláster listo", "Batalla final"],
+};
+function getBossLyrics() {
+  return BOSS_LYRICS_BY_LANG[lang] || BOSS_LYRICS_BY_LANG.uk;
+}
 // Bass/chord root notes (one per bar roughly): simple alternating I-V
 const BASS_PATTERN = [0, 7, 0, 5, 0, 7, 0, 5, 0, 4, 0, 5, 0, 7, 0, 5];
 
@@ -725,8 +760,11 @@ function scheduleDrums(barStart, beatDuration = BEAT, intense = false) {
 }
 function scheduleChord(root, startTime, dur) {
   const isRain = musicTrackIdx === 2;
-  const third = musicTrackIdx === 1 || isRain ? 3 : 4;
-  const notes = isRain
+  const isBoss = musicTrackIdx === 3;
+  const third = musicTrackIdx === 1 || isRain || isBoss ? 3 : 4;
+  const notes = isBoss
+    ? [root - 12, root, root + 6, root + 10]
+    : isRain
     ? [root, root + third, root + 7, root + 10]
     : [root, root + third, root + 7, root + 12];
   notes.forEach((semi, i) => {
@@ -734,56 +772,71 @@ function scheduleChord(root, startTime, dur) {
     playNote(
       noteToHz(semi),
       t,
-      dur * (isRain ? 0.7 : 0.55),
-      isRain ? "triangle" : "sawtooth",
-      isRain ? 0.045 : 0.035,
+      dur * (isBoss ? 0.9 : isRain ? 0.7 : 0.55),
+      isBoss ? "sawtooth" : isRain ? "triangle" : "sawtooth",
+      isBoss ? 0.065 : isRain ? 0.045 : 0.035,
       -8 + i * 5,
     );
   });
-  playNote(noteToHz(root + 7), startTime, dur, "triangle", isRain ? 0.05 : 0.035, 6);
+  playNote(
+    noteToHz(root + (isBoss ? -12 : 7)),
+    startTime,
+    dur,
+    isBoss ? "square" : "triangle",
+    isBoss ? 0.08 : isRain ? 0.05 : 0.035,
+    6,
+  );
 }
 
 function scheduleMusic() {
   if (!musicPlaying || !audioCtx) return;
+  const desiredTrack = getActiveMusicTrackIndex();
+  if (musicTrackIdx !== desiredTrack) {
+    musicTrackIdx = desiredTrack;
+    resetMusicPattern();
+    nextNoteTime = audioCtx.currentTime + 0.04;
+    showLyric();
+  }
   while (nextNoteTime < audioCtx.currentTime + scheduleAhead) {
     const melody = MUSIC_TRACKS[musicTrackIdx];
     const isMarch = musicTrackIdx === 1;
     const isRain = musicTrackIdx === 2;
+    const isBoss = musicTrackIdx === 3;
     const [semi, beats] = melody[melodyIdx % melody.length];
-    const trackBeat = BEAT * (isMarch ? 0.76 : isRain ? 0.62 : 1);
+    const trackBeat = BEAT * (isMarch ? 0.76 : isRain ? 0.62 : isBoss ? 0.52 : 1);
     const dur = beats * trackBeat;
     const freq = noteToHz(semi);
-    const accent = melodyIdx % 4 === 0 ? (isMarch ? 1.35 : isRain ? 1.45 : 1.15) : 1;
+    const accent = melodyIdx % 4 === 0 ? (isMarch ? 1.35 : isRain ? 1.45 : isBoss ? 1.65 : 1.15) : 1;
     playNote(
       freq,
       nextNoteTime,
-      dur * (isMarch ? 0.78 : isRain ? 0.7 : 0.94),
-      isMarch ? "sawtooth" : isRain ? "square" : "triangle",
-      (isMarch ? 0.16 : isRain ? 0.11 : 0.18) * accent,
+      dur * (isMarch ? 0.78 : isRain ? 0.7 : isBoss ? 0.62 : 0.94),
+      isMarch || isBoss ? "sawtooth" : isRain ? "square" : "triangle",
+      (isMarch ? 0.16 : isRain ? 0.11 : isBoss ? 0.14 : 0.18) * accent,
     );
     playNote(
       noteToHz(semi + 12),
       nextNoteTime + dur * 0.04,
-      dur * (isMarch ? 0.28 : isRain ? 0.22 : 0.45),
-      isMarch || isRain ? "square" : "sine",
-      isMarch ? 0.055 : isRain ? 0.04 : 0.035,
+      dur * (isMarch ? 0.28 : isRain ? 0.22 : isBoss ? 0.2 : 0.45),
+      isMarch || isRain || isBoss ? "square" : "sine",
+      isMarch ? 0.055 : isRain ? 0.04 : isBoss ? 0.05 : 0.035,
     );
     playNote(
-      noteToHz(semi + (isMarch || isRain ? 3 : 4)),
+      noteToHz(semi + (isMarch || isRain || isBoss ? 3 : 4)),
       nextNoteTime,
-      dur * (isMarch ? 0.58 : isRain ? 0.42 : 0.8),
+      dur * (isMarch ? 0.58 : isRain ? 0.42 : isBoss ? 0.34 : 0.8),
       "sine",
-      isMarch ? 0.07 : isRain ? 0.04 : 0.055,
+      isMarch ? 0.07 : isRain ? 0.04 : isBoss ? 0.035 : 0.055,
     );
 
     if (melodyIdx % 2 === 0) {
-      const bassSemi = BASS_PATTERN[bassIdx % BASS_PATTERN.length] - (isRain ? 24 : 12);
+      const bassSemi = BASS_PATTERN[bassIdx % BASS_PATTERN.length] - (isBoss ? 31 : isRain ? 24 : 12);
       playNote(
         noteToHz(bassSemi),
         nextNoteTime,
-        dur * (isMarch ? 1.1 : isRain ? 1.45 : 1.65),
-        isMarch || isRain ? "square" : "triangle",
-        isMarch ? 0.18 : isRain ? 0.16 : 0.13,
+        dur * (isMarch ? 1.1 : isRain ? 1.45 : isBoss ? 1.2 : 1.65),
+        isMarch || isRain || isBoss ? "square" : "triangle",
+        isMarch ? 0.18 : isRain ? 0.16 : isBoss ? 0.22 : 0.13,
       );
       playNote(
         noteToHz(bassSemi + 12),
@@ -796,8 +849,8 @@ function scheduleMusic() {
     }
     if (melodyIdx % 4 === 0) {
       const root = CHORD_PATTERN[chordIdx % CHORD_PATTERN.length];
-      scheduleChord(root, nextNoteTime, dur * (isMarch ? 1.55 : isRain ? 1.35 : 2.2));
-      scheduleDrums(nextNoteTime, trackBeat, isMarch || isRain);
+      scheduleChord(root, nextNoteTime, dur * (isMarch ? 1.55 : isRain ? 1.35 : isBoss ? 1.1 : 2.2));
+      scheduleDrums(nextNoteTime, trackBeat, isMarch || isRain || isBoss);
       chordIdx++;
     }
 
@@ -806,7 +859,7 @@ function scheduleMusic() {
     // Loop
     if (melodyIdx >= melody.length) {
       melodyIdx = 0;
-      musicTrackIdx = getMusicTrackIndex();
+      musicTrackIdx = getActiveMusicTrackIndex();
       lyricIdx = 0;
     }
   }
@@ -827,7 +880,7 @@ function startMusic() {
   musicPlaying = true;
   melodyIdx = 0;
   bassIdx = 0;
-  musicTrackIdx = getMusicTrackIndex();
+  musicTrackIdx = getActiveMusicTrackIndex();
   drumStep = 0;
   chordIdx = 0;
   nextNoteTime = audioCtx.currentTime + 0.1;
@@ -900,13 +953,16 @@ function showLyric() {
       ? getMarchLyrics()
       : musicTrackIdx === 2
         ? getRainLyrics()
+        : musicTrackIdx === 3
+          ? getBossLyrics()
         : t().lyrics || [];
   if (!lines.length) return;
   const line = lines[lyricIdx % lines.length];
   LYRIC_DIV.textContent = line;
   LYRIC_DIV.style.opacity = "1";
   if (musicTrackIdx === 1) playMarchVocal(lyricIdx);
-  const displayDuration = musicTrackIdx === 1 ? 4200 : musicTrackIdx === 2 ? 2200 : 2600;
+  const displayDuration =
+    musicTrackIdx === 1 ? 4200 : musicTrackIdx === 2 || musicTrackIdx === 3 ? 2200 : 2600;
   lyricTimer = setTimeout(() => {
     LYRIC_DIV.style.opacity = "0";
     lyricIdx++;
@@ -8783,6 +8839,7 @@ function update() {
     superJumps = [];
     cityGifts = [];
     postcardItems = [];
+    forceMusicTrackRefresh();
     speakAndrii(["Ого! Машина перетворюється на трансформера!"]);
   }
   if (bossActive) {
@@ -9138,6 +9195,7 @@ function update() {
         bossHp = 0;
         bossActive = false;
         bossDefeated = true;
+        forceMusicTrackRefresh();
         bossTransform = 120;
         bossX = W + 180;
         updateFireControl();
