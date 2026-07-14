@@ -1381,6 +1381,7 @@ const GAME_COPY = {
     radioCrosswalkGreen: "Зелений сигнал. Можна бігти.",
     radioCrosswalkRed: "Червоний сигнал. Готуйся стрибати.",
     radioStorm: "Дощ посилюється. Дорога слизька.",
+    radioPostcard: "Бачу листівку міста. Забери її в колекцію.",
     jumpShort: "СТРИБАЙ",
     skipScene: "Натисни будь-яку кнопку, щоб пропустити сцену",
     signs: { school: "Школа", repair: "Ремонт", metro: "Метро" },
@@ -1406,6 +1407,7 @@ const GAME_COPY = {
     radioCrosswalkGreen: "Green signal. You can run.",
     radioCrosswalkRed: "Red signal. Get ready to jump.",
     radioStorm: "Rain is getting stronger. The road is slippery.",
+    radioPostcard: "City postcard detected. Add it to the collection.",
     jumpShort: "JUMP",
     skipScene: "Press any button to skip the scene",
     signs: { school: "School", repair: "Roadwork", metro: "Metro" },
@@ -1431,6 +1433,7 @@ const GAME_COPY = {
     radioCrosswalkGreen: "Grünes Signal. Du kannst laufen.",
     radioCrosswalkRed: "Rotes Signal. Spring gleich.",
     radioStorm: "Der Regen wird stärker. Die Straße ist glatt.",
+    radioPostcard: "Stadtpostkarte entdeckt. Sammle sie ein.",
     jumpShort: "SPRUNG",
     skipScene: "Taste drücken, um zu überspringen",
     signs: { school: "Schule", repair: "Baustelle", metro: "Metro" },
@@ -1456,6 +1459,7 @@ const GAME_COPY = {
     radioCrosswalkGreen: "Feu vert. Tu peux courir.",
     radioCrosswalkRed: "Feu rouge. Prépare-toi à sauter.",
     radioStorm: "La pluie augmente. La route glisse.",
+    radioPostcard: "Carte postale détectée. Ajoute-la à la collection.",
     jumpShort: "SAUTE",
     skipScene: "Appuie pour passer la scène",
     signs: { school: "École", repair: "Travaux", metro: "Métro" },
@@ -1481,6 +1485,7 @@ const GAME_COPY = {
     radioCrosswalkGreen: "Semáforo verde. Puedes correr.",
     radioCrosswalkRed: "Semáforo rojo. Prepárate para saltar.",
     radioStorm: "La lluvia aumenta. La carretera resbala.",
+    radioPostcard: "Postal de la ciudad detectada. Añádela a la colección.",
     jumpShort: "SALTA",
     skipScene: "Pulsa para saltar la escena",
     signs: { school: "Escuela", repair: "Obras", metro: "Metro" },
@@ -1807,6 +1812,27 @@ function buildAchievements() {
   saveGame();
   updateAchievementReadyBadge();
 }
+function buildCollection() {
+  const list = document.getElementById("collectionList");
+  const count = document.getElementById("collectionCount");
+  if (!list) return;
+  list.innerHTML = "";
+  const opened = CITY_POSTCARDS.filter((card) => postcards[card.id]).length;
+  if (count) count.textContent = `${opened}/${CITY_POSTCARDS.length}`;
+  CITY_POSTCARDS.forEach((card) => {
+    const unlocked = Boolean(postcards[card.id]);
+    const item = document.createElement("article");
+    item.className = "collection-card " + (unlocked ? "unlocked" : "locked");
+    item.innerHTML = `
+      <div class="collection-art" style="color:${card.color}">${unlocked ? card.icon : "?"}</div>
+      <div class="collection-info">
+        <div class="collection-title">${unlocked ? card.title : "Невідома листівка"}</div>
+        <div class="collection-desc">${unlocked ? card.desc : "Знайди її під час забігу містом."}</div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
 function refreshCoinAchievements() {
   achievementStats.coins1000 = Math.max(
     Number(achievementStats.coins1000) || 0,
@@ -1991,6 +2017,7 @@ function showScreen(id) {
   if (id === "sMenu") updateAchievementReadyBadge();
   if (id === "sQuests") buildQuests();
   if (id === "sAchievements") buildAchievements();
+  if (id === "sCollection") buildCollection();
   if (id === "sBackpack") buildBackpack();
   if (settingSound) {
     if (id === "sMenu" || id === "sGame") {
@@ -2504,7 +2531,16 @@ document.getElementById("btnAchievementsOpen").onclick = () => {
   buildAchievements();
   showScreen("sAchievements");
 };
+document.getElementById("btnCollectionOpen").onclick = () => {
+  buildCollection();
+  showScreen("sCollection");
+};
 document.getElementById("btnBackAchievements").onclick = () => {
+  saveGame();
+  syncCoins();
+  showScreen("sMenu");
+};
+document.getElementById("btnBackCollection").onclick = () => {
   saveGame();
   syncCoins();
   showScreen("sMenu");
@@ -7836,6 +7872,7 @@ function beginStoryScene(kind, sceneKey = null) {
   obs = [];
   coins = [];
   cityGifts = [];
+  postcardItems = [];
   parts = [];
   bullets = [];
   confetti = [];
@@ -8584,6 +8621,7 @@ function update() {
     shields = [];
     superJumps = [];
     cityGifts = [];
+    postcardItems = [];
     speakAndrii(["Ого! Машина перетворюється на трансформера!"]);
   }
   if (bossActive) {
@@ -8664,6 +8702,7 @@ function update() {
       shields = [];
       superJumps = [];
       chestnuts = [];
+      postcardItems = [];
       chaserX = -220;
       showAndriiBubble("\u0423\u0440\u0430! \u042f \u0434\u0456\u0441\u0442\u0430\u0432\u0441\u044f \u0434\u043e \u0448\u043a\u043e\u043b\u0438!");
       return;
@@ -8820,6 +8859,15 @@ function update() {
     totalDist < FDIST - 120
   )
     spawnCityGift(true);
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    fr % 900 === 520 &&
+    totalDist > 130 &&
+    totalDist < FDIST - 170
+  )
+    spawnPostcard();
 
   obs.forEach((o) => (o.x -= spd + (o.vx || 0)));
   coins.forEach((c) => {
@@ -8844,6 +8892,7 @@ function update() {
   chestnuts.forEach((c) => (c.x -= spd));
   shields.forEach((s) => (s.x -= spd));
   superJumps.forEach((j) => (j.x -= spd));
+  postcardItems.forEach((item) => (item.x -= spd));
   cityGifts.forEach((gift) => {
     gift.x += gift.vx - spd * 0.12;
     gift.giverX = (gift.giverX ?? gift.x) - spd * 0.12;
@@ -8855,6 +8904,7 @@ function update() {
       gift.vx *= 0.94;
     }
   });
+  postcardItems = postcardItems.filter((item) => item.x > -40);
 
   // ТЦК стріляють у Львові з третього рівня, коли їхня зброя вже видима.
   if (currentLocation === 1 && currentLevel >= 2) {
@@ -9035,6 +9085,26 @@ function update() {
   });
 
   // перевірка куль
+  postcardItems = postcardItems.filter((item) => {
+    if (item.lane !== pLane) return true;
+    const card = CITY_POSTCARDS.find((entry) => entry.id === item.cardId);
+    const prc = { x: item.x - 22, y: item.y - 24, w: 44, h: 48 };
+    if (!card || !hit(pr, prc)) return true;
+    const firstTime = !postcards[card.id];
+    postcards[card.id] = true;
+    if (firstTime) {
+      runCoins += 25;
+      addQuestProgress("coins", 25);
+      addLevelMissionProgress("coins", 25);
+      showAndriiBubble("Листівка: " + card.title + " +25 монет");
+    }
+    sfxCoin();
+    addParts(item.x, item.y, card.color);
+    saveGame();
+    hudUp();
+    return false;
+  });
+
   bullets = bullets.filter((b) => {
     if (b.lane !== pLane) return true;
     const br =
@@ -9206,6 +9276,7 @@ function loop() {
   chestnuts.forEach(drawChestnutPower);
   magnets.forEach(drawMagnet);
   coins.forEach(drawCoin);
+  postcardItems.forEach(drawPostcardItem);
   cityGifts.forEach(drawCityGift);
   obs.forEach(drawObs);
   drawKyivBoss();
