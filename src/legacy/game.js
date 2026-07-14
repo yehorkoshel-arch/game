@@ -3910,24 +3910,22 @@ function drawRealRoad(timePeriod) {
 
   if (isLvivRoad) {
     const rowOffset = (34 - ((bgOff * 1.45) % 34)) % 34;
-    for (let y = horizonY - 34 + rowOffset; y < bottomY + 34; y += 22) {
-      const y2 = Math.min(bottomY, y + 18);
+    for (let y = horizonY - 34 + rowOffset; y < bottomY + 34; y += 30) {
+      const y2 = Math.min(bottomY, y + 24);
       if (y2 <= horizonY) continue;
       const t1 = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
       const t2 = Math.max(0, Math.min(1, (y2 - horizonY) / (bottomY - horizonY)));
       const half1 = topHalf + (bottomHalf - topHalf) * t1;
       const half2 = topHalf + (bottomHalf - topHalf) * t2;
-      const stones = Math.max(8, Math.floor(10 + t1 * 15));
+      const stones = Math.max(7, Math.floor(8 + t1 * 10));
       for (let s = 0; s < stones; s++) {
         const fracA = -1 + (s / stones) * 2;
         const fracB = -1 + ((s + 1) / stones) * 2;
-        const stagger = (Math.floor(y / 22) % 2) * (1 / stones);
+        const stagger = (Math.floor(y / 30) % 2) * (1 / stones);
         const a = Math.max(-1, Math.min(1, fracA + stagger));
         const b = Math.max(-1, Math.min(1, fracB + stagger));
-        const tone = (s + Math.floor(y / 22)) % 3;
+        const tone = (s + Math.floor(y / 30)) % 3;
         ctx.fillStyle = tone === 0 ? "rgba(154,139,119,0.58)" : tone === 1 ? "rgba(105,93,80,0.52)" : "rgba(190,176,150,0.42)";
-        ctx.strokeStyle = isNight ? "rgba(27,23,21,0.45)" : "rgba(59,50,43,0.5)";
-        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(cx + half1 * a, y);
         ctx.lineTo(cx + half1 * b, y);
@@ -3935,7 +3933,6 @@ function drawRealRoad(timePeriod) {
         ctx.lineTo(cx + half2 * a, y2);
         ctx.closePath();
         ctx.fill();
-        ctx.stroke();
       }
     }
     ctx.strokeStyle = isNight ? "rgba(44, 37, 32, 0.7)" : "rgba(80, 68, 58, 0.72)";
@@ -3971,7 +3968,8 @@ function drawRealRoad(timePeriod) {
   ctx.fillStyle = isLvivRoad
     ? isNight ? "rgba(255, 232, 188, 0.04)" : "rgba(255, 238, 199, 0.06)"
     : isNight ? "rgba(255, 255, 255, 0.035)" : "rgba(255, 255, 255, 0.055)";
-  for (let i = 0; i < 85; i++) {
+  const roadSpeckles = isLvivRoad ? 46 : 85;
+  for (let i = 0; i < roadSpeckles; i++) {
     const y =
       horizonY +
       ((i * 47 - bgOff * 2.1 + (bottomY - horizonY) * 4) %
@@ -4100,6 +4098,16 @@ function getScooterRoadPoint(o) {
     x: point.x,
     y: Math.min(GND, point.y),
     scale: 0.46 + depth * 0.54,
+  };
+}
+
+function getTrafficCarRoadPoint(o) {
+  const depth = getRoadObstacleDepth(o);
+  const point = getPerspectiveLanePoint(o.lane, 0.1 + depth * 0.55);
+  return {
+    x: point.x,
+    y: Math.min(GND + 2, point.y + 6),
+    scale: 0.44 + depth * 0.64,
   };
 }
 
@@ -6424,14 +6432,19 @@ function drawChaser() {
 }
 
 function drawObs(o) {
-  const x = o.x;
+  let x = o.x;
   if (o.type === "scooter") {
     drawScooterRider(o);
   } else if (o.type === "traffic_car") {
-    const y = GND - 22;
+    const roadPoint = getTrafficCarRoadPoint(o);
+    x = roadPoint.x;
+    const y = roadPoint.y - 24;
     const bob = Math.sin(fr * 0.12 + (o.phase || 0)) * 1.5;
     const isLvivRoad = currentLocation === 1;
     ctx.save();
+    ctx.translate(x, roadPoint.y);
+    ctx.scale(roadPoint.scale, roadPoint.scale);
+    ctx.translate(-x, -roadPoint.y);
 
     ctx.fillStyle = "rgba(0,0,0,0.28)";
     ctx.beginPath();
@@ -7683,7 +7696,15 @@ function oRect(o) {
   if (o.type === "crosswalk")
     return { x: o.x - 145, y: GND - 42, w: 290, h: 82 };
   if (o.type === "traffic_car")
-    return { x: o.x - 42, y: GND - 58, w: 84, h: 62 };
+  {
+    const p = getTrafficCarRoadPoint(o);
+    return {
+      x: p.x - 44 * p.scale,
+      y: p.y - 60 * p.scale,
+      w: 88 * p.scale,
+      h: 66 * p.scale,
+    };
+  }
   if (o.type === "scooter") {
     const p = getScooterRoadPoint(o);
     return {
@@ -9315,8 +9336,8 @@ function update() {
   const laneObstacle = obs.find(
     (o) =>
       o.lane === pLane &&
-      o.x > LANES[pLane] + 110 &&
-      o.x < LANES[pLane] + 230 &&
+      getRoadObstacleDepth(o) > 0.25 &&
+      getRoadObstacleDepth(o) < 0.72 &&
       ["traffic_car", "hole", "kiosk", "scooter", "bollard"].includes(o.type),
   );
   if (laneObstacle) {
@@ -9370,7 +9391,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
-    fr % 680 === 260 &&
+    fr % 460 === 260 &&
     totalDist > 120 &&
     totalDist < FDIST - 170
   )
@@ -9765,7 +9786,8 @@ function update() {
     if (pY < GND - 50 && o.type === "kiosk") return;
     if (pY < GND - 48 && o.type === "scooter") return;
     if (pY < GND - 64 && o.type === "traffic_car") {
-      if (!o.rewarded && Math.abs(o.x - px) < 40) {
+      const carRect = oRect(o);
+      if (!o.rewarded && carRect.x < px + 28 && carRect.x + carRect.w > px - 28) {
         o.rewarded = true;
         addLevelMissionProgress("trafficCars");
         addParts(px, GND - 55, "#9fd8ff");
