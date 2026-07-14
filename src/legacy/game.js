@@ -215,7 +215,7 @@ let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
     : 800,
   settingSound =
     typeof save.settingSound === "boolean" ? save.settingSound : false,
-  settingMusicTrack = ["kyiv", "march"].includes(save.settingMusicTrack)
+  settingMusicTrack = ["kyiv", "march", "rain"].includes(save.settingMusicTrack)
     ? save.settingMusicTrack
     : "kyiv",
   settingTimeOfDay = ["auto", "morning", "day", "night"].includes(
@@ -456,7 +456,22 @@ const MARCH_NOTES = [
   [5, 1], [3, 1], [0, 1], [-2, 1],
   [0, 4],
 ];
-const MUSIC_TRACKS = [MELODY_NOTES, MARCH_NOTES];
+const RAIN_NOTES = [
+  [0, 0.5], [7, 0.5], [10, 0.5], [7, 0.5],
+  [3, 0.5], [10, 0.5], [12, 1],
+  [10, 0.5], [7, 0.5], [5, 0.5], [3, 0.5],
+  [0, 1], [-5, 1],
+  [2, 0.5], [9, 0.5], [12, 0.5], [9, 0.5],
+  [5, 0.5], [12, 0.5], [14, 1],
+  [12, 0.5], [9, 0.5], [7, 0.5], [5, 0.5],
+  [2, 1], [-3, 1],
+];
+const MUSIC_TRACKS = [MELODY_NOTES, MARCH_NOTES, RAIN_NOTES];
+function getMusicTrackIndex(track = settingMusicTrack) {
+  if (track === "march") return 1;
+  if (track === "rain") return 2;
+  return 0;
+}
 const MARCH_LYRICS_BY_LANG = {
   uk: [
     "Шалійте, шалійте, скажені кати!",
@@ -592,6 +607,16 @@ const MARCH_LYRICS_BY_LANG = {
 function getMarchLyrics() {
   return MARCH_LYRICS_BY_LANG[lang] || MARCH_LYRICS_BY_LANG.uk;
 }
+const RAIN_LYRICS_BY_LANG = {
+  uk: ["Дощовий Київ", "Фари на мокрій дорозі", "Роботрон на зв'язку", "Біжи до фінішу"],
+  en: ["Rainy Kyiv", "Headlights on wet roads", "Robotron online", "Run to the finish"],
+  de: ["Regnerisches Kiew", "Lichter auf nasser Straße", "Robotron online", "Lauf bis ins Ziel"],
+  fr: ["Kyiv sous la pluie", "Phares sur route mouillée", "Robotron en ligne", "Cours vers l'arrivée"],
+  es: ["Kyiv lluvioso", "Faros en la carretera mojada", "Robotron en línea", "Corre a la meta"],
+};
+function getRainLyrics() {
+  return RAIN_LYRICS_BY_LANG[lang] || RAIN_LYRICS_BY_LANG.uk;
+}
 // Bass/chord root notes (one per bar roughly): simple alternating I-V
 const BASS_PATTERN = [0, 7, 0, 5, 0, 7, 0, 5, 0, 4, 0, 5, 0, 7, 0, 5];
 
@@ -699,13 +724,23 @@ function scheduleDrums(barStart, beatDuration = BEAT, intense = false) {
   drumStep = (drumStep + 4) % 16;
 }
 function scheduleChord(root, startTime, dur) {
-  const third = musicTrackIdx === 1 ? 3 : 4;
-  const notes = [root, root + third, root + 7, root + 12];
+  const isRain = musicTrackIdx === 2;
+  const third = musicTrackIdx === 1 || isRain ? 3 : 4;
+  const notes = isRain
+    ? [root, root + third, root + 7, root + 10]
+    : [root, root + third, root + 7, root + 12];
   notes.forEach((semi, i) => {
     const t = startTime + i * (dur / 5);
-    playNote(noteToHz(semi), t, dur * 0.55, "sawtooth", 0.035, -8 + i * 5);
+    playNote(
+      noteToHz(semi),
+      t,
+      dur * (isRain ? 0.7 : 0.55),
+      isRain ? "triangle" : "sawtooth",
+      isRain ? 0.045 : 0.035,
+      -8 + i * 5,
+    );
   });
-  playNote(noteToHz(root + 7), startTime, dur, "triangle", 0.035, 6);
+  playNote(noteToHz(root + 7), startTime, dur, "triangle", isRain ? 0.05 : 0.035, 6);
 }
 
 function scheduleMusic() {
@@ -713,41 +748,42 @@ function scheduleMusic() {
   while (nextNoteTime < audioCtx.currentTime + scheduleAhead) {
     const melody = MUSIC_TRACKS[musicTrackIdx];
     const isMarch = musicTrackIdx === 1;
+    const isRain = musicTrackIdx === 2;
     const [semi, beats] = melody[melodyIdx % melody.length];
-    const trackBeat = BEAT * (isMarch ? 0.76 : 1);
+    const trackBeat = BEAT * (isMarch ? 0.76 : isRain ? 0.62 : 1);
     const dur = beats * trackBeat;
     const freq = noteToHz(semi);
-    const accent = melodyIdx % 4 === 0 ? (isMarch ? 1.35 : 1.15) : 1;
+    const accent = melodyIdx % 4 === 0 ? (isMarch ? 1.35 : isRain ? 1.45 : 1.15) : 1;
     playNote(
       freq,
       nextNoteTime,
-      dur * (isMarch ? 0.78 : 0.94),
-      isMarch ? "sawtooth" : "triangle",
-      (isMarch ? 0.16 : 0.18) * accent,
+      dur * (isMarch ? 0.78 : isRain ? 0.7 : 0.94),
+      isMarch ? "sawtooth" : isRain ? "square" : "triangle",
+      (isMarch ? 0.16 : isRain ? 0.11 : 0.18) * accent,
     );
     playNote(
       noteToHz(semi + 12),
       nextNoteTime + dur * 0.04,
-      dur * (isMarch ? 0.28 : 0.45),
-      isMarch ? "square" : "sine",
-      isMarch ? 0.055 : 0.035,
+      dur * (isMarch ? 0.28 : isRain ? 0.22 : 0.45),
+      isMarch || isRain ? "square" : "sine",
+      isMarch ? 0.055 : isRain ? 0.04 : 0.035,
     );
     playNote(
-      noteToHz(semi + (isMarch ? 3 : 4)),
+      noteToHz(semi + (isMarch || isRain ? 3 : 4)),
       nextNoteTime,
-      dur * (isMarch ? 0.58 : 0.8),
+      dur * (isMarch ? 0.58 : isRain ? 0.42 : 0.8),
       "sine",
-      isMarch ? 0.07 : 0.055,
+      isMarch ? 0.07 : isRain ? 0.04 : 0.055,
     );
 
     if (melodyIdx % 2 === 0) {
-      const bassSemi = BASS_PATTERN[bassIdx % BASS_PATTERN.length] - 12;
+      const bassSemi = BASS_PATTERN[bassIdx % BASS_PATTERN.length] - (isRain ? 24 : 12);
       playNote(
         noteToHz(bassSemi),
         nextNoteTime,
-        dur * (isMarch ? 1.1 : 1.65),
-        isMarch ? "square" : "triangle",
-        isMarch ? 0.18 : 0.13,
+        dur * (isMarch ? 1.1 : isRain ? 1.45 : 1.65),
+        isMarch || isRain ? "square" : "triangle",
+        isMarch ? 0.18 : isRain ? 0.16 : 0.13,
       );
       playNote(
         noteToHz(bassSemi + 12),
@@ -760,8 +796,8 @@ function scheduleMusic() {
     }
     if (melodyIdx % 4 === 0) {
       const root = CHORD_PATTERN[chordIdx % CHORD_PATTERN.length];
-      scheduleChord(root, nextNoteTime, dur * (isMarch ? 1.55 : 2.2));
-      scheduleDrums(nextNoteTime, trackBeat, isMarch);
+      scheduleChord(root, nextNoteTime, dur * (isMarch ? 1.55 : isRain ? 1.35 : 2.2));
+      scheduleDrums(nextNoteTime, trackBeat, isMarch || isRain);
       chordIdx++;
     }
 
@@ -770,7 +806,7 @@ function scheduleMusic() {
     // Loop
     if (melodyIdx >= melody.length) {
       melodyIdx = 0;
-      musicTrackIdx = settingMusicTrack === "march" ? 1 : 0;
+      musicTrackIdx = getMusicTrackIndex();
       lyricIdx = 0;
     }
   }
@@ -791,7 +827,7 @@ function startMusic() {
   musicPlaying = true;
   melodyIdx = 0;
   bassIdx = 0;
-  musicTrackIdx = settingMusicTrack === "march" ? 1 : 0;
+  musicTrackIdx = getMusicTrackIndex();
   drumStep = 0;
   chordIdx = 0;
   nextNoteTime = audioCtx.currentTime + 0.1;
@@ -859,13 +895,18 @@ function playMarchVocal(index) {
 }
 function showLyric() {
   if (!musicPlaying) return;
-  const lines = musicTrackIdx === 1 ? getMarchLyrics() : t().lyrics || [];
+  const lines =
+    musicTrackIdx === 1
+      ? getMarchLyrics()
+      : musicTrackIdx === 2
+        ? getRainLyrics()
+        : t().lyrics || [];
   if (!lines.length) return;
   const line = lines[lyricIdx % lines.length];
   LYRIC_DIV.textContent = line;
   LYRIC_DIV.style.opacity = "1";
   if (musicTrackIdx === 1) playMarchVocal(lyricIdx);
-  const displayDuration = musicTrackIdx === 1 ? 4200 : 2600;
+  const displayDuration = musicTrackIdx === 1 ? 4200 : musicTrackIdx === 2 ? 2200 : 2600;
   lyricTimer = setTimeout(() => {
     LYRIC_DIV.style.opacity = "0";
     lyricIdx++;
@@ -2054,7 +2095,11 @@ function buildSettings() {
       "\u041e\u0431\u0435\u0440\u0438 \u0444\u043e\u043d \u043c\u0435\u043d\u044e \u0442\u0430 \u0433\u0440\u0438";
   document.getElementById("sLblSound").textContent = L.lblSound;
   document.getElementById("sDescSound").textContent =
-    settingMusicTrack === "march" ? getMarchLyrics()[0] : L.descSound;
+    settingMusicTrack === "march"
+      ? getMarchLyrics()[0]
+      : settingMusicTrack === "rain"
+        ? getRainLyrics()[0]
+        : L.descSound;
   document.getElementById("sLblVib").textContent = L.lblVib;
   document.getElementById("sDescVib").textContent = L.descVib;
   const robotVoiceUi = ROBOT_VOICE_UI[lang] || ROBOT_VOICE_UI.uk;

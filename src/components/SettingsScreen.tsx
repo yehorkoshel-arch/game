@@ -66,6 +66,9 @@ export function SettingsScreen() {
               <button className="seg-btn" data-val="march" type="button">
                 Шалійте, шалійте, скажені кати
               </button>
+              <button className="seg-btn" data-val="rain" type="button">
+                Дощовий Київ
+              </button>
             </div>
           </div>
         </div>
