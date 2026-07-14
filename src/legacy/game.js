@@ -1335,6 +1335,7 @@ let lightningFlash = 0,
   nextLightning = 240;
 let startVoiceTimer = null;
 let robotRadioCooldown = 0;
+let marichkaVoiceCooldown = 0;
 let bossActive = false,
   bossDefeated = false,
   bossTransform = 0,
@@ -8058,6 +8059,8 @@ const MARICHKA_PROJECT_03 =
   "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u043f\u0440\u043e\u0454\u043a\u0442! \u042f \u0442\u0435\u0431\u0435 \u043d\u0430\u0437\u0434\u043e\u0436\u0435\u043d\u0443!";
 const MARICHKA_SCHOOL_PROJECT =
   "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u0441\u0432\u0456\u0439 \u043f\u0440\u043e\u0454\u043a\u0442.";
+const MARICHKA_RUN_SUPPORT =
+  "\u0411\u0456\u0436\u0438, \u0410\u043d\u0434\u0440\u0456\u044e, \u0431\u0456\u0436\u0438!";
 const MARICHKA_PROJECT_LINES = [
   {
     who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
@@ -8958,6 +8961,7 @@ function update() {
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
   if (robotRadioCooldown > 0) robotRadioCooldown--;
+  if (marichkaVoiceCooldown > 0) marichkaVoiceCooldown--;
   if (lightningFlash > 0) lightningFlash--;
   if (isStormWeather()) {
     if (fr % 22 === 0) sfxRainLayer();
@@ -8971,6 +8975,7 @@ function update() {
   }
   if (!bossActive && !secretRoute?.active && chaserX < LANES[0] - 100)
     chaserX += 0.5 + (spd - 2.8) * 0.1;
+  if (chaserX > -10 && chaserX < LANES[0] - 130) speakMarichkaSupport();
   if (andriiCooldown > 0) andriiCooldown--;
 
   // перший ворог на екрані — Андрій реагує
@@ -9594,6 +9599,13 @@ function _doSpeakAndrii(lines) {
   const text = lines[Math.floor(Math.random() * lines.length)];
   showAndriiBubble(text);
   speakAndWait(text);
+}
+function speakMarichkaSupport() {
+  if (marichkaVoiceCooldown > 0 || bubbleTimer > 0 || gameState !== "run") return;
+  marichkaVoiceCooldown = 900;
+  bubbleText = "\u041c\u0430\u0440\u0456\u0447\u043a\u0430: " + MARICHKA_RUN_SUPPORT;
+  bubbleTimer = 170;
+  speakAndWait(MARICHKA_RUN_SUPPORT);
 }
 
 // Bubble над гравцем
