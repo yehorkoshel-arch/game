@@ -3870,7 +3870,7 @@ function drawRealRoad(timePeriod) {
   ctx.stroke();
 
   if (isLvivRoad) {
-    const rowOffset = (bgOff * 1.45) % 34;
+    const rowOffset = (34 - ((bgOff * 1.45) % 34)) % 34;
     for (let y = horizonY - 34 + rowOffset; y < bottomY + 34; y += 22) {
       const y2 = Math.min(bottomY, y + 18);
       if (y2 <= horizonY) continue;
@@ -3910,7 +3910,7 @@ function drawRealRoad(timePeriod) {
   } else {
     ctx.strokeStyle = isNight ? "rgba(255, 241, 168, 0.72)" : "rgba(255, 239, 154, 0.94)";
     ctx.lineCap = "round";
-    const dashOffset = (bgOff * 2.4) % 72;
+    const dashOffset = (72 - ((bgOff * 2.4) % 72)) % 72;
     for (let y = horizonY - 72 + dashOffset; y < bottomY + 72; y += 72) {
       const y2 = Math.min(bottomY, y + 32);
       if (y2 <= horizonY) continue;
@@ -3933,7 +3933,10 @@ function drawRealRoad(timePeriod) {
     ? isNight ? "rgba(255, 232, 188, 0.04)" : "rgba(255, 238, 199, 0.06)"
     : isNight ? "rgba(255, 255, 255, 0.035)" : "rgba(255, 255, 255, 0.055)";
   for (let i = 0; i < 85; i++) {
-    const y = horizonY + ((i * 47 + bgOff * 2.1) % (bottomY - horizonY));
+    const y =
+      horizonY +
+      ((i * 47 - bgOff * 2.1 + (bottomY - horizonY) * 4) %
+        (bottomY - horizonY));
     const t = (y - horizonY) / (bottomY - horizonY);
     const half = topHalf + (bottomHalf - topHalf) * t;
     const x = cx - half + ((i * 83) % Math.max(1, half * 2));
@@ -3964,7 +3967,11 @@ function drawRealRoad(timePeriod) {
     ctx.strokeStyle = "rgba(213, 244, 255, 0.28)";
     ctx.lineWidth = 2;
     for (let i = 0; i < 16; i++) {
-      const y = horizonY + 24 + ((i * 53 + bgOff * 1.8) % (bottomY - horizonY));
+      const y =
+        horizonY +
+        24 +
+        ((i * 53 - bgOff * 1.8 + (bottomY - horizonY) * 4) %
+          (bottomY - horizonY));
       const t = (y - horizonY) / (bottomY - horizonY);
       const half = topHalf + (bottomHalf - topHalf) * t;
       const x = cx - half * 0.7 + ((i * 91) % Math.max(1, half * 1.4));
