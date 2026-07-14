@@ -11,6 +11,19 @@ export function CollectionScreen() {
       <div className="quest-body">
         <div id="collectionList" className="collection-list" />
       </div>
+      <div id="postcardViewer" className="postcard-viewer" aria-hidden="true">
+        <div className="postcard-viewer-panel">
+          <button className="postcard-viewer-close" id="btnClosePostcard" type="button">
+            ×
+          </button>
+          <div id="postcardViewerArt" className="postcard-viewer-art">?</div>
+          <div className="postcard-viewer-copy">
+            <div id="postcardViewerCity" className="postcard-viewer-city" />
+            <div id="postcardViewerTitle" className="postcard-viewer-title" />
+            <div id="postcardViewerDesc" className="postcard-viewer-desc" />
+          </div>
+        </div>
+      </div>
       <footer className="quest-footer">
         <button className="mbtn-back" id="btnBackCollection" type="button">
           ← До меню

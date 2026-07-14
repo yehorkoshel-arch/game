@@ -1882,6 +1882,11 @@ function buildCollection() {
     const unlocked = Boolean(postcards[card.id]);
     const item = document.createElement("article");
     item.className = "collection-card " + (unlocked ? "unlocked" : "locked");
+    if (unlocked) {
+      item.dataset.cardId = card.id;
+      item.type = "button";
+      item.tabIndex = 0;
+    }
     item.innerHTML = `
       <div class="collection-art" style="color:${card.color}">${unlocked ? card.icon : "?"}</div>
       <div class="collection-info">
@@ -1891,6 +1896,31 @@ function buildCollection() {
     `;
     list.appendChild(item);
   });
+}
+function openPostcardViewer(cardId) {
+  const card = CITY_POSTCARDS.find((entry) => entry.id === cardId);
+  if (!card || !postcards[card.id]) return;
+  const viewer = document.getElementById("postcardViewer");
+  const art = document.getElementById("postcardViewerArt");
+  const city = document.getElementById("postcardViewerCity");
+  const title = document.getElementById("postcardViewerTitle");
+  const desc = document.getElementById("postcardViewerDesc");
+  if (!viewer || !art || !city || !title || !desc) return;
+  const cityLabel =
+    card.loc === 0 ? "Київ" : card.loc === 1 ? "Львів" : "Фініш";
+  art.textContent = card.icon;
+  art.style.setProperty("--postcard-color", card.color);
+  city.textContent = cityLabel;
+  title.textContent = card.title;
+  desc.textContent = card.desc;
+  viewer.classList.add("active");
+  viewer.setAttribute("aria-hidden", "false");
+}
+function closePostcardViewer() {
+  const viewer = document.getElementById("postcardViewer");
+  if (!viewer) return;
+  viewer.classList.remove("active");
+  viewer.setAttribute("aria-hidden", "true");
 }
 function refreshCoinAchievements() {
   achievementStats.coins1000 = Math.max(
@@ -2606,22 +2636,30 @@ document.getElementById("btnBackCollection").onclick = () => {
 };
 document.getElementById("collectionList").onclick = (event) => {
   const button = event.target.closest(".collection-claim");
-  if (!button) return;
-  const reward = COLLECTION_REWARDS.find(
-    (item) => item.id === button.dataset.rewardId,
-  );
-  if (!reward || collectionRewards[reward.id]) return;
-  const ready = reward.ids.every((id) => postcards[id]);
-  if (!ready) return;
-  collectionRewards[reward.id] = true;
-  totalCoins += reward.coins;
-  if (reward.skinId && VALID_SKIN_IDS.has(reward.skinId) && !owned.includes(reward.skinId)) {
-    owned.push(reward.skinId);
+  if (button) {
+    const reward = COLLECTION_REWARDS.find(
+      (item) => item.id === button.dataset.rewardId,
+    );
+    if (!reward || collectionRewards[reward.id]) return;
+    const ready = reward.ids.every((id) => postcards[id]);
+    if (!ready) return;
+    collectionRewards[reward.id] = true;
+    totalCoins += reward.coins;
+    if (reward.skinId && VALID_SKIN_IDS.has(reward.skinId) && !owned.includes(reward.skinId)) {
+      owned.push(reward.skinId);
+    }
+    syncCoins();
+    saveGame();
+    sfxCoin();
+    buildCollection();
+    return;
   }
-  syncCoins();
-  saveGame();
-  sfxCoin();
-  buildCollection();
+  const card = event.target.closest(".collection-card.unlocked");
+  if (card?.dataset.cardId) openPostcardViewer(card.dataset.cardId);
+};
+document.getElementById("btnClosePostcard").onclick = closePostcardViewer;
+document.getElementById("postcardViewer").onclick = (event) => {
+  if (event.target.id === "postcardViewer") closePostcardViewer();
 };
 document.getElementById("btnBackQuests").onclick = () => {
   saveGame();
