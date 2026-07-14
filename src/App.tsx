@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { GameScreen } from './components/GameScreen';
 import { AchievementScreen } from './components/AchievementScreen';
 import { BackpackScreen } from './components/BackpackScreen';
+import { CollectionScreen } from './components/CollectionScreen';
 import { IntroScreen } from './components/IntroScreen';
 import { MenuScreen } from './components/MenuScreen';
 import { QuestScreen } from './components/QuestScreen';
@@ -20,6 +21,7 @@ export function App() {
       <MenuScreen />
       <AchievementScreen />
       <BackpackScreen />
+      <CollectionScreen />
       <QuestScreen />
       <ShopScreen />
       <SettingsScreen />

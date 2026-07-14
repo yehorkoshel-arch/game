@@ -115,6 +115,61 @@ let achievementSeen =
   save.achievementSeen && typeof save.achievementSeen === "object"
     ? save.achievementSeen
     : {};
+const CITY_POSTCARDS = [
+  {
+    id: "kyiv_maidan",
+    loc: 0,
+    icon: "M",
+    title: "Майдан",
+    desc: "Святкова площа з прапорами та вогнями.",
+    color: "#4ea7ff",
+  },
+  {
+    id: "kyiv_metro",
+    loc: 0,
+    icon: "M",
+    title: "Київське метро",
+    desc: "Секретний маршрут під містом.",
+    color: "#62d6ff",
+  },
+  {
+    id: "kyiv_rain",
+    loc: 0,
+    icon: "☔",
+    title: "Дощовий Київ",
+    desc: "Фари машин блищать на мокрій дорозі.",
+    color: "#9ee8ff",
+  },
+  {
+    id: "lviv_tram",
+    loc: 1,
+    icon: "T",
+    title: "Львівський трамвай",
+    desc: "Трамвай дзвенить поруч із бруківкою.",
+    color: "#ffd45c",
+  },
+  {
+    id: "lviv_cobble",
+    loc: 1,
+    icon: "L",
+    title: "Львівська бруківка",
+    desc: "Кам’яна дорога старого міста.",
+    color: "#d7b58a",
+  },
+  {
+    id: "school_finish",
+    loc: 2,
+    icon: "S",
+    title: "Шкільний фініш",
+    desc: "Андрій добігає до школи.",
+    color: "#6bcb77",
+  },
+];
+const savedPostcards =
+  save.postcards && typeof save.postcards === "object" ? save.postcards : {};
+let postcards = Object.fromEntries(
+  CITY_POSTCARDS.map((card) => [card.id, Boolean(savedPostcards[card.id])]),
+);
 let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
     ? save.settingDiff
     : "normal",
@@ -288,6 +343,7 @@ function saveGame() {
     playerUpgrades,
     backpackSlots,
     bonusInventory,
+    postcards,
   });
 }
 
@@ -1133,6 +1189,7 @@ let obs = [],
   shields = [],
   superJumps = [],
   cityGifts = [],
+  postcardItems = [],
   parts = [],
   confetti = [],
   bullets = [],
@@ -2825,6 +2882,7 @@ function startLevel() {
   shields = [];
   superJumps = [];
   cityGifts = [];
+  postcardItems = [];
   parts = [];
   confetti = [];
   bullets = [];
