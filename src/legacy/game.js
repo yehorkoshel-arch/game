@@ -3832,21 +3832,24 @@ function drawRealRoad(timePeriod) {
   const horizonY = GND - 112;
   const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 205;
-  const bottomHalf = Math.max(W * 0.36, 245);
-  const laneEdgeRatios = [-0.31, 0.31];
+  const topHalf = 245;
+  const bottomHalf = 245;
+  const laneEdgeRatios = [-0.33, 0.33];
   const isNight = timePeriod === "time-night";
   const isLvivRoad = currentLocation === 1;
 
+  ctx.fillStyle = isNight ? "#253425" : "#8ca579";
+  ctx.fillRect(0, horizonY, W, bottomY - horizonY);
+
   const road = ctx.createLinearGradient(0, horizonY, 0, bottomY);
   if (isLvivRoad) {
-    road.addColorStop(0, isNight ? "#4b4036" : "#8b7a67");
-    road.addColorStop(0.56, isNight ? "#372f2a" : "#6d5f50");
-    road.addColorStop(1, isNight ? "#28221f" : "#4c4238");
+    road.addColorStop(0, isNight ? "#4a4d55" : "#a6a8ad");
+    road.addColorStop(0.56, isNight ? "#383c44" : "#92959c");
+    road.addColorStop(1, isNight ? "#2a2e36" : "#787c85");
   } else {
-    road.addColorStop(0, isNight ? "#242a38" : "#3c4656");
-    road.addColorStop(0.55, isNight ? "#171d2a" : "#2b3340");
-    road.addColorStop(1, isNight ? "#0f1420" : "#1d2430");
+    road.addColorStop(0, isNight ? "#3a404d" : "#b5b7bc");
+    road.addColorStop(0.55, isNight ? "#2b313d" : "#9ea1a8");
+    road.addColorStop(1, isNight ? "#202632" : "#858991");
   }
   ctx.fillStyle = road;
   ctx.beginPath();
@@ -3862,6 +3865,15 @@ function drawRealRoad(timePeriod) {
   shoulder.addColorStop(1, isNight ? "#242b3a" : "#3e4856");
   ctx.strokeStyle = shoulder;
   ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(cx - topHalf, horizonY);
+  ctx.lineTo(cx - bottomHalf, bottomY);
+  ctx.moveTo(cx + topHalf, horizonY);
+  ctx.lineTo(cx + bottomHalf, bottomY);
+  ctx.stroke();
+
+  ctx.strokeStyle = isNight ? "rgba(235, 242, 255, 0.55)" : "rgba(255, 255, 255, 0.86)";
+  ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(cx - topHalf, horizonY);
   ctx.lineTo(cx - bottomHalf, bottomY);
@@ -3988,10 +4000,10 @@ function drawRoadRunTrack() {
   const horizonY = GND - 112;
   const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 205;
-  const bottomHalf = Math.max(W * 0.36, 245);
-  const laneRatios = [-0.48, 0, 0.48];
-  const laneEdgeRatios = [-0.31, 0.31];
+  const topHalf = 245;
+  const bottomHalf = 245;
+  const laneRatios = [-0.62, 0, 0.62];
+  const laneEdgeRatios = [-0.33, 0.33];
   const roadAt = (t, laneRatio) => {
     const half = topHalf + (bottomHalf - topHalf) * t;
     const y = horizonY + (bottomY - horizonY) * t;
@@ -4039,9 +4051,9 @@ function getPerspectiveLanePoint(lane = pLane, t = 0.78) {
   const horizonY = GND - 112;
   const bottomY = H + 18;
   const cx = W / 2;
-  const topHalf = 205;
-  const bottomHalf = Math.max(W * 0.36, 245);
-  const laneRatios = [-0.48, 0, 0.48];
+  const topHalf = 245;
+  const bottomHalf = 245;
+  const laneRatios = [-0.62, 0, 0.62];
   const safeT = Math.max(0, Math.min(1, t));
   const half = topHalf + (bottomHalf - topHalf) * safeT;
   return {
