@@ -36,5 +36,9 @@ export const VOICE_CLIPS = {
   "Підпиши документи хлопче": "/game/audio/voice/story_tck_02.mp3",
   "Я не буду підписувати ваші документи": "/game/audio/voice/story_tck_03.mp3",
   "А ну ти хлопче зараз підеш до нас Іди сюди": "/game/audio/voice/story_tck_04.mp3",
+  "Ой що це випало з рюкзака Андрія": "/game/audio/voice/marichka_project_01.mp3",
+  "Та це ж його шкільний проєкт без нього він не зможе виступити": "/game/audio/voice/marichka_project_02.mp3",
+  "Андрію зачекай ти забув проєкт я тебе наздожену": "/game/audio/voice/marichka_project_03.mp3",
+  "Андрію зачекай ти забув свій проєкт": "/game/audio/voice/marichka_school_01.mp3",
   "Біжи Андрію біжи": "/game/audio/voice/marichka_run_01.mp3",
 };
