@@ -3109,11 +3109,17 @@ function fireAndriiWeapon() {
   if (weapon === "minigun") {
     fireCooldown = getWeaponCooldown(12, 8);
     const speedBonus = getBulletSpeedBonus();
+    const spreadLanes = [
+      pLane,
+      Math.max(0, pLane - 1),
+      Math.min(2, pLane + 1),
+    ];
     for (let i = 0; i < 9; i++) {
       playerBullets.push({
         x: x + i * 8,
         y: y - 4 + (i % 3) * 3,
-        lane: i % 3,
+        prevX: x + i * 8,
+        lane: spreadLanes[i % spreadLanes.length],
         vx: 13.5 + speedBonus + i * 0.7,
         life: 50,
         type: "minigun",
@@ -9467,6 +9473,7 @@ function update() {
   });
   bullets = bullets.filter((b) => b.life > 0 && b.x > -20);
   playerBullets.forEach((b) => {
+    b.prevX = b.x;
     b.x += b.vx;
     b.life--;
   });
@@ -9541,9 +9548,9 @@ function update() {
       const br =
         b.type === "minigun"
           ? {
-              x: b.x - Math.max(22, b.vx),
+              x: Math.min(b.prevX ?? b.x, b.x) - 24,
               y: b.y - 10,
-              w: Math.max(44, b.vx * 2),
+              w: Math.abs(b.x - (b.prevX ?? b.x)) + 54,
               h: 20,
             }
           : b.type === "laser"
