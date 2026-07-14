@@ -170,6 +170,40 @@ const savedPostcards =
 let postcards = Object.fromEntries(
   CITY_POSTCARDS.map((card) => [card.id, Boolean(savedPostcards[card.id])]),
 );
+const COLLECTION_REWARDS = [
+  {
+    id: "kyiv",
+    title: "Київський набір",
+    desc: "Збери всі листівки Києва",
+    ids: ["kyiv_maidan", "kyiv_metro", "kyiv_rain"],
+    coins: 300,
+  },
+  {
+    id: "lviv",
+    title: "Львівський набір",
+    desc: "Збери всі листівки Львова",
+    ids: ["lviv_tram", "lviv_cobble"],
+    coins: 300,
+  },
+  {
+    id: "all",
+    title: "Повний альбом",
+    desc: "Збери всі листівки та відкрий космічного кур’єра",
+    ids: CITY_POSTCARDS.map((card) => card.id),
+    coins: 800,
+    skinId: "space_courier",
+  },
+];
+const savedCollectionRewards =
+  save.collectionRewards && typeof save.collectionRewards === "object"
+    ? save.collectionRewards
+    : {};
+let collectionRewards = Object.fromEntries(
+  COLLECTION_REWARDS.map((reward) => [
+    reward.id,
+    Boolean(savedCollectionRewards[reward.id]),
+  ]),
+);
 let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
     ? save.settingDiff
     : "normal",
@@ -344,6 +378,7 @@ function saveGame() {
     backpackSlots,
     bonusInventory,
     postcards,
+    collectionRewards,
   });
 }
 
@@ -1819,6 +1854,30 @@ function buildCollection() {
   list.innerHTML = "";
   const opened = CITY_POSTCARDS.filter((card) => postcards[card.id]).length;
   if (count) count.textContent = `${opened}/${CITY_POSTCARDS.length}`;
+  const rewards = document.createElement("section");
+  rewards.className = "collection-rewards";
+  COLLECTION_REWARDS.forEach((reward) => {
+    const progress = reward.ids.filter((id) => postcards[id]).length;
+    const ready = progress >= reward.ids.length;
+    const claimed = Boolean(collectionRewards[reward.id]);
+    const rewardItem = document.createElement("article");
+    rewardItem.className =
+      "collection-reward" +
+      (ready ? " ready" : "") +
+      (claimed ? " claimed" : "");
+    rewardItem.innerHTML = `
+      <div>
+        <div class="collection-reward-title">${reward.title}</div>
+        <div class="collection-reward-desc">${reward.desc}</div>
+        <div class="collection-reward-progress">${progress}/${reward.ids.length} · +${reward.coins}₴${reward.skinId ? " · скін" : ""}</div>
+      </div>
+      <button class="collection-claim" data-reward-id="${reward.id}" type="button" ${!ready || claimed ? "disabled" : ""}>
+        ${claimed ? "Отримано" : "Забрати"}
+      </button>
+    `;
+    rewards.appendChild(rewardItem);
+  });
+  list.appendChild(rewards);
   CITY_POSTCARDS.forEach((card) => {
     const unlocked = Boolean(postcards[card.id]);
     const item = document.createElement("article");
@@ -2544,6 +2603,25 @@ document.getElementById("btnBackCollection").onclick = () => {
   saveGame();
   syncCoins();
   showScreen("sMenu");
+};
+document.getElementById("collectionList").onclick = (event) => {
+  const button = event.target.closest(".collection-claim");
+  if (!button) return;
+  const reward = COLLECTION_REWARDS.find(
+    (item) => item.id === button.dataset.rewardId,
+  );
+  if (!reward || collectionRewards[reward.id]) return;
+  const ready = reward.ids.every((id) => postcards[id]);
+  if (!ready) return;
+  collectionRewards[reward.id] = true;
+  totalCoins += reward.coins;
+  if (reward.skinId && VALID_SKIN_IDS.has(reward.skinId) && !owned.includes(reward.skinId)) {
+    owned.push(reward.skinId);
+  }
+  syncCoins();
+  saveGame();
+  sfxCoin();
+  buildCollection();
 };
 document.getElementById("btnBackQuests").onclick = () => {
   saveGame();

@@ -128,6 +128,15 @@ canvas{display:block}
 .achievement-status{min-width:82px;text-align:center;font-size:10px;font-weight:800;color:#8291ad}
 .achievement-item.complete .achievement-status{color:#ffd700}
 .collection-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.collection-rewards{grid-column:1/-1;display:grid;grid-template-columns:1fr;gap:8px}
+.collection-reward{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid #293754;border-radius:8px;background:#142038}
+.collection-reward.ready{border-color:#756426;background:#211f20}
+.collection-reward.claimed{border-color:#285b42;background:#14261f}
+.collection-reward-title{font-size:12px;font-weight:800;color:#e5ebf7}
+.collection-reward-desc{margin-top:2px;font-size:10px;color:#8291ad}
+.collection-reward-progress{margin-top:4px;font-size:10px;color:#ffd700}
+.collection-claim{min-width:76px;padding:6px 8px;border:1px solid #ffd700;border-radius:6px;background:#ffd700;color:#17192a;font-size:10px;font-weight:800;cursor:pointer}
+.collection-claim:disabled{border-color:#354057;background:#273047;color:#697792;cursor:default}
 .collection-card{min-height:118px;border:1px solid #293754;border-radius:8px;background:#182139;overflow:hidden}
 .collection-card.unlocked{border-color:#6f5b1f;background:#211f20}
 .collection-art{height:58px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;background:linear-gradient(135deg,#172a4a,#27385f)}
