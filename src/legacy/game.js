@@ -3099,15 +3099,13 @@ function act(c) {
 }
 
 function hitMinigunTargets() {
-  const playerX = LANES[pLane];
   const maxRange = 430 + getBulletSpeedBonus() * 18;
   let destroyed = 0;
   obs = obs.filter((o) => {
     if (destroyed >= 5) return true;
     if (o.type !== "tck" && o.type !== "scooter") return true;
     if (Math.abs(o.lane - pLane) > 1) return true;
-    const distance = o.x - playerX;
-    if (distance < 18 || distance > maxRange) return true;
+    if (o.x < 80 || o.x > W + Math.min(120, maxRange * 0.3)) return true;
     destroyed++;
     addQuestProgress("enemies");
     addParts(o.x, GND - 34, o.type === "tck" ? "#ffd700" : "#58d7ff");
@@ -4084,6 +4082,20 @@ function getPerspectiveLanePoint(lane = pLane, t = 0.78) {
   return {
     x: cx + half * (laneRatios[lane] || 0),
     y: horizonY + (bottomY - horizonY) * safeT,
+  };
+}
+
+function getRoadObstacleDepth(o) {
+  return Math.max(0, Math.min(1, (W + 40 - o.x) / (W + 120)));
+}
+
+function getScooterRoadPoint(o) {
+  const depth = getRoadObstacleDepth(o);
+  const point = getPerspectiveLanePoint(o.lane, 0.1 + depth * 0.42);
+  return {
+    x: point.x,
+    y: Math.min(GND, point.y),
+    scale: 0.46 + depth * 0.54,
   };
 }
 
@@ -7048,12 +7060,16 @@ function drawObs(o) {
 }
 
 function drawScooterRider(o) {
-  const x = o.x;
-  const y = GND;
+  const roadPoint = getScooterRoadPoint(o);
+  const x = roadPoint.x;
+  const y = roadPoint.y;
   const phase = fr * 0.32 + (o.wheelPhase || 0);
   const bob = Math.sin(phase) * 2;
 
   ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(roadPoint.scale, roadPoint.scale);
+  ctx.translate(-x, -y);
   ctx.fillStyle = "rgba(0,0,0,0.24)";
   ctx.beginPath();
   ctx.ellipse(x, y + 5, 33, 6, 0, 0, Math.PI * 2);
@@ -7664,8 +7680,15 @@ function oRect(o) {
     return { x: o.x - 145, y: GND - 42, w: 290, h: 82 };
   if (o.type === "traffic_car")
     return { x: o.x - 42, y: GND - 58, w: 84, h: 62 };
-  if (o.type === "scooter")
-    return { x: o.x - 30, y: GND - 48, w: 60, h: 55 };
+  if (o.type === "scooter") {
+    const p = getScooterRoadPoint(o);
+    return {
+      x: p.x - 30 * p.scale,
+      y: p.y - 55 * p.scale,
+      w: 60 * p.scale,
+      h: 62 * p.scale,
+    };
+  }
   if (o.type === "kiosk") return { x: o.x - 24, y: GND - 46, w: 48, h: 46 };
   if (o.type === "cop") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
   if (o.type === "tck") return { x: o.x - 14, y: GND - 75, w: 28, h: 75 };
