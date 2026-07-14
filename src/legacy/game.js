@@ -8052,29 +8052,70 @@ const TCK_SCENE_LINES = [
   },
 ];
 const TCK_SCENE_END_FRAME = 2700;
-const MARICHKA_PROJECT_01 = "\u041e\u0439, \u0449\u043e \u0446\u0435 \u0432\u0438\u043f\u0430\u043b\u043e \u0437 \u0440\u044e\u043a\u0437\u0430\u043a\u0430 \u0410\u043d\u0434\u0440\u0456\u044f?";
-const MARICHKA_PROJECT_02 =
-  "\u0422\u0430 \u0446\u0435 \u0436 \u0439\u043e\u0433\u043e \u0448\u043a\u0456\u043b\u044c\u043d\u0438\u0439 \u043f\u0440\u043e\u0454\u043a\u0442! \u0411\u0435\u0437 \u043d\u044c\u043e\u0433\u043e \u0432\u0456\u043d \u043d\u0435 \u0437\u043c\u043e\u0436\u0435 \u0432\u0438\u0441\u0442\u0443\u043f\u0438\u0442\u0438.";
-const MARICHKA_PROJECT_03 =
-  "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u043f\u0440\u043e\u0454\u043a\u0442! \u042f \u0442\u0435\u0431\u0435 \u043d\u0430\u0437\u0434\u043e\u0436\u0435\u043d\u0443!";
-const MARICHKA_SCHOOL_PROJECT =
-  "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u0441\u0432\u0456\u0439 \u043f\u0440\u043e\u0454\u043a\u0442.";
-const MARICHKA_RUN_SUPPORT =
-  "\u0411\u0456\u0436\u0438, \u0410\u043d\u0434\u0440\u0456\u044e, \u0431\u0456\u0436\u0438!";
-const MARICHKA_PROJECT_LINES = [
-  {
-    who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
-    text: MARICHKA_PROJECT_01,
+const MARICHKA_LINES_BY_LANG = {
+  uk: {
+    name: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
+    project1:
+      "\u041e\u0439, \u0449\u043e \u0446\u0435 \u0432\u0438\u043f\u0430\u043b\u043e \u0437 \u0440\u044e\u043a\u0437\u0430\u043a\u0430 \u0410\u043d\u0434\u0440\u0456\u044f?",
+    project2:
+      "\u0422\u0430 \u0446\u0435 \u0436 \u0439\u043e\u0433\u043e \u0448\u043a\u0456\u043b\u044c\u043d\u0438\u0439 \u043f\u0440\u043e\u0454\u043a\u0442! \u0411\u0435\u0437 \u043d\u044c\u043e\u0433\u043e \u0432\u0456\u043d \u043d\u0435 \u0437\u043c\u043e\u0436\u0435 \u0432\u0438\u0441\u0442\u0443\u043f\u0438\u0442\u0438.",
+    project3:
+      "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u043f\u0440\u043e\u0454\u043a\u0442! \u042f \u0442\u0435\u0431\u0435 \u043d\u0430\u0437\u0434\u043e\u0436\u0435\u043d\u0443!",
+    school:
+      "\u0410\u043d\u0434\u0440\u0456\u044e, \u0437\u0430\u0447\u0435\u043a\u0430\u0439! \u0422\u0438 \u0437\u0430\u0431\u0443\u0432 \u0441\u0432\u0456\u0439 \u043f\u0440\u043e\u0454\u043a\u0442.",
+    run: "\u0411\u0456\u0436\u0438, \u0410\u043d\u0434\u0440\u0456\u044e, \u0431\u0456\u0436\u0438!",
+    thanks:
+      "\u0414\u044f\u043a\u0443\u044e, \u041c\u0430\u0440\u0456\u0447\u043a\u043e! \u0422\u0438 \u043c\u0435\u043d\u0435 \u0432\u0440\u044f\u0442\u0443\u0432\u0430\u043b\u0430.",
   },
-  {
-    who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
-    text: MARICHKA_PROJECT_02,
+  en: {
+    name: "Marichka",
+    project1: "Oh, what fell out of Andrii's backpack?",
+    project2: "That is his school project! Without it, he will not be able to present.",
+    project3: "Andrii, wait! You forgot your project! I will catch up with you!",
+    school: "Andrii, wait! You forgot your project.",
+    run: "Run, Andrii, run!",
+    thanks: "Thank you, Marichka! You saved me.",
   },
-  {
-    who: "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
-    text: MARICHKA_PROJECT_03,
+  de: {
+    name: "Marichka",
+    project1: "Oh, was ist aus Andriis Rucksack gefallen?",
+    project2: "Das ist sein Schulprojekt! Ohne es kann er nicht präsentieren.",
+    project3: "Andrii, warte! Du hast dein Projekt vergessen! Ich hole dich ein!",
+    school: "Andrii, warte! Du hast dein Projekt vergessen.",
+    run: "Lauf, Andrii, lauf!",
+    thanks: "Danke, Marichka! Du hast mich gerettet.",
   },
-];
+  fr: {
+    name: "Marichka",
+    project1: "Oh, qu'est-ce qui est tombé du sac d'Andrii ?",
+    project2: "C'est son projet scolaire ! Sans lui, il ne pourra pas le présenter.",
+    project3: "Andrii, attends ! Tu as oublié ton projet ! Je vais te rattraper !",
+    school: "Andrii, attends ! Tu as oublié ton projet.",
+    run: "Cours, Andrii, cours !",
+    thanks: "Merci, Marichka ! Tu m'as sauvé.",
+  },
+  es: {
+    name: "Marichka",
+    project1: "Oh, ¿qué se cayó de la mochila de Andrii?",
+    project2: "¡Es su proyecto escolar! Sin él, no podrá presentarlo.",
+    project3: "¡Andrii, espera! ¡Olvidaste tu proyecto! ¡Te alcanzaré!",
+    school: "¡Andrii, espera! Olvidaste tu proyecto.",
+    run: "¡Corre, Andrii, corre!",
+    thanks: "¡Gracias, Marichka! Me salvaste.",
+  },
+};
+function getMarichkaLine(key) {
+  const pack = MARICHKA_LINES_BY_LANG[settingRobotVoiceLang] || MARICHKA_LINES_BY_LANG.uk;
+  return pack[key] || MARICHKA_LINES_BY_LANG.uk[key];
+}
+function getMarichkaProjectLines() {
+  const who = getMarichkaLine("name");
+  return ["project1", "project2", "project3"].map((key) => ({
+    who,
+    text: getMarichkaLine(key),
+    voiceLanguage: settingRobotVoiceLang,
+  }));
+}
 
 function beginStoryScene(kind, sceneKey = null) {
   cancelSpeech();
@@ -8128,7 +8169,7 @@ function updateTckScene() {
   if (!tckScene) return;
   const sceneLines =
     tckScene.kind === "marichka_project"
-      ? MARICHKA_PROJECT_LINES
+      ? getMarichkaProjectLines()
       : TCK_SCENE_LINES;
   tckScene.frame++;
   fr++;
@@ -8541,8 +8582,8 @@ function drawSchoolMarichkaScene() {
 
   if (schoolDialogueStep === 1) {
     drawSpeechBox(
-      "\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
-      MARICHKA_SCHOOL_PROJECT,
+      getMarichkaLine("name"),
+      getMarichkaLine("school"),
       650,
       48,
       "right",
@@ -8552,7 +8593,7 @@ function drawSchoolMarichkaScene() {
   if (schoolDialogueStep === 1) {
     drawSpeechBox(
       "Марічка",
-      "Андрію, зачекай! Ти забув свій проєкт.",
+      getMarichkaLine("school"),
       650,
       48,
       "right",
@@ -8560,7 +8601,7 @@ function drawSchoolMarichkaScene() {
   } else if (schoolDialogueStep === 2) {
     drawSpeechBox(
       "Андрій",
-      "Дякую, Марічко! Ти мене врятувала.",
+      getMarichkaLine("thanks"),
       28,
       48,
       "left",
@@ -8696,11 +8737,11 @@ function update() {
     pSlide = false;
     if (schoolEnterTimer === 22 && schoolDialogueStep === 0) {
       schoolDialogueStep = 1;
-      speakAndWait(MARICHKA_SCHOOL_PROJECT)
+      speakAndWait(getMarichkaLine("school"), settingRobotVoiceLang)
         .then(() => {
           if (gameState !== "schoolEnter") return null;
           schoolDialogueStep = 2;
-          return speakAndWait("Дякую Марічко ти мене врятувала");
+          return speakAndWait(getMarichkaLine("thanks"), settingRobotVoiceLang);
         })
         .then(() => {
           if (gameState !== "schoolEnter") return;
@@ -9589,7 +9630,7 @@ function speakSceneLine(line) {
   cancelSpeech();
   bubbleText = line.text;
   bubbleTimer = 640;
-  speakAndWait(line.text).then(() => {
+  speakAndWait(line.text, line.voiceLanguage || "uk").then(() => {
     if (!tckScene || tckScene.line !== line) return;
     tckScene.spoken = false;
     tckScene.waitUntil = tckScene.frame + 90;
@@ -9602,10 +9643,11 @@ function _doSpeakAndrii(lines) {
 }
 function speakMarichkaSupport() {
   if (marichkaVoiceCooldown > 0 || bubbleTimer > 0 || gameState !== "run") return;
+  const text = getMarichkaLine("run");
   marichkaVoiceCooldown = 900;
-  bubbleText = "\u041c\u0430\u0440\u0456\u0447\u043a\u0430: " + MARICHKA_RUN_SUPPORT;
+  bubbleText = getMarichkaLine("name") + ": " + text;
   bubbleTimer = 170;
-  speakAndWait(MARICHKA_RUN_SUPPORT);
+  speakAndWait(text, settingRobotVoiceLang);
 }
 
 // Bubble над гравцем
