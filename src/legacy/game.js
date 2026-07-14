@@ -3098,6 +3098,24 @@ function act(c) {
   if (c === "KeyE") activateBackpackBonus();
 }
 
+function hitMinigunTargets() {
+  const playerX = LANES[pLane];
+  const maxRange = 430 + getBulletSpeedBonus() * 18;
+  let destroyed = 0;
+  obs = obs.filter((o) => {
+    if (destroyed >= 5) return true;
+    if (o.type !== "tck" && o.type !== "scooter") return true;
+    if (Math.abs(o.lane - pLane) > 1) return true;
+    const distance = o.x - playerX;
+    if (distance < 18 || distance > maxRange) return true;
+    destroyed++;
+    addQuestProgress("enemies");
+    addParts(o.x, GND - 34, o.type === "tck" ? "#ffd700" : "#58d7ff");
+    sfxHit();
+    return false;
+  });
+}
+
 function fireAndriiWeapon() {
   const weapon = getAndriiWeapon(currentLevel, currentLocation);
   if (gameState !== "run" || !weapon || fireCooldown > 0) return;
@@ -3125,6 +3143,7 @@ function fireAndriiWeapon() {
         type: "minigun",
       });
     }
+    hitMinigunTargets();
     if (weaponUpgrades.laser) {
       playerBullets.push({
         x,
