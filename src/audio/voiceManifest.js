@@ -36,4 +36,5 @@ export const VOICE_CLIPS = {
   "Підпиши документи хлопче": "/game/audio/voice/story_tck_02.mp3",
   "Я не буду підписувати ваші документи": "/game/audio/voice/story_tck_03.mp3",
   "А ну ти хлопче зараз підеш до нас Іди сюди": "/game/audio/voice/story_tck_04.mp3",
+  "Біжи Андрію біжи": "/game/audio/voice/marichka_run_01.mp3",
 };
