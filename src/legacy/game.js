@@ -3834,6 +3834,7 @@ function drawRealRoad(timePeriod) {
   const cx = W / 2;
   const topHalf = 34;
   const bottomHalf = Math.max(W * 0.72, 460);
+  const laneEdgeRatios = [-0.39, 0.39];
   const isNight = timePeriod === "time-night";
   const isLvivRoad = currentLocation === 1;
 
@@ -3900,7 +3901,7 @@ function drawRealRoad(timePeriod) {
     }
     ctx.strokeStyle = isNight ? "rgba(44, 37, 32, 0.7)" : "rgba(80, 68, 58, 0.72)";
     ctx.lineWidth = 3;
-    for (const laneGroove of [-1 / 3, 1 / 3]) {
+    for (const laneGroove of laneEdgeRatios) {
       ctx.beginPath();
       ctx.moveTo(cx + topHalf * laneGroove, horizonY);
       ctx.lineTo(cx + bottomHalf * laneGroove, bottomY);
@@ -3918,7 +3919,7 @@ function drawRealRoad(timePeriod) {
       const half1 = topHalf + (bottomHalf - topHalf) * t1;
       const half2 = topHalf + (bottomHalf - topHalf) * t2;
       ctx.lineWidth = 3 + t1 * 3;
-      for (const laneMark of [-1 / 3, 1 / 3]) {
+      for (const laneMark of laneEdgeRatios) {
         ctx.beginPath();
         ctx.moveTo(cx + half1 * laneMark, y);
         ctx.lineTo(cx + half2 * laneMark, y2);
@@ -3982,6 +3983,8 @@ function drawRoadRunTrack() {
   const cx = W / 2;
   const topHalf = 34;
   const bottomHalf = Math.max(W * 0.72, 460);
+  const laneRatios = [-0.56, 0, 0.56];
+  const laneEdgeRatios = [-0.39, 0.39];
   const roadAt = (t, laneRatio) => {
     const half = topHalf + (bottomHalf - topHalf) * t;
     const y = horizonY + (bottomY - horizonY) * t;
@@ -4002,7 +4005,7 @@ function drawRoadRunTrack() {
     : "rgba(220, 238, 255, 0.2)";
   ctx.lineCap = "round";
   ctx.setLineDash([24, 22]);
-  for (const laneRatio of [-1 / 3, 1 / 3]) {
+  for (const laneRatio of laneEdgeRatios) {
     ctx.beginPath();
     for (let step = 0; step <= 18; step++) {
       const t = 0.04 + step * 0.052;
@@ -4015,13 +4018,13 @@ function drawRoadRunTrack() {
   }
   ctx.setLineDash([]);
 
-  const activeRatio = [-2 / 3, 0, 2 / 3][pLane] || 0;
+  const activeRatio = laneRatios[pLane] || 0;
   const active = roadAt(0.72, activeRatio);
   const pulse = 0.45 + Math.sin(fr * 0.12) * 0.12;
   ctx.globalAlpha = pulse;
   ctx.fillStyle = isLvivRoad ? "rgba(255, 211, 120, 0.18)" : "rgba(98, 214, 255, 0.18)";
   ctx.beginPath();
-  ctx.ellipse(active.x, ROAD_RUN_Y + 10, 70, 18, 0, 0, Math.PI * 2);
+  ctx.ellipse(active.x, ROAD_RUN_Y + 10, 58, 16, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -10355,3 +10358,4 @@ const LEVEL2_DIALOG = [
 ];
 
 export {};
+
