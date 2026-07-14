@@ -4035,6 +4035,20 @@ function drawRoadRunTrack() {
   ctx.fill();
   ctx.restore();
 }
+function getPerspectiveLanePoint(lane = pLane, t = 0.78) {
+  const horizonY = GND - 112;
+  const bottomY = H + 18;
+  const cx = W / 2;
+  const topHalf = 34;
+  const bottomHalf = Math.max(W * 0.72, 460);
+  const laneRatios = [-0.56, 0, 0.56];
+  const safeT = Math.max(0, Math.min(1, t));
+  const half = topHalf + (bottomHalf - topHalf) * safeT;
+  return {
+    x: cx + half * (laneRatios[lane] || 0),
+    y: horizonY + (bottomY - horizonY) * safeT,
+  };
+}
 
 function drawRoadSign(x, y, label, kind = "direction") {
   ctx.save();
@@ -6118,18 +6132,27 @@ function drawMarichkaRemodel(x, y, options = {}) {
 
 function drawChaser() {
   if (gameState === "win" || gameState === "schoolEnter") return;
-  const cx = chaserX,
-    cy = GND;
+  const dangerPct = Math.min(Math.max((chaserX + 100) / (LANES[0] - 80), 0), 1);
+  const chasePoint = getPerspectiveLanePoint(pLane, 0.58 + dangerPct * 0.18);
+  const cx = chasePoint.x;
+  const cy = chasePoint.y + 12;
   const lp = Math.sin(fr * 0.32) * 10;
 
   // небезпечна зона — аура рожева коли близько
-  const dangerPct = Math.min(Math.max((chaserX + 100) / (LANES[0] - 80), 0), 1);
   if (dangerPct > 0.5) {
     const auraAlpha = (dangerPct - 0.5) * 0.35;
     ctx.fillStyle = `rgba(255,100,180,${auraAlpha})`;
-    ctx.fillRect(cx - 20, cy - 80, 40, H - cy + 80);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - 28, 30, 58, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
+  ctx.save();
+  const scale = 0.78 + dangerPct * 0.18;
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  ctx.translate(-cx, -cy);
   drawMarichkaRemodel(cx, cy, { step: lp, showName: true, dangerPct });
+  ctx.restore();
   return;
 
   // тінь
