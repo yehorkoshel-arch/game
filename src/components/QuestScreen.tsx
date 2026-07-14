@@ -4,7 +4,7 @@ export function QuestScreen() {
       <header className="quest-header">
         <div>
           <div className="quest-header-title">Квести</div>
-          <div className="quest-header-subtitle">Виконай усі 10 завдань</div>
+          <div className="quest-header-subtitle">Ланцюжок Марічки та 10 завдань</div>
         </div>
         <div className="quest-header-reward">100 ₴ за квест</div>
       </header>

@@ -54,6 +54,7 @@ let tckSceneSeenLevels =
     ? save.tckSceneSeenLevels
     : {};
 const QUEST_REWARD = 100;
+const MARICHKA_CHAIN_REWARD = 150;
 const QUESTS = [
   { id: "distance", title: "Пробіжи 2 000 метрів", target: 2000, unit: "м" },
   { id: "coins", title: "Збери 100 монет", target: 100, unit: "₴" },
@@ -66,6 +67,13 @@ const QUESTS = [
   { id: "bosses", title: "Переможи боса", target: 1, unit: "" },
   { id: "finishes", title: "Дістанься фінішу 10 разів", target: 10, unit: "" },
 ];
+const MARICHKA_CHAIN = [
+  { id: "project", title: "Знайди проєкт Андрія", target: 1, unit: "" },
+  { id: "coins", title: "Збери 30 монет для Марічки", target: 30, unit: "₴" },
+  { id: "route", title: "Пройди секретний маршрут", target: 1, unit: "" },
+  { id: "bell", title: "Встигни до школи до дзвоника", target: 1, unit: "" },
+  { id: "finish", title: "Заведи Андрія до школи", target: 1, unit: "" },
+];
 const savedQuestStats = save.questStats || {};
 let questStats = Object.fromEntries(
   QUESTS.map((quest) => [quest.id, Number(savedQuestStats[quest.id]) || 0]),
@@ -74,6 +82,20 @@ let questClaimed =
   save.questClaimed && typeof save.questClaimed === "object"
     ? save.questClaimed
     : {};
+let marichkaChainStep = Math.min(
+  MARICHKA_CHAIN.length,
+  Math.max(0, Number(save.marichkaChainStep) || 0),
+);
+const savedMarichkaChainStats =
+  save.marichkaChainStats && typeof save.marichkaChainStats === "object"
+    ? save.marichkaChainStats
+    : {};
+let marichkaChainStats = Object.fromEntries(
+  MARICHKA_CHAIN.map((step) => [
+    step.id,
+    Math.min(step.target, Math.max(0, Number(savedMarichkaChainStats[step.id]) || 0)),
+  ]),
+);
 const ACHIEVEMENTS = [
   {
     id: "metro",
@@ -371,6 +393,8 @@ function saveGame() {
     tckSceneSeenLevels,
     questStats,
     questClaimed,
+    marichkaChainStep,
+    marichkaChainStats,
     achievementStats,
     achievementSeen,
     weaponUpgrades,
@@ -1502,6 +1526,7 @@ function completeSecretRoute() {
     );
   }
   addQuestProgress("routes");
+  addMarichkaChainProgress("route");
   addLevelMissionProgress("route");
   if (secretRoute.id === "metro") addLevelMissionProgress("metro");
   if (secretRoute.id === "metro") addAchievementProgress("metro");
@@ -1690,12 +1715,36 @@ function addQuestProgress(id, amount = 1) {
   questStats[id] = Math.min(quest.target, (Number(questStats[id]) || 0) + amount);
   refreshQuestUI();
 }
+function getActiveMarichkaChainStep() {
+  return MARICHKA_CHAIN[marichkaChainStep] || null;
+}
+function addMarichkaChainProgress(id, amount = 1) {
+  const step = getActiveMarichkaChainStep();
+  if (!step || step.id !== id) return;
+  marichkaChainStats[id] = Math.min(
+    step.target,
+    (Number(marichkaChainStats[id]) || 0) + amount,
+  );
+  refreshQuestUI();
+}
+function syncMarichkaChainProgress() {
+  const step = getActiveMarichkaChainStep();
+  if (!step) return;
+  if (step.id === "project" && marichkaProjectSceneSeen)
+    marichkaChainStats.project = 1;
+}
+function isMarichkaChainReady() {
+  const step = getActiveMarichkaChainStep();
+  return Boolean(step && (Number(marichkaChainStats[step.id]) || 0) >= step.target);
+}
 function getReadyQuestCount() {
-  return QUESTS.filter(
+  syncMarichkaChainProgress();
+  const baseCount = QUESTS.filter(
     (quest) =>
       !questClaimed[quest.id] &&
       (Number(questStats[quest.id]) || 0) >= quest.target,
   ).length;
+  return baseCount + (isMarichkaChainReady() ? 1 : 0);
 }
 function updateQuestReadyBadge() {
   const badge = document.getElementById("questReadyBadge");
@@ -2057,7 +2106,42 @@ function refreshCoinAchievements() {
 function buildQuests() {
   const list = document.getElementById("questList");
   if (!list) return;
+  syncMarichkaChainProgress();
   list.innerHTML = "";
+  const chainStep = getActiveMarichkaChainStep();
+  const chainCard = document.createElement("article");
+  const chainDone = marichkaChainStep >= MARICHKA_CHAIN.length;
+  const chainProgress = chainStep
+    ? Math.min(chainStep.target, Math.floor(Number(marichkaChainStats[chainStep.id]) || 0))
+    : MARICHKA_CHAIN.length;
+  const chainReady = Boolean(chainStep && chainProgress >= chainStep.target);
+  const chainUnit = chainStep?.unit ? ` ${chainStep.unit}` : "";
+  chainCard.className =
+    "quest-chain" + (chainDone ? " claimed" : chainReady ? " complete" : "");
+  chainCard.innerHTML = chainDone
+    ? `
+      <div class="quest-chain-kicker">Ланцюжок Марічки</div>
+      <div class="quest-chain-title">Уся історія завершена</div>
+      <div class="quest-chain-desc">Марічка допомогла Андрію дістатися до школи.</div>
+      <div class="quest-chain-steps">${MARICHKA_CHAIN.map(() => `<span class="done"></span>`).join("")}</div>
+    `
+    : `
+      <div class="quest-chain-kicker">Ланцюжок Марічки · крок ${marichkaChainStep + 1}/${MARICHKA_CHAIN.length}</div>
+      <div class="quest-chain-title">${chainStep.title}</div>
+      <div class="quest-chain-desc">Виконай крок, забери нагороду і відкрий наступну частину історії.</div>
+      <div class="quest-progress">
+        <div class="quest-progress-fill" style="width:${(chainProgress / chainStep.target) * 100}%"></div>
+      </div>
+      <div class="quest-item-footer">
+        <span class="quest-reward">+${MARICHKA_CHAIN_REWARD} ₴</span>
+        <span class="quest-item-count">${chainProgress} / ${chainStep.target}${chainUnit}</span>
+        <button class="quest-claim quest-chain-claim" data-chain-step="${chainStep.id}" type="button" ${!chainReady ? "disabled" : ""}>
+          ${chainReady ? "Забрати" : "В процесі"}
+        </button>
+      </div>
+      <div class="quest-chain-steps">${MARICHKA_CHAIN.map((_, index) => `<span class="${index < marichkaChainStep ? "done" : index === marichkaChainStep ? "active" : ""}"></span>`).join("")}</div>
+    `;
+  list.appendChild(chainCard);
   QUESTS.forEach((quest, index) => {
     const progress = Math.min(
       quest.target,
@@ -2798,6 +2882,22 @@ document.getElementById("btnBackQuests").onclick = () => {
 document.getElementById("questList").onclick = (event) => {
   const button = event.target.closest(".quest-claim");
   if (!button) return;
+  if (button.dataset.chainStep) {
+    const step = getActiveMarichkaChainStep();
+    if (
+      !step ||
+      step.id !== button.dataset.chainStep ||
+      (Number(marichkaChainStats[step.id]) || 0) < step.target
+    )
+      return;
+    totalCoins += MARICHKA_CHAIN_REWARD;
+    marichkaChainStep = Math.min(MARICHKA_CHAIN.length, marichkaChainStep + 1);
+    syncCoins();
+    saveGame();
+    buildQuests();
+    sfxCoin();
+    return;
+  }
   const quest = QUESTS.find((item) => item.id === button.dataset.questId);
   if (
     !quest ||
@@ -8229,6 +8329,7 @@ function beginStoryScene(kind, sceneKey = null) {
 function finishTckScene() {
   if (tckScene?.kind === "marichka_project") {
     marichkaProjectSceneSeen = true;
+    addMarichkaChainProgress("project");
   } else if (tckScene && tckScene.sceneKey) {
     tckSceneSeenLevels[tckScene.sceneKey] = true;
   }
@@ -8753,7 +8854,9 @@ function completeLevelAfterSchool() {
   if (schoolBellRewardEarned && !schoolBellRewardClaimed) {
     runCoins += SCHOOL_BELL_REWARD;
     schoolBellRewardClaimed = true;
+    addMarichkaChainProgress("bell");
   }
+  addMarichkaChainProgress("finish");
   runCoins += lv.bonusCoins;
   claimLevelMissionReward();
   totalCoins += runCoins;
@@ -9613,6 +9716,7 @@ function update() {
       const trickMult = registerTrickCoinCombo();
       const mult = dangerMult * comboMult * trickMult * chestnutMult;
       addQuestProgress("coins", mult);
+      addMarichkaChainProgress("coins", mult);
       addLevelMissionProgress("coins", mult);
       runCoins += mult;
       c.done = true;
