@@ -10556,8 +10556,7 @@ let iFr = 0,
   iPhase = 0,
   iCharIdx = 0,
   iTyping = false,
-  introStarted = false,
-  introAutoStartTimer = null;
+  introStarted = false;
 let iTypedText = "",
   iPhaseTimer = 0;
 const ISTATE = { TYPING: 0, PAUSE: 1, DONE: 2 };
@@ -10861,12 +10860,6 @@ function iTick() {
 }
 
 function finishIntro() {
-  introStarted = true;
-  iState = ISTATE.DONE;
-  if (introAutoStartTimer) {
-    clearTimeout(introAutoStartTimer);
-    introAutoStartTimer = null;
-  }
   if (iRaf) {
     cancelAnimationFrame(iRaf);
     iRaf = null;
@@ -10900,7 +10893,7 @@ function beginIntroAfterGesture() {
   if (introStarted) return;
   startIntro();
 }
-introAutoStartTimer = window.setTimeout(() => {
+const introAutoStartTimer = window.setTimeout(() => {
   const introScreen = document.getElementById("sIntro");
   if (!introStarted && introScreen?.classList.contains("active")) startIntro();
 }, 1200);
