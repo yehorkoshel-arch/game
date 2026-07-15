@@ -2717,6 +2717,40 @@ function drawSkinPreview(canvas, sk) {
     c.stroke();
   }
 }
+function getPlayerUpgradeEffectText(id, level) {
+  const safeLevel = Math.max(0, Math.min(3, Number(level) || 0));
+  if (id === "speed") return "+" + Math.round(safeLevel * 4) + "% \u0448\u0432\u0438\u0434\u043a\u0456\u0441\u0442\u044c";
+  if (id === "jump") return "+" + safeLevel + " \u0441\u0438\u043b\u0430 \u0441\u0442\u0440\u0438\u0431\u043a\u0430";
+  if (id === "weapon") return "+" + safeLevel + " \u0443\u0440\u043e\u043d \u0456 \u0448\u0432\u0438\u0434\u043a\u0456\u0441\u0442\u044c \u043a\u0443\u043b\u044c";
+  if (id === "defense") return safeLevel >= 3 ? "2 \u0437\u0430\u0440\u044f\u0434\u0438 \u0449\u0438\u0442\u0430" : safeLevel >= 2 ? "1 \u0437\u0430\u0440\u044f\u0434 \u0449\u0438\u0442\u0430" : "\u0449\u0438\u0442 \u043d\u0430 \u0441\u0442\u0430\u0440\u0442\u0456";
+  return "\u041f\u043e\u043a\u0440\u0430\u0449\u0435\u043d\u043d\u044f";
+}
+
+function getWeaponUpgradeEffectText(id) {
+  if (id === "fireRate") return "\u041c\u0456\u043d\u0456\u0433\u0430\u043d \u0441\u0442\u0440\u0456\u043b\u044f\u0454 \u0447\u0430\u0441\u0442\u0456\u0448\u0435";
+  if (id === "damage") return "\u0411\u0456\u043b\u044c\u0448\u0435 \u0443\u0440\u043e\u043d\u0443 \u0431\u043e\u0441\u0430\u043c";
+  if (id === "laser") return "\u0414\u043e\u0434\u0430\u0454 \u043b\u0430\u0437\u0435\u0440\u043d\u0438\u0439 \u043f\u043e\u0441\u0442\u0440\u0456\u043b";
+  return "\u041f\u043e\u043a\u0440\u0430\u0449\u0435\u043d\u043d\u044f \u0437\u0431\u0440\u043e\u0457";
+}
+
+function appendUpgradeMeter(parent, level, max) {
+  const meter = document.createElement("div");
+  meter.className = "upgrade-meter";
+  for (let i = 0; i < max; i++) {
+    const dot = document.createElement("span");
+    if (i < level) dot.className = "filled";
+    meter.appendChild(dot);
+  }
+  parent.appendChild(meter);
+}
+
+function appendUpgradeAction(parent, text, disabled = false) {
+  const action = document.createElement("div");
+  action.className = "upgrade-action" + (disabled ? " disabled" : "");
+  action.textContent = text;
+  parent.appendChild(action);
+}
+
 function buildShop() {
   const L = t(),
     grid = document.getElementById("shopGrid");
@@ -2780,7 +2814,9 @@ function buildShop() {
     const maxed = level >= upgrade.prices.length;
     const price = maxed ? 0 : upgrade.prices[level];
     const div = document.createElement("div");
-    div.className = "sitem upgrade" + (maxed ? " owned" : "");
+    div.className =
+      "sitem upgrade" +
+      (maxed ? " owned" : totalCoins >= price ? " affordable" : " locked");
     const icon = document.createElement("div");
     icon.className = "sitem-upgrade-icon";
     icon.textContent = upgrade.icon;
@@ -2791,16 +2827,22 @@ function buildShop() {
     desc.className = "sitem-desc";
     desc.textContent = upgrade.desc;
     const lvl = document.createElement("div");
-    lvl.className = "sitem-desc";
-    lvl.textContent = "\u0420\u0456\u0432\u0435\u043d\u044c " + level + " / " + upgrade.prices.length;
+    lvl.className = "sitem-desc upgrade-effect";
+    lvl.textContent = getPlayerUpgradeEffectText(upgrade.id, level);
     const pr = document.createElement("div");
-    pr.className = maxed ? "sitem-owned" : "sitem-price";
+    pr.className = maxed ? "sitem-owned" : totalCoins >= price ? "sitem-price" : "sitem-price locked";
     pr.textContent = maxed ? "\u041c\u0430\u043a\u0441\u0438\u043c\u0443\u043c" : price + "\u20b4";
     div.appendChild(icon);
     div.appendChild(nm);
     div.appendChild(desc);
     div.appendChild(lvl);
+    appendUpgradeMeter(div, level, upgrade.prices.length);
     div.appendChild(pr);
+    appendUpgradeAction(
+      div,
+      maxed ? "\u0413\u043e\u0442\u043e\u0432\u043e" : totalCoins >= price ? "\u041a\u0443\u043f\u0438\u0442\u0438" : "\u041d\u0435 \u0432\u0438\u0441\u0442\u0430\u0447\u0430\u0454",
+      maxed || totalCoins < price,
+    );
     div.onclick = () => {
       const current = getPlayerUpgradeLevel(upgrade.id);
       if (current >= upgrade.prices.length) return;
@@ -2822,7 +2864,9 @@ function buildShop() {
   WEAPON_UPGRADES.forEach((upgrade) => {
     const div = document.createElement("div");
     const bought = Boolean(weaponUpgrades[upgrade.id]);
-    div.className = "sitem upgrade" + (bought ? " owned" : "");
+    div.className =
+      "sitem upgrade" +
+      (bought ? " owned" : totalCoins >= upgrade.price ? " affordable" : " locked");
     const icon = document.createElement("div");
     icon.className = "sitem-upgrade-icon";
     icon.textContent =
@@ -2833,13 +2877,23 @@ function buildShop() {
     const desc = document.createElement("div");
     desc.className = "sitem-desc";
     desc.textContent = upgrade.desc;
+    const effect = document.createElement("div");
+    effect.className = "sitem-desc upgrade-effect";
+    effect.textContent = getWeaponUpgradeEffectText(upgrade.id);
     const pr = document.createElement("div");
-    pr.className = bought ? "sitem-owned" : "sitem-price";
+    pr.className = bought ? "sitem-owned" : totalCoins >= upgrade.price ? "sitem-price" : "sitem-price locked";
     pr.textContent = bought ? "\u041a\u0443\u043f\u043b\u0435\u043d\u043e" : upgrade.price + "\u20b4";
     div.appendChild(icon);
     div.appendChild(nm);
     div.appendChild(desc);
+    div.appendChild(effect);
+    appendUpgradeMeter(div, bought ? 1 : 0, 1);
     div.appendChild(pr);
+    appendUpgradeAction(
+      div,
+      bought ? "\u0413\u043e\u0442\u043e\u0432\u043e" : totalCoins >= upgrade.price ? "\u041a\u0443\u043f\u0438\u0442\u0438" : "\u041d\u0435 \u0432\u0438\u0441\u0442\u0430\u0447\u0430\u0454",
+      bought || totalCoins < upgrade.price,
+    );
     div.onclick = () => {
       if (bought || totalCoins < upgrade.price) return;
       totalCoins -= upgrade.price;
