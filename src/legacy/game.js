@@ -3402,12 +3402,15 @@ const cv = document.getElementById("gc"),
 function spawnObs() {
   const lv = getLvl();
   const types = lv.obsTypes;
+  const roadworkChance = Math.min(0.08 + currentLevel * 0.01, 0.16);
   const hazardChance = Math.min(
     (isStormWeather() ? 0.28 : 0.14) + currentLevel * 0.012,
     isStormWeather() ? 0.42 : 0.28,
   );
   const type =
-    Math.random() < hazardChance
+    Math.random() < roadworkChance
+      ? "cone"
+      : Math.random() < hazardChance
       ? Math.random() < (isStormWeather() ? 0.72 : 0.52)
         ? "puddle"
         : "hole"
@@ -4111,6 +4114,16 @@ function getTrafficCarRoadPoint(o) {
   };
 }
 
+function getConeRoadPoint(o) {
+  const depth = getRoadObstacleDepth(o);
+  const point = getPerspectiveLanePoint(o.lane, 0.14 + depth * 0.5);
+  return {
+    x: point.x,
+    y: Math.min(GND + 4, point.y + 4),
+    scale: 0.48 + depth * 0.55,
+  };
+}
+
 function drawRoadSign(x, y, label, kind = "direction") {
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -4434,6 +4447,17 @@ function drawLvivCoffeeScene() {
   }
 }
 
+function drawRoadsideLvivCoffeeScene() {
+  if (currentLocation !== 1) return;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, GND - 118, 116, 140);
+  ctx.rect(W - 116, GND - 118, 116, 140);
+  ctx.clip();
+  drawLvivCoffeeScene();
+  ctx.restore();
+}
+
 function drawKyivMaidanScene() {
   if (currentLocation !== 0) return;
   const off = (bgOff * 0.18) % 760;
@@ -4541,10 +4565,11 @@ function drawBG() {
     drawGreetingBuildings(x, lv.loc);
   }
 
-  drawRealRoad(timePeriod);
-  drawRoadRunTrack();
   drawLvivCoffeeScene();
   drawKyivMaidanScene();
+  drawRealRoad(timePeriod);
+  drawRoadRunTrack();
+  drawRoadsideLvivCoffeeScene();
   drawLvivTram();
   drawRoadsideSigns();
 }
@@ -6516,6 +6541,60 @@ function drawObs(o) {
     ctx.fillStyle = "rgba(255,255,255,0.35)";
     ctx.fillRect(x - 28, y - 8 + bob, 28, 2);
     ctx.restore();
+  } else if (o.type === "cone") {
+    const p = getConeRoadPoint(o);
+    x = p.x;
+    const y = p.y;
+    const blink = 0.75 + Math.sin(fr * 0.18 + (o.phase || 0)) * 0.25;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(p.scale, p.scale);
+    ctx.translate(-x, -y);
+
+    ctx.fillStyle = "rgba(0,0,0,0.24)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 5, 28, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#2f343b";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - 28, y - 5, 56, 10, 3);
+    else ctx.fillRect(x - 28, y - 5, 56, 10);
+    ctx.fill();
+
+    ctx.fillStyle = "#ff7a18";
+    ctx.beginPath();
+    ctx.moveTo(x - 19, y - 5);
+    ctx.lineTo(x, y - 62);
+    ctx.lineTo(x + 19, y - 5);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#fff7df";
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y - 25);
+    ctx.lineTo(x + 12, y - 25);
+    ctx.lineTo(x + 16, y - 15);
+    ctx.lineTo(x - 16, y - 15);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x - 7, y - 44);
+    ctx.lineTo(x + 7, y - 44);
+    ctx.lineTo(x + 10, y - 36);
+    ctx.lineTo(x - 10, y - 36);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(255, 204, 72, ${0.25 + blink * 0.25})`;
+    ctx.beginPath();
+    ctx.arc(x, y - 64, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffd34d";
+    ctx.beginPath();
+    ctx.arc(x, y - 64, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   } else if (o.type === "crosswalk") {
     const y = GND + 6;
     const pulse = 0.75 + Math.sin(fr * 0.12 + (o.phase || 0)) * 0.25;
@@ -7686,6 +7765,7 @@ function isRoadHazard(type) {
   return (
     type === "hole" ||
     type === "puddle" ||
+    type === "cone" ||
     type === "crosswalk" ||
     type === "traffic_car"
   );
@@ -7703,6 +7783,15 @@ function oRect(o) {
       y: p.y - 60 * p.scale,
       w: 88 * p.scale,
       h: 66 * p.scale,
+    };
+  }
+  if (o.type === "cone") {
+    const p = getConeRoadPoint(o);
+    return {
+      x: p.x - 24 * p.scale,
+      y: p.y - 58 * p.scale,
+      w: 48 * p.scale,
+      h: 62 * p.scale,
     };
   }
   if (o.type === "scooter") {
@@ -9338,7 +9427,7 @@ function update() {
       o.lane === pLane &&
       getRoadObstacleDepth(o) > 0.25 &&
       getRoadObstacleDepth(o) < 0.72 &&
-      ["traffic_car", "hole", "kiosk", "scooter", "bollard"].includes(o.type),
+      ["traffic_car", "hole", "kiosk", "scooter", "bollard", "cone"].includes(o.type),
   );
   if (laneObstacle) {
     speakMarichkaHint(
@@ -9782,6 +9871,7 @@ function update() {
       }
     }
     if (o.type === "hole" && pY < GND - 46) return;
+    if (o.type === "cone" && pY < GND - 42) return;
     if (pSlide && o.type === "bollard") return;
     if (pY < GND - 50 && o.type === "kiosk") return;
     if (pY < GND - 48 && o.type === "scooter") return;
