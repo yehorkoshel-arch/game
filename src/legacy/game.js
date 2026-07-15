@@ -4128,6 +4128,17 @@ function getConeRoadPoint(o) {
   };
 }
 
+function getSmallRoadPoint(o, yLift = 0) {
+  const depth = getRoadObstacleDepth(o);
+  const point = getPerspectiveLanePoint(o.lane, 0.14 + depth * 0.52);
+  const scale = 0.5 + depth * 0.5;
+  return {
+    x: point.x,
+    y: Math.min(GND + 4, point.y + 4) - yLift * scale,
+    scale,
+  };
+}
+
 function drawRoadSign(x, y, label, kind = "direction") {
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -6668,8 +6679,14 @@ function drawObs(o) {
     ctx.textAlign = "left";
     ctx.restore();
   } else if (o.type === "hole") {
-    const y = GND + 3;
+    const p = getSmallRoadPoint(o, 0);
+    x = p.x;
+    const y = p.y;
     ctx.fillStyle = "rgba(0,0,0,0.34)";
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(p.scale, p.scale);
+    ctx.translate(-x, -y);
     ctx.beginPath();
     ctx.ellipse(x, y + 1, 34, 10, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -6689,10 +6706,17 @@ function drawObs(o) {
     ctx.fillStyle = "rgba(190,180,164,0.5)";
     ctx.fillRect(x - 27, y - 8, 8, 2);
     ctx.fillRect(x + 14, y - 6, 11, 2);
+    ctx.restore();
   } else if (o.type === "puddle") {
-    const y = GND + 4;
+    const p = getSmallRoadPoint(o, 0);
+    x = p.x;
+    const y = p.y;
     const shine = Math.sin(fr * 0.08 + x * 0.01) * 3;
     ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(p.scale, p.scale);
+    ctx.translate(-x, -y);
     ctx.beginPath();
     ctx.ellipse(x, y + 3, 38, 8, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -6709,10 +6733,17 @@ function drawObs(o) {
     ctx.beginPath();
     ctx.ellipse(x - 7 + shine, y - 2, 18, 3.5, -0.05, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
   } else if (o.type === "oil") {
-    const y = GND + 4;
+    const p = getSmallRoadPoint(o, 0);
+    x = p.x;
+    const y = p.y;
     const slick = Math.sin(fr * 0.09 + x * 0.02) * 4;
     ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(p.scale, p.scale);
+    ctx.translate(-x, -y);
     ctx.beginPath();
     ctx.ellipse(x, y + 3, 40, 9, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -6733,6 +6764,7 @@ function drawObs(o) {
     ctx.beginPath();
     ctx.ellipse(x + 10 - slick * 0.5, y + 2, 15, 3, 0.1, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
   } else if (o.type === "boss_dancer") {
     const gx = x;
     const gy = GND;
@@ -7269,8 +7301,9 @@ function drawScooterRider(o) {
 
 function drawCoin(c) {
   if (c.done) return;
-  const x = c.x ?? LANES[c.lane],
-    y = c.y - 14;
+  const p = getSmallRoadPoint(c, c.y < GND ? 70 : 14);
+  const x = p.x,
+    y = p.y;
   if (magnetTimer > 0 && c.magneted) {
     ctx.globalAlpha = 0.72;
     ctx.strokeStyle = "rgba(99, 214, 255, 0.62)";
@@ -7301,8 +7334,9 @@ function drawCoin(c) {
 }
 
 function drawMagnet(m) {
-  const x = m.x;
-  const y = m.y + Math.sin(fr * 0.12 + (m.phase || 0)) * 4;
+  const p = getSmallRoadPoint(m, 36);
+  const x = p.x;
+  const y = p.y + Math.sin(fr * 0.12 + (m.phase || 0)) * 4 * p.scale;
   ctx.save();
   const glow = ctx.createRadialGradient(x, y, 0, x, y, 30);
   glow.addColorStop(0, "rgba(98, 214, 255, 0.78)");
@@ -7335,8 +7369,9 @@ function drawMagnet(m) {
 }
 
 function drawChestnutPower(c) {
-  const x = c.x;
-  const y = c.y + Math.sin(fr * 0.13 + (c.phase || 0)) * 4;
+  const p = getSmallRoadPoint(c, 38);
+  const x = p.x;
+  const y = p.y + Math.sin(fr * 0.13 + (c.phase || 0)) * 4 * p.scale;
   ctx.save();
   const glow = ctx.createRadialGradient(x, y, 0, x, y, 31);
   glow.addColorStop(0, "rgba(255, 210, 94, 0.75)");
@@ -7372,8 +7407,9 @@ function drawChestnutPower(c) {
 }
 
 function drawShieldItem(s) {
-  const x = s.x;
-  const y = s.y + Math.sin(fr * 0.12 + (s.phase || 0)) * 4;
+  const p = getSmallRoadPoint(s, 38);
+  const x = p.x;
+  const y = p.y + Math.sin(fr * 0.12 + (s.phase || 0)) * 4 * p.scale;
   ctx.save();
   const glow = ctx.createRadialGradient(x, y, 0, x, y, 30);
   glow.addColorStop(0, "rgba(88, 190, 255, 0.78)");
@@ -7411,8 +7447,9 @@ function drawShieldItem(s) {
 }
 
 function drawSuperJumpItem(j) {
-  const x = j.x;
-  const y = j.y + Math.sin(fr * 0.14 + (j.phase || 0)) * 5;
+  const p = getSmallRoadPoint(j, 40);
+  const x = p.x;
+  const y = p.y + Math.sin(fr * 0.14 + (j.phase || 0)) * 5 * p.scale;
   ctx.save();
   const glow = ctx.createRadialGradient(x, y, 0, x, y, 32);
   glow.addColorStop(0, "rgba(255, 232, 92, 0.82)");
@@ -7800,9 +7837,18 @@ function isRoadHazard(type) {
   );
 }
 function oRect(o) {
-  if (o.type === "hole") return { x: o.x - 32, y: GND - 8, w: 64, h: 18 };
-  if (o.type === "puddle") return { x: o.x - 36, y: GND - 7, w: 72, h: 16 };
-  if (o.type === "oil") return { x: o.x - 38, y: GND - 8, w: 76, h: 18 };
+  if (o.type === "hole") {
+    const p = getSmallRoadPoint(o, 0);
+    return { x: p.x - 32 * p.scale, y: p.y - 12 * p.scale, w: 64 * p.scale, h: 22 * p.scale };
+  }
+  if (o.type === "puddle") {
+    const p = getSmallRoadPoint(o, 0);
+    return { x: p.x - 38 * p.scale, y: p.y - 12 * p.scale, w: 76 * p.scale, h: 22 * p.scale };
+  }
+  if (o.type === "oil") {
+    const p = getSmallRoadPoint(o, 0);
+    return { x: p.x - 40 * p.scale, y: p.y - 12 * p.scale, w: 80 * p.scale, h: 22 * p.scale };
+  }
   if (o.type === "crosswalk")
     return { x: o.x - 145, y: GND - 42, w: 290, h: 82 };
   if (o.type === "traffic_car")
@@ -9797,35 +9843,59 @@ function update() {
     px = LANES[pLane];
   magnets = magnets.filter((m) => {
     if (m.lane !== pLane) return true;
-    const mr = { x: m.x - 22, y: m.y - 24, w: 44, h: 48 };
+    const point = getSmallRoadPoint(m, 36);
+    const mr = {
+      x: point.x - 22 * point.scale,
+      y: point.y - 24 * point.scale,
+      w: 44 * point.scale,
+      h: 48 * point.scale,
+    };
     if (!hit(pr, mr)) return true;
-    collectBackpackBonus("magnet", m.x, m.y, "#62d6ff");
+    collectBackpackBonus("magnet", point.x, point.y, "#62d6ff");
     return false;
   });
   chestnuts = chestnuts.filter((c) => {
     if (c.lane !== pLane) return true;
-    const cr = { x: c.x - 24, y: c.y - 26, w: 48, h: 52 };
+    const point = getSmallRoadPoint(c, 38);
+    const cr = {
+      x: point.x - 24 * point.scale,
+      y: point.y - 26 * point.scale,
+      w: 48 * point.scale,
+      h: 52 * point.scale,
+    };
     if (!hit(pr, cr)) return true;
     chestnutTimer = Math.max(chestnutTimer, 600);
     magnetTimer = Math.max(magnetTimer, 260);
     sfxCoin();
-    addParts(c.x, c.y, "#ffd45c");
+    addParts(point.x, point.y, "#ffd45c");
     showAndriiBubble("\u041a\u0438\u0457\u0432\u0441\u044c\u043a\u0438\u0439 \u043a\u0430\u0448\u0442\u0430\u043d! \u041c\u043e\u043d\u0435\u0442\u0438 x2!");
     hudUp();
     return false;
   });
   shields = shields.filter((s) => {
     if (s.lane !== pLane) return true;
-    const sr = { x: s.x - 22, y: s.y - 24, w: 44, h: 48 };
+    const point = getSmallRoadPoint(s, 38);
+    const sr = {
+      x: point.x - 22 * point.scale,
+      y: point.y - 24 * point.scale,
+      w: 44 * point.scale,
+      h: 48 * point.scale,
+    };
     if (!hit(pr, sr)) return true;
-    collectBackpackBonus("shield", s.x, s.y, "#58beff");
+    collectBackpackBonus("shield", point.x, point.y, "#58beff");
     return false;
   });
   superJumps = superJumps.filter((j) => {
     if (j.lane !== pLane) return true;
-    const jr = { x: j.x - 22, y: j.y - 25, w: 44, h: 50 };
+    const point = getSmallRoadPoint(j, 40);
+    const jr = {
+      x: point.x - 22 * point.scale,
+      y: point.y - 25 * point.scale,
+      w: 44 * point.scale,
+      h: 50 * point.scale,
+    };
     if (!hit(pr, jr)) return true;
-    collectBackpackBonus("jump", j.x, j.y, "#fff36a");
+    collectBackpackBonus("jump", point.x, point.y, "#fff36a");
     return false;
   });
   cityGifts = cityGifts.filter((gift) => {
@@ -9992,9 +10062,15 @@ function update() {
   });
   coins = coins.filter((c) => {
     if (!c.magneted && c.lane !== pLane) return true;
-    const coinX = c.x ?? LANES[c.lane];
-    const coinY = c.y - 14;
-    const cr = { x: coinX - 18, y: coinY - 26, w: 36, h: 52 };
+    const point = getSmallRoadPoint(c, c.y < GND ? 70 : 14);
+    const coinX = point.x;
+    const coinY = point.y;
+    const cr = {
+      x: coinX - 18 * point.scale,
+      y: coinY - 26 * point.scale,
+      w: 36 * point.scale,
+      h: 52 * point.scale,
+    };
     if (hit(pr, cr)) {
       const dangerPct = Math.min(
         Math.max((chaserX + 100) / (LANES[0] - 80), 0),

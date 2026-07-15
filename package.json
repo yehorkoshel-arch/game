@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --configLoader native",
     "build": "tsc --noEmit -p tsconfig.json && vite build --configLoader native",
-    "preview": "vite preview",
+    "preview": "vite preview --configLoader native",
     "voice:generate": "node scripts/generate-voice.mjs",
     "voice:generate:andrii": "node scripts/generate-voice.mjs --group-prefix andrii_ --voice uk-UA-OstapNeural --lang uk-UA --force",
     "voice:generate:tck": "node scripts/generate-voice.mjs --group story_tck --voice uk-UA-OstapNeural --lang uk-UA",
