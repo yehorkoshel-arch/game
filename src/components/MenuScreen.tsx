@@ -72,6 +72,7 @@ export function MenuScreen() {
       />
       <div className="debug-level-panel">
         <div className="debug-level-title">Швидка перевірка</div>
+        <div className="debug-preset-grid" id="debugPresetBar" />
         <div className="debug-level-grid" id="debugLevelBar" />
       </div>
       <div style={{ marginTop: '14px', fontSize: '12px', color: '#556677' }}>

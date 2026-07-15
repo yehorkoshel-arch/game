@@ -2243,19 +2243,70 @@ function buildDebugLevelBar() {
       btn.className = "debug-level-btn";
       btn.textContent = String(i + 1);
       btn.title = cityLabels[loc] + " - \u0440\u0456\u0432\u0435\u043d\u044c " + (i + 1);
-      btn.onclick = () => {
-        focusApp();
-        currentLocation = loc;
-        currentLevel = i;
-        saveGame();
-        showScreen("sGame");
-        startLevel();
-      };
+      btn.onclick = () => startDebugScenario(loc, i, "start");
+
       bar.appendChild(btn);
     });
   });
 }
 
+function startDebugScenario(loc, level, mode = "start") {
+  focusApp();
+  currentLocation = loc;
+  currentLevel = Math.min(Math.max(Number(level) || 0, 0), getLevels().length - 1);
+  marichkaProjectSceneSeen = true;
+  tckSceneSeenLevels[currentLocation + ":" + currentLevel] = true;
+  showScreen("sGame");
+  startLevel();
+  if (gameState === "missionIntro") beginLevelRun();
+  if (mode !== "start") {
+    secretRoute = null;
+    obs = [];
+    coins = [];
+    bullets = [];
+    playerBullets = [];
+    chaserX = -140;
+  }
+  if (mode === "finish") {
+    bossDefeated = true;
+    totalDist = Math.max(0, getFinishDistance() - FINISH_APPROACH_DISTANCE - 4);
+    showAndriiBubble("Тест фінішу");
+  } else if (mode === "boss") {
+    totalDist = Math.max(0, getFinishDistance() - 245);
+    bossActive = false;
+    bossDefeated = false;
+    showAndriiBubble("Тест боса");
+  } else if (mode === "tram") {
+    totalDist = Math.min(160, Math.max(0, getFinishDistance() * 0.28));
+    showAndriiBubble("Тест трамвая");
+  } else if (mode === "weapon") {
+    totalDist = 130;
+    showAndriiBubble("Тест зброї");
+    updateFireControl();
+  }
+  hudUp();
+  saveGame();
+}
+
+function buildDebugPresetBar() {
+  const bar = document.getElementById("debugPresetBar");
+  if (!bar) return;
+  bar.innerHTML = "";
+  const presets = [
+    { label: "Фініш", loc: currentLocation, level: currentLevel, mode: "finish" },
+    { label: "Бос Київ", loc: 0, level: LEVELS_KYIV.length - 1, mode: "boss" },
+    { label: "Трамвай", loc: 1, level: 2, mode: "tram" },
+    { label: "Зброя", loc: 1, level: 2, mode: "weapon" },
+  ];
+  presets.forEach((preset) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "debug-preset-btn";
+    btn.textContent = preset.label;
+    btn.onclick = () => startDebugScenario(preset.loc, preset.level, preset.mode);
+    bar.appendChild(btn);
+  });
+}
 function applyLang() {
   const L = t();
   document.getElementById("menuSub").textContent = L.sub;
@@ -2277,6 +2328,7 @@ function applyLang() {
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
   buildLevelBar();
   buildDebugLevelBar();
+  buildDebugPresetBar();
   buildShop();
   buildSettings();
 }
