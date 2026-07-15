@@ -70,6 +70,10 @@ export function MenuScreen() {
           overflowY: 'auto',
         }}
       />
+      <div className="debug-level-panel">
+        <div className="debug-level-title">Швидка перевірка</div>
+        <div className="debug-level-grid" id="debugLevelBar" />
+      </div>
       <div style={{ marginTop: '14px', fontSize: '12px', color: '#556677' }}>
         <span id="menuCoinsLabel">Монети</span>: <span id="menuCoins" style={{ color: '#ffd700' }}>396</span> ₴
       </div>
