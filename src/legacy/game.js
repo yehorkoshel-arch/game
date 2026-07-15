@@ -3951,17 +3951,17 @@ function drawRealRoad(timePeriod) {
       ctx.stroke();
     }
   } else {
-    ctx.strokeStyle = isNight ? "rgba(255, 241, 168, 0.72)" : "rgba(255, 239, 154, 0.94)";
+    ctx.strokeStyle = isNight ? "rgba(232, 240, 255, 0.58)" : "rgba(255, 255, 255, 0.86)";
     ctx.lineCap = "round";
-    const dashOffset = (72 - ((bgOff * 2.4) % 72)) % 72;
-    for (let y = horizonY - 72 + dashOffset; y < bottomY + 72; y += 72) {
-      const y2 = Math.min(bottomY, y + 32);
+    const dashOffset = (82 - ((bgOff * 2.15) % 82)) % 82;
+    for (let y = horizonY - 82 + dashOffset; y < bottomY + 82; y += 82) {
+      const y2 = Math.min(bottomY, y + 28);
       if (y2 <= horizonY) continue;
       const t1 = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
       const t2 = Math.max(0, Math.min(1, (y2 - horizonY) / (bottomY - horizonY)));
       const half1 = topHalf + (bottomHalf - topHalf) * t1;
       const half2 = topHalf + (bottomHalf - topHalf) * t2;
-      ctx.lineWidth = 3 + t1 * 3;
+      ctx.lineWidth = 2.2 + t1 * 2.2;
       for (const laneMark of laneEdgeRatios) {
         ctx.beginPath();
         ctx.moveTo(cx + half1 * laneMark, y);
@@ -3975,7 +3975,7 @@ function drawRealRoad(timePeriod) {
   ctx.fillStyle = isLvivRoad
     ? isNight ? "rgba(255, 232, 188, 0.04)" : "rgba(255, 238, 199, 0.06)"
     : isNight ? "rgba(255, 255, 255, 0.035)" : "rgba(255, 255, 255, 0.055)";
-  const roadSpeckles = isLvivRoad ? 46 : 85;
+  const roadSpeckles = isLvivRoad ? 46 : 52;
   for (let i = 0; i < roadSpeckles; i++) {
     const y =
       horizonY +
