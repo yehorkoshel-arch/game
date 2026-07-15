@@ -3185,17 +3185,25 @@ function act(c) {
   if (c === "KeyE") activateBackpackBonus();
 }
 
+function isMinigunDestroyable(o) {
+  if (o.type === "tck" || o.type === "scooter") return true;
+  return currentLocation === 1 && !isRoadHazard(o.type) && o.type !== "boss_dancer";
+}
+
 function hitMinigunTargets() {
   const maxRange = 430 + getBulletSpeedBonus() * 18;
+  const muzzleX = LANES[pLane] + 24;
   let destroyed = 0;
   obs = obs.filter((o) => {
-    if (destroyed >= 5) return true;
-    if (o.type !== "tck" && o.type !== "scooter") return true;
+    if (destroyed >= 6) return true;
+    if (!isMinigunDestroyable(o)) return true;
     if (Math.abs(o.lane - pLane) > 1) return true;
-    if (o.x < 80 || o.x > W + Math.min(120, maxRange * 0.3)) return true;
+    const rect = oRect(o);
+    const targetX = rect.x + rect.w / 2;
+    if (targetX < muzzleX - 90 || targetX > muzzleX + maxRange) return true;
     destroyed++;
-    addQuestProgress("enemies");
-    addParts(o.x, GND - 34, o.type === "tck" ? "#ffd700" : "#58d7ff");
+    if (o.type === "tck" || o.type === "scooter") addQuestProgress("enemies");
+    addParts(targetX, rect.y + rect.h / 2, o.type === "tck" ? "#ffd700" : "#58d7ff");
     sfxHit();
     return false;
   });
@@ -9881,15 +9889,11 @@ function update() {
     obs = obs.filter((o) => {
       const isEnemy =
         o.type === "tck" || o.type === "cop" || o.type === "boss_dancer";
-      const isMinigunTarget =
-        b.type === "minigun" &&
-        currentLocation === 1 &&
-        o.type !== "boss_dancer" &&
-        !isRoadHazard(o.type);
+      const isMinigunTarget = b.type === "minigun" && isMinigunDestroyable(o);
       const isLvivObject =
         currentLocation === 1 &&
         (b.type === "minigun"
-          ? o.type !== "boss_dancer" && !isRoadHazard(o.type)
+          ? isMinigunDestroyable(o)
           : o.type === "kiosk" || o.type === "bollard");
       const laneMatches = isMinigunTarget || b.lane === o.lane;
       if (hitTarget || !laneMatches || (!isEnemy && !isLvivObject)) return true;
@@ -9897,9 +9901,9 @@ function update() {
         b.type === "minigun"
           ? {
               x: Math.min(b.prevX ?? b.x, b.x) - 24,
-              y: b.y - 10,
-              w: Math.abs(b.x - (b.prevX ?? b.x)) + 54,
-              h: 20,
+              y: GND - 96,
+              w: Math.abs(b.x - (b.prevX ?? b.x)) + 62,
+              h: 118,
             }
           : b.type === "laser"
             ? { x: b.x - 48, y: b.y - 8, w: 86, h: 16 }
