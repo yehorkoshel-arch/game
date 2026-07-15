@@ -10884,11 +10884,6 @@ if (window.__kyivRunnerFinishIntroRequested) {
   finishIntro();
 }
 
-document.getElementById("introSkip").onclick = (event) => {
-  event?.stopPropagation?.();
-  focusApp();
-  finishIntro();
-};
 
 function startIntro() {
   introStarted = true;
