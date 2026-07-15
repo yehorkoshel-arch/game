@@ -10872,6 +10872,11 @@ function finishIntro() {
   showScreen("sMenu");
 }
 
+window.addEventListener("kyiv-runner:finish-intro", () => {
+  focusApp();
+  finishIntro();
+});
+
 document.getElementById("introSkip").onclick = (event) => {
   event?.stopPropagation?.();
   focusApp();
