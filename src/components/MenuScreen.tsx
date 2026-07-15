@@ -1,6 +1,8 @@
 import { DancingAndrii } from './DancingAndrii';
 
 export function MenuScreen() {
+  const showDebugPanel = import.meta.env.DEV;
+
   return (
     <div id="sMenu" className="screen">
       <div id="menuTimeBadge" className="menu-time-badge">
@@ -70,11 +72,13 @@ export function MenuScreen() {
           overflowY: 'auto',
         }}
       />
-      <div className="debug-level-panel">
-        <div className="debug-level-title">Швидка перевірка</div>
-        <div className="debug-preset-grid" id="debugPresetBar" />
-        <div className="debug-level-grid" id="debugLevelBar" />
-      </div>
+      {showDebugPanel ? (
+        <div className="debug-level-panel">
+          <div className="debug-level-title">Швидка перевірка</div>
+          <div className="debug-preset-grid" id="debugPresetBar" />
+          <div className="debug-level-grid" id="debugLevelBar" />
+        </div>
+      ) : null}
       <div style={{ marginTop: '14px', fontSize: '12px', color: '#556677' }}>
         <span id="menuCoinsLabel">Монети</span>: <span id="menuCoins" style={{ color: '#ffd700' }}>396</span> ₴
       </div>
