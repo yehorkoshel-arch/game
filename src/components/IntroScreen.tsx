@@ -4,7 +4,7 @@ export function IntroScreen() {
       <canvas id="introCanvas" width={340} height={220} />
       <div id="introSubtitle">...</div>
       <button id="introSkip" type="button">
-        ▶ Пропустити
+        ▶ Увійти в гру
       </button>
     </div>
   );
