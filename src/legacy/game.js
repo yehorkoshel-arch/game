@@ -3403,6 +3403,9 @@ function spawnObs() {
   const lv = getLvl();
   const types = lv.obsTypes;
   const roadworkChance = Math.min(0.08 + currentLevel * 0.01, 0.16);
+  const oilChance = isStormWeather()
+    ? 0.08
+    : Math.min(0.045 + currentLevel * 0.006, 0.1);
   const hazardChance = Math.min(
     (isStormWeather() ? 0.28 : 0.14) + currentLevel * 0.012,
     isStormWeather() ? 0.42 : 0.28,
@@ -3410,6 +3413,8 @@ function spawnObs() {
   const type =
     Math.random() < roadworkChance
       ? "cone"
+      : Math.random() < oilChance
+      ? "oil"
       : Math.random() < hazardChance
       ? Math.random() < (isStormWeather() ? 0.72 : 0.52)
         ? "puddle"
@@ -6705,6 +6710,30 @@ function drawObs(o) {
     ctx.beginPath();
     ctx.ellipse(x - 7 + shine, y - 2, 18, 3.5, -0.05, 0, Math.PI * 2);
     ctx.stroke();
+  } else if (o.type === "oil") {
+    const y = GND + 4;
+    const slick = Math.sin(fr * 0.09 + x * 0.02) * 4;
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 3, 40, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const oil = ctx.createLinearGradient(x - 38, y - 10, x + 38, y + 8);
+    oil.addColorStop(0, "rgba(12, 12, 18, 0.82)");
+    oil.addColorStop(0.45, "rgba(36, 31, 48, 0.88)");
+    oil.addColorStop(1, "rgba(5, 7, 12, 0.86)");
+    ctx.fillStyle = oil;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 38, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(138, 236, 255, 0.55)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x - 9 + slick, y - 2, 19, 4, -0.08, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255, 112, 220, 0.42)";
+    ctx.beginPath();
+    ctx.ellipse(x + 10 - slick * 0.5, y + 2, 15, 3, 0.1, 0, Math.PI * 2);
+    ctx.stroke();
   } else if (o.type === "boss_dancer") {
     const gx = x;
     const gy = GND;
@@ -7765,6 +7794,7 @@ function isRoadHazard(type) {
   return (
     type === "hole" ||
     type === "puddle" ||
+    type === "oil" ||
     type === "cone" ||
     type === "crosswalk" ||
     type === "traffic_car"
@@ -7773,6 +7803,7 @@ function isRoadHazard(type) {
 function oRect(o) {
   if (o.type === "hole") return { x: o.x - 32, y: GND - 8, w: 64, h: 18 };
   if (o.type === "puddle") return { x: o.x - 36, y: GND - 7, w: 72, h: 16 };
+  if (o.type === "oil") return { x: o.x - 38, y: GND - 8, w: 76, h: 18 };
   if (o.type === "crosswalk")
     return { x: o.x - 145, y: GND - 42, w: 290, h: 82 };
   if (o.type === "traffic_car")
@@ -9427,7 +9458,7 @@ function update() {
       o.lane === pLane &&
       getRoadObstacleDepth(o) > 0.25 &&
       getRoadObstacleDepth(o) < 0.72 &&
-      ["traffic_car", "hole", "kiosk", "scooter", "bollard", "cone"].includes(o.type),
+      ["traffic_car", "hole", "kiosk", "scooter", "bollard", "cone", "oil"].includes(o.type),
   );
   if (laneObstacle) {
     speakMarichkaHint(
@@ -9842,6 +9873,23 @@ function update() {
         slideT = Math.max(slideT, 20);
         addParts(px, GND - 5, "#77dfff");
         sfxLand();
+      }
+      return;
+    }
+    if (o.type === "oil") {
+      if (!o.triggered && hit(pr, oRect(o))) {
+        o.triggered = true;
+        if (pY < GND - 42) return;
+        const drift = pLane === 0 ? 1 : pLane === 2 ? -1 : Math.random() < 0.5 ? -1 : 1;
+        pLane = Math.max(0, Math.min(2, pLane + drift));
+        pSlide = true;
+        slideT = Math.max(slideT, 30);
+        puddleSlow = Math.max(puddleSlow, 28);
+        resetTrickCombo();
+        addParts(px, GND - 6, "#22242d");
+        addParts(LANES[pLane], GND - 10, "#8aecff");
+        sfxLand();
+        showAndriiBubble("Обережно, масло!");
       }
       return;
     }
