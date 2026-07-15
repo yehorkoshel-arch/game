@@ -2185,12 +2185,16 @@ function unlockGameAudio() {
   const c = getSfxCtx();
   if (c && c.state === "suspended") c.resume().catch(() => {});
 }
-document.getElementById("app").addEventListener("pointerdown", () => {
+function handleAppGesture() {
   focusApp();
   unlockGameAudio();
   beginIntroAfterGesture();
   if (gameState === "missionIntro") beginLevelRun();
-});
+}
+const appRoot = document.getElementById("app");
+appRoot.addEventListener("pointerdown", handleAppGesture, { passive: true });
+appRoot.addEventListener("click", handleAppGesture, { passive: true });
+appRoot.addEventListener("touchstart", handleAppGesture, { passive: true });
 function buildLevelBar() {
   const bar = document.getElementById("lvlBar");
   bar.innerHTML = "";
