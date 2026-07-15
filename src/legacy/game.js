@@ -8998,25 +8998,58 @@ function drawSchoolMarichkaScene() {
       48,
       "right",
     );
-    return;
-  }
-  if (schoolDialogueStep === 1) {
-    drawSpeechBox(
-      "Марічка",
-      getMarichkaLine("school"),
-      650,
-      48,
-      "right",
-    );
   } else if (schoolDialogueStep === 2) {
     drawSpeechBox(
-      "Андрій",
+      "�����",
       getMarichkaLine("thanks"),
       28,
       48,
       "left",
     );
   }
+}
+
+function drawSchoolFinaleScene() {
+  if (gameState !== "schoolEnter" || !schoolDialogueDone || schoolExitTimer < 42)
+    return;
+  const reveal = Math.min((schoolExitTimer - 42) / 34, 1);
+  const panelY = 48 + (1 - reveal) * 18;
+
+  ctx.save();
+  ctx.globalAlpha = reveal;
+  ctx.fillStyle = "rgba(6, 15, 30, 0.56)";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.94)";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(152, panelY, 376, 112, 12);
+  else ctx.fillRect(152, panelY, 376, 112);
+  ctx.fill();
+  ctx.strokeStyle = "#ffd34d";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.fillStyle = "#12325c";
+  ctx.font = "bold 24px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Проєкт здано!", W / 2, panelY + 38);
+  ctx.fillStyle = "#2d5d35";
+  ctx.font = "bold 15px sans-serif";
+  ctx.fillText("Андрій встиг до школи", W / 2, panelY + 66);
+  ctx.fillStyle = "#586578";
+  ctx.font = "13px sans-serif";
+  ctx.fillText("Марічка принесла проєкт, а Роботрон підтвердив перемогу.", W / 2, panelY + 91);
+
+  drawNeonRobotron(118, GND + 8);
+  drawStoryMarichka(W - 118, GND, false);
+  ctx.fillStyle = "#ffd700";
+  ctx.font = "bold 12px sans-serif";
+  ctx.fillText("Роботрон: місію виконано!", 118, GND - 94);
+  ctx.fillStyle = "#ff8fc8";
+  ctx.fillText("Марічка: встигли!", W - 118, GND - 94);
+  ctx.textAlign = "left";
+  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 function drawSchoolPursuersScene() {
@@ -9165,7 +9198,7 @@ function update() {
           schoolDialogueDone = true;
         });
     }
-    if ((schoolDialogueDone && schoolExitTimer >= 100) || schoolEnterTimer >= 600)
+    if ((schoolDialogueDone && schoolExitTimer >= 160) || schoolEnterTimer >= 700)
       completeLevelAfterSchool();
     return;
   }
@@ -10026,6 +10059,7 @@ function loop() {
   drawSchoolPursuersScene();
   drawSchoolMarichkaScene();
   drawPlayer();
+  drawSchoolFinaleScene();
   drawPlayerShieldAura();
   drawSuperJumpAura();
   drawRain();
