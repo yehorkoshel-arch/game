@@ -4231,6 +4231,32 @@ function drawRoadRunTrack() {
   }
   ctx.setLineDash([]);
 
+  const arrowBase = (bgOff * 0.012) % 0.24;
+  ctx.strokeStyle = isLvivRoad
+    ? "rgba(255, 245, 205, 0.28)"
+    : "rgba(230, 246, 255, 0.32)";
+  ctx.fillStyle = isLvivRoad
+    ? "rgba(255, 220, 130, 0.16)"
+    : "rgba(98, 214, 255, 0.14)";
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  for (const laneRatio of laneRatios) {
+    for (let i = 0; i < 3; i++) {
+      const t = 0.18 + ((i * 0.24 + arrowBase) % 0.68);
+      const p = roadAt(t, laneRatio);
+      const size = 8 + t * 20;
+      ctx.lineWidth = 1.2 + t * 2.4;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - size * 0.9);
+      ctx.lineTo(p.x - size * 0.44, p.y + size * 0.1);
+      ctx.lineTo(p.x, p.y - size * 0.18);
+      ctx.lineTo(p.x + size * 0.44, p.y + size * 0.1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+
   const activeRatio = laneRatios[pLane] || 0;
   const active = roadAt(0.72, activeRatio);
   const pulse = 0.45 + Math.sin(fr * 0.12) * 0.12;
