@@ -9159,13 +9159,7 @@ function drawMarichkaProjectScene() {
     ctx.fillRect(x + 14, 123, 18, 24);
     ctx.fillRect(x + 48, 123, 18, 24);
   }
-  ctx.fillStyle = lv.road;
-  ctx.fillRect(0, GND - 10, W, H - GND + 10);
-  for (let i = 0; i < 3; i++) {
-    ctx.fillStyle = "#1a2030";
-    ctx.fillRect(LANES[i] - 42, GND - 4, 84, H - GND + 4);
-  }
-
+  drawRealRoad("time-day");
   const andriiX = Math.min(W + 100, 120 + f * 3.8);
   if (andriiX < W + 50) drawStoryAndrii(andriiX, GND);
 
@@ -9315,18 +9309,7 @@ function drawTckScene() {
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = "#101927";
   ctx.fillRect(0, 0, W, 80);
-  ctx.fillStyle = lv.road;
-  ctx.fillRect(0, GND - 16, W, H - GND + 16);
-  for (let i = 0; i < 3; i++) {
-    ctx.fillStyle = "#1a2030";
-    ctx.fillRect(LANES[i] - 42, GND - 4, 84, H - GND + 4);
-  }
-  ctx.fillStyle = "#22304a";
-  ctx.fillRect(0, GND - 5, W, 10);
-  ctx.fillStyle = "rgba(255,255,255,0.12)";
-  for (let x = -80 + ((f * 2) % 120); x < W + 120; x += 120)
-    ctx.fillRect(x, GND + 36, 54, 4);
-
+  drawRealRoad("time-day");
   const carX = Math.min(430, -170 + f * 3.1);
   drawBlackCar(carX, GND - 68);
   drawStoryAndrii(160, GND);
@@ -10573,7 +10556,8 @@ let iFr = 0,
   iPhase = 0,
   iCharIdx = 0,
   iTyping = false,
-  introStarted = false;
+  introStarted = false,
+  introAutoStartTimer = null;
 let iTypedText = "",
   iPhaseTimer = 0;
 const ISTATE = { TYPING: 0, PAUSE: 1, DONE: 2 };
@@ -10877,6 +10861,12 @@ function iTick() {
 }
 
 function finishIntro() {
+  introStarted = true;
+  iState = ISTATE.DONE;
+  if (introAutoStartTimer) {
+    clearTimeout(introAutoStartTimer);
+    introAutoStartTimer = null;
+  }
   if (iRaf) {
     cancelAnimationFrame(iRaf);
     iRaf = null;
@@ -10910,7 +10900,7 @@ function beginIntroAfterGesture() {
   if (introStarted) return;
   startIntro();
 }
-const introAutoStartTimer = window.setTimeout(() => {
+introAutoStartTimer = window.setTimeout(() => {
   const introScreen = document.getElementById("sIntro");
   if (!introStarted && introScreen?.classList.contains("active")) startIntro();
 }, 1200);
