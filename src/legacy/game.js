@@ -2185,10 +2185,13 @@ function unlockGameAudio() {
   const c = getSfxCtx();
   if (c && c.state === "suspended") c.resume().catch(() => {});
 }
-function handleAppGesture() {
+function handleAppGesture(event) {
   focusApp();
   unlockGameAudio();
-  beginIntroAfterGesture();
+  const introScreen = document.getElementById("sIntro");
+  const introActive = introScreen?.classList.contains("active");
+  const skipPressed = event?.target?.closest?.("#introSkip");
+  if (introActive && !skipPressed) beginIntroAfterGesture();
   if (gameState === "missionIntro") beginLevelRun();
 }
 const appRoot = document.getElementById("app");
@@ -10886,7 +10889,8 @@ function finishIntro() {
   showScreen("sMenu");
 }
 
-document.getElementById("introSkip").onclick = () => {
+document.getElementById("introSkip").onclick = (event) => {
+  event?.stopPropagation?.();
   focusApp();
   finishIntro();
 };
