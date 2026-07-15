@@ -1,5 +1,6 @@
 export function IntroScreen() {
   const enterGame = () => {
+    (window as Window & { __kyivRunnerFinishIntroRequested?: boolean }).__kyivRunnerFinishIntroRequested = true;
     window.dispatchEvent(new Event("kyiv-runner:finish-intro"));
   };
 

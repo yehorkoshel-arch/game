@@ -10873,9 +10873,16 @@ function finishIntro() {
 }
 
 window.addEventListener("kyiv-runner:finish-intro", () => {
+  window.__kyivRunnerFinishIntroRequested = false;
   focusApp();
   finishIntro();
 });
+
+if (window.__kyivRunnerFinishIntroRequested) {
+  window.__kyivRunnerFinishIntroRequested = false;
+  focusApp();
+  finishIntro();
+}
 
 document.getElementById("introSkip").onclick = (event) => {
   event?.stopPropagation?.();
