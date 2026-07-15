@@ -3917,31 +3917,30 @@ function drawRealRoad(timePeriod) {
   ctx.stroke();
 
   if (isLvivRoad) {
-    const rowOffset = (34 - ((bgOff * 1.45) % 34)) % 34;
-    for (let y = horizonY - 34 + rowOffset; y < bottomY + 34; y += 30) {
-      const y2 = Math.min(bottomY, y + 24);
-      if (y2 <= horizonY) continue;
-      const t1 = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
-      const t2 = Math.max(0, Math.min(1, (y2 - horizonY) / (bottomY - horizonY)));
-      const half1 = topHalf + (bottomHalf - topHalf) * t1;
-      const half2 = topHalf + (bottomHalf - topHalf) * t2;
-      const stones = Math.max(7, Math.floor(8 + t1 * 10));
-      for (let s = 0; s < stones; s++) {
-        const fracA = -1 + (s / stones) * 2;
-        const fracB = -1 + ((s + 1) / stones) * 2;
-        const stagger = (Math.floor(y / 30) % 2) * (1 / stones);
-        const a = Math.max(-1, Math.min(1, fracA + stagger));
-        const b = Math.max(-1, Math.min(1, fracB + stagger));
-        const tone = (s + Math.floor(y / 30)) % 3;
-        ctx.fillStyle = tone === 0 ? "rgba(154,139,119,0.58)" : tone === 1 ? "rgba(105,93,80,0.52)" : "rgba(190,176,150,0.42)";
-        ctx.beginPath();
-        ctx.moveTo(cx + half1 * a, y);
-        ctx.lineTo(cx + half1 * b, y);
-        ctx.lineTo(cx + half2 * b, y2);
-        ctx.lineTo(cx + half2 * a, y2);
-        ctx.closePath();
-        ctx.fill();
-      }
+    ctx.strokeStyle = isNight ? "rgba(26, 29, 36, 0.28)" : "rgba(92, 88, 82, 0.28)";
+    ctx.lineWidth = 1;
+    const rowOffset = (24 - ((bgOff * 1.35) % 24)) % 24;
+    for (let y = horizonY - 24 + rowOffset; y < bottomY + 24; y += 24) {
+      const t = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
+      const half = topHalf + (bottomHalf - topHalf) * t;
+      ctx.beginPath();
+      ctx.moveTo(cx - half * 0.94, y);
+      ctx.lineTo(cx + half * 0.94, y);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = isNight ? "rgba(255, 232, 188, 0.08)" : "rgba(255, 244, 212, 0.16)";
+    for (let i = 0; i < 34; i++) {
+      const y =
+        horizonY +
+        ((i * 39 - bgOff * 1.4 + (bottomY - horizonY) * 3) %
+          (bottomY - horizonY));
+      const t = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
+      const half = topHalf + (bottomHalf - topHalf) * t;
+      const x = cx - half * 0.82 + ((i * 73) % (half * 1.64));
+      ctx.beginPath();
+      ctx.moveTo(x - 10 - t * 8, y);
+      ctx.lineTo(x + 10 + t * 8, y + 2);
+      ctx.stroke();
     }
     ctx.strokeStyle = isNight ? "rgba(44, 37, 32, 0.7)" : "rgba(80, 68, 58, 0.72)";
     ctx.lineWidth = 3;
