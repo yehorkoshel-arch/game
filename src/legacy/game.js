@@ -4541,10 +4541,10 @@ function drawBG() {
     drawGreetingBuildings(x, lv.loc);
   }
 
-  drawLvivCoffeeScene();
-  drawKyivMaidanScene();
   drawRealRoad(timePeriod);
   drawRoadRunTrack();
+  drawLvivCoffeeScene();
+  drawKyivMaidanScene();
   drawLvivTram();
   drawRoadsideSigns();
 }
