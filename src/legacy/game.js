@@ -9899,6 +9899,12 @@ function update() {
         forceMusicTrackRefresh();
         bossTransform = 120;
         bossX = W + 180;
+        totalDist = Math.max(
+          totalDist,
+          getFinishDistance() - FINISH_APPROACH_DISTANCE - 5,
+        );
+        finishActive = false;
+        finishX = 9999;
         updateFireControl();
         bullets = [];
         obs = obs.filter((o) => o.type !== "boss_dancer");
