@@ -1425,10 +1425,10 @@ const W = 680,
   GND = 270,
   ROAD_RUN_Y = GND + 18,
   LANES = [150, 340, 530];
-const ROAD_TOP_HALF = 170;
-const ROAD_BOTTOM_HALF = 255;
+const ROAD_TOP_HALF = 125;
+const ROAD_BOTTOM_HALF = 270;
 const ROAD_LANE_RATIOS = [-0.58, 0, 0.58];
-const ROAD_LANE_EDGE_RATIOS = [-0.31, 0.31];
+const ROAD_LANE_EDGE_RATIOS = [-0.32, 0.32];
 
 function getAndriiWeapon(level = currentLevel, location = currentLocation) {
   const levelIndex = Number(level);
@@ -4033,16 +4033,16 @@ function drawGreetingBuildings(x, location) {
 }
 
 function drawRealRoad(timePeriod) {
-  const horizonY = GND - 112;
+  const horizonY = GND - 132;
   const bottomY = H + 18;
   const cx = W / 2;
   const topHalf = ROAD_TOP_HALF;
   const bottomHalf = ROAD_BOTTOM_HALF;
   const laneEdgeRatios = ROAD_LANE_EDGE_RATIOS;
   const isNight = timePeriod === "time-night";
-  const isLvivRoad = currentLocation === 1;
+  const isLvivRoad = false;
 
-  ctx.fillStyle = isNight ? "#253425" : "#8ca579";
+  ctx.fillStyle = isNight ? "#223421" : "#7fa568";
   ctx.fillRect(0, horizonY, W, bottomY - horizonY);
 
   const road = ctx.createLinearGradient(0, horizonY, 0, bottomY);
@@ -4051,9 +4051,9 @@ function drawRealRoad(timePeriod) {
     road.addColorStop(0.56, isNight ? "#383c44" : "#92959c");
     road.addColorStop(1, isNight ? "#2a2e36" : "#787c85");
   } else {
-    road.addColorStop(0, isNight ? "#3a404d" : "#b5b7bc");
-    road.addColorStop(0.55, isNight ? "#2b313d" : "#9ea1a8");
-    road.addColorStop(1, isNight ? "#202632" : "#858991");
+    road.addColorStop(0, isNight ? "#2c333d" : "#59616a");
+    road.addColorStop(0.55, isNight ? "#242b35" : "#48515a");
+    road.addColorStop(1, isNight ? "#1d2430" : "#333c45");
   }
   ctx.fillStyle = road;
   ctx.beginPath();
@@ -4065,8 +4065,8 @@ function drawRealRoad(timePeriod) {
   ctx.fill();
 
   const shoulder = ctx.createLinearGradient(0, horizonY, 0, bottomY);
-  shoulder.addColorStop(0, isNight ? "#384055" : "#687487");
-  shoulder.addColorStop(1, isNight ? "#242b3a" : "#3e4856");
+  shoulder.addColorStop(0, isNight ? "#2f3744" : "#4f5b66");
+  shoulder.addColorStop(1, isNight ? "#1f2631" : "#2f3944");
   ctx.strokeStyle = shoulder;
   ctx.lineWidth = 7;
   ctx.beginPath();
@@ -4143,7 +4143,7 @@ function drawRealRoad(timePeriod) {
 
   ctx.fillStyle = isLvivRoad
     ? isNight ? "rgba(255, 232, 188, 0.04)" : "rgba(255, 238, 199, 0.06)"
-    : isNight ? "rgba(255, 255, 255, 0.035)" : "rgba(255, 255, 255, 0.055)";
+    : isNight ? "rgba(255, 255, 255, 0.032)" : "rgba(255, 255, 255, 0.038)";
   const roadSpeckles = isLvivRoad ? 46 : 52;
   for (let i = 0; i < roadSpeckles; i++) {
     const y =
@@ -4197,8 +4197,8 @@ function drawRealRoad(timePeriod) {
 }
 
 function drawRoadRunTrack() {
-  const isLvivRoad = currentLocation === 1;
-  const horizonY = GND - 112;
+  const isLvivRoad = false;
+  const horizonY = GND - 132;
   const bottomY = H + 18;
   const cx = W / 2;
   const topHalf = ROAD_TOP_HALF;
@@ -4275,7 +4275,7 @@ function drawRoadRunTrack() {
   ctx.restore();
 }
 function getPerspectiveLanePoint(lane = pLane, t = 0.78) {
-  const horizonY = GND - 112;
+  const horizonY = GND - 132;
   const bottomY = H + 18;
   const cx = W / 2;
   const topHalf = ROAD_TOP_HALF;
@@ -6675,7 +6675,7 @@ function drawObs(o) {
     x = roadPoint.x;
     const y = roadPoint.y - 24;
     const bob = Math.sin(fr * 0.12 + (o.phase || 0)) * 1.5;
-    const isLvivRoad = currentLocation === 1;
+    const isLvivRoad = false;
     ctx.save();
     ctx.translate(x, roadPoint.y);
     ctx.scale(roadPoint.scale, roadPoint.scale);
