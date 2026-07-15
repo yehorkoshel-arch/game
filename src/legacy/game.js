@@ -2226,6 +2226,36 @@ function buildLevelBar() {
     .forEach((b, i) => (b.textContent = locNames[i]));
 }
 
+
+function buildDebugLevelBar() {
+  const bar = document.getElementById("debugLevelBar");
+  if (!bar) return;
+  bar.innerHTML = "";
+  const cityLabels = ["\u041a\u0438\u0457\u0432", "\u041b\u044c\u0432\u0456\u0432"];
+  [LEVELS_KYIV, LEVELS_LVIV].forEach((levels, loc) => {
+    const city = document.createElement("div");
+    city.className = "debug-level-city";
+    city.textContent = cityLabels[loc];
+    bar.appendChild(city);
+    levels.forEach((_, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "debug-level-btn";
+      btn.textContent = String(i + 1);
+      btn.title = cityLabels[loc] + " - \u0440\u0456\u0432\u0435\u043d\u044c " + (i + 1);
+      btn.onclick = () => {
+        focusApp();
+        currentLocation = loc;
+        currentLevel = i;
+        saveGame();
+        showScreen("sGame");
+        startLevel();
+      };
+      bar.appendChild(btn);
+    });
+  });
+}
+
 function applyLang() {
   const L = t();
   document.getElementById("menuSub").textContent = L.sub;
@@ -2246,6 +2276,7 @@ function applyLang() {
     .querySelectorAll(".lbtn")
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
   buildLevelBar();
+  buildDebugLevelBar();
   buildShop();
   buildSettings();
 }
