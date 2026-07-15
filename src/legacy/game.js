@@ -10906,6 +10906,10 @@ function beginIntroAfterGesture() {
   if (introStarted) return;
   startIntro();
 }
+const introAutoStartTimer = window.setTimeout(() => {
+  const introScreen = document.getElementById("sIntro");
+  if (!introStarted && introScreen?.classList.contains("active")) startIntro();
+}, 1200);
 drawBot(0, false);
 document.getElementById("introSubtitle").textContent =
   "\u041d\u0430\u0442\u0438\u0441\u043d\u0438 \u043d\u0430 \u0435\u043a\u0440\u0430\u043d, \u0449\u043e\u0431 \u043f\u043e\u0447\u0430\u0442\u0438.";
