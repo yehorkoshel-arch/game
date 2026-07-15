@@ -10808,7 +10808,7 @@ function drawBot(f, talking) {
   ix.fillStyle = `rgba(0,200,255,${0.5 + 0.3 * Math.sin(f * 0.05)})`;
   ix.font = "bold 8px monospace";
   ix.textAlign = "center";
-  ix.fillText("РОБОТРОН-9000", cx, IH - 6);
+  ix.fillText("ROBOTRON-9000", cx, IH - 6);
   ix.textAlign = "left";
 }
 
@@ -10821,7 +10821,7 @@ function typeNextChar() {
     iCharIdx++;
     iTypedText = full.slice(0, iCharIdx);
     document.getElementById("introSubtitle").textContent =
-      iTypedText + (iCharIdx < full.length ? "▋" : "");
+      iTypedText + (iCharIdx < full.length ? "\u258b" : "");
     setTimeout(typeNextChar, full[iCharIdx - 1] === " " ? 60 : 38);
   } else {
     // Фраза повністю набрана на екрані, тепер чекаємо озвучку.

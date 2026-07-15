@@ -11,6 +11,7 @@ export const VOICE_CLIPS = {
   "Андрій не злякався": "/game/audio/voice/robot_intro_08.mp3",
   "Він побіг швидко спритно хоробро": "/game/audio/voice/robot_intro_09.mp3",
   "Допоможи йому добігти до фінішу": "/game/audio/voice/robot_intro_10.mp3",
+  "Слава Україні": "/game/audio/voice/robot_intro_11.mp3",
   "Слава Україні 🇺🇦": "/game/audio/voice/robot_intro_11.mp3",
   "Ну що ж побігли": "/game/audio/voice/andrii_start_01.mp3",
   "Поїхали Тримайтесь": "/game/audio/voice/andrii_start_02.mp3",
