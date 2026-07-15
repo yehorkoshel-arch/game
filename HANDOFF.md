@@ -1,112 +1,141 @@
 # Handoff для продовження розробки гри
 
-Дата: 2026-07-05
+Дата оновлення: 2026-07-15
 Репозиторій: `yehorkoshel-arch/game`
 Локальна папка: `C:\Users\Yehor\Documents\Codex\2026-06-03\github-repo\work\game`
 
 ## Поточний стан
 
-- Останній коміт: `c139198 Add waving people in city windows`.
-- Гілка була синхронна з `origin/main` перед останньою незавершеною роботою.
-- Є незакомічені зміни у `src/legacy/game.js`.
-- Ці зміни почали фічу:
-  - реакції міста;
-  - бонусні монети з вікон;
-  - секретний дід з балкона з прапором;
-  - апгрейди зброї в магазині.
+- Проєкт: Vite + React + TypeScript, основна логіка гри все ще у `src/legacy/game.js`.
+- Деплой: GitHub Pages через `.github/workflows/pages.yml`.
+- GitHub Pages URL: `https://yehorkoshel-arch.github.io/game/`.
+- Гілка `main` синхронна з `origin/main` на момент оновлення handoff.
+- Робоче дерево було чисте перед оновленням цього файлу.
+- Останні коміти:
+  - `aa4b74f Update game.js`
+  - `8cb2088 Update IntroScreen.tsx`
+  - `1157ec0 Update game.js`
+  - `625aaff Update game.js`
+  - `f2dd0e0 Update voiceManifest.js`
+  - `840e261 Роботрон`
 
-## Важливо
-
-Незакомічена фіча ще не завершена. Не робити commit/push, поки не дороблено і не пройшла збірка.
-
-Перевірити стан:
+## Як перевіряти
 
 ```powershell
+cd C:\Users\Yehor\Documents\Codex\2026-06-03\github-repo\work\game
 git status --short --branch
-git diff -- src/legacy/game.js
-```
-
-## Що вже додано в незакомічених змінах
-
-У `src/legacy/game.js` уже частково додано:
-
-- `weaponUpgrades` у збереження:
-  - `fireRate`
-  - `damage`
-  - `laser`
-- масив `WEAPON_UPGRADES` з цінами:
-  - швидкий мініган: `450`
-  - потужні кулі: `650`
-  - лазерний бластер: `900`
-- новий масив стану `cityGifts`;
-- функцію `spawnCityGift(secret = false)`;
-- функцію `drawBalconyGrandpa(...)`;
-- скидання `cityGifts` при старті рівня, story-сцені та бос-сцені.
-
-## Що треба доробити
-
-1. Доробити малювання бонусів міста:
-   - додати `drawCityGift(gift)`;
-   - викликати `cityGifts.forEach(drawCityGift)` у `loop()` поруч із монетами.
-
-2. Доробити рух і збір бонусів:
-   - у `update()` рухати `cityGifts`;
-   - фільтрувати подарунки за `life`;
-   - при зіткненні з Андрієм додавати `gift.value` до `runCoins`;
-   - викликати `addQuestProgress("coins", gift.value)`, `sfxCoin()`, `addParts(...)`, `hudUp()`.
-
-3. Додати періодичний спавн:
-   - звичайний подарунок з вікон раз на кілька секунд;
-   - рідше `spawnCityGift(true)` для діда з балкона.
-
-4. Доробити магазин апгрейдів:
-   - після списку скінів додати окремий блок “Покращення зброї”;
-   - для кожного `WEAPON_UPGRADES` показати назву, опис, ціну або “Куплено”;
-   - при покупці списувати монети, ставити `weaponUpgrades[id] = true`, зберігати гру.
-
-5. Підключити апгрейди до зброї:
-   - `fireRate`: зменшити `fireCooldown` для `minigun` і `machinegun`;
-   - `damage`: збільшити damage по boss-босу;
-   - `laser`: додати тип кулі `laser`, довший hitbox і інший вигляд у `drawBullets`.
-
-6. Перевірити місце в diff біля boss-сцени:
-   - зараз у diff видно змінений блок:
-     ```js
-     obs = [];
-       coins = [];
-       cityGifts = [];
-     ```
-   - треба вирівняти відступи й переконатись, що синтаксис не зламаний.
-
-## Команди перевірки
-
-```powershell
 node --check src/legacy/game.js
 npm.cmd run build
-git diff --check
 ```
 
-Якщо все добре:
+Для голосових файлів:
 
 ```powershell
-git add src/legacy/game.js src/styles/global.css
-git commit -m "Add city reactions and weapon upgrades"
+node --input-type=module -e "import fs from 'node:fs'; import { VOICE_CLIPS } from './src/audio/voiceManifest.js'; const missing = Object.entries(VOICE_CLIPS).filter(([,src]) => !fs.existsSync('public' + src.replace('/game',''))); if (missing.length) { console.error(missing); process.exit(1); } console.log('Voice files OK:', Object.keys(VOICE_CLIPS).length);"
 ```
 
-Push користувач часто робить вручну, але якщо попросить:
+## Важливе про файл `game.js`
+
+`src/legacy/game.js` має проблемне старе кодування. `apply_patch` часто падає з `invalid utf-8`.
+
+Для редагування цього файлу краще використовувати PowerShell:
 
 ```powershell
-git push origin main
+$path = 'src\legacy\game.js'
+$enc = [System.Text.Encoding]::Default
+$lines = [System.Collections.Generic.List[string]]::new()
+[System.IO.File]::ReadAllLines($path, $enc) | ForEach-Object { [void]$lines.Add($_) }
+# редагування рядків
+[System.IO.File]::WriteAllLines($path, $lines, $enc)
 ```
 
-## Попередні важливі коміти
+Нові українські рядки у `game.js` краще додавати через `\u....`, щоб не отримати mojibake.
 
-- `c139198` — люди у вікнах махають Андрію.
-- `4d860a8` — виправлення збережень, lifecycle і стабільної збірки.
-- `0acbfd6` — фікс фінішу в Києві.
-- `c7a5117` — мініган влучає по цілях у Львові через смуги.
-- `fc6bd4a` — фікси маршруту й діалогів у Львові.
+## Остання важлива зона: запуск гри та Роботрон
+
+Проблема: на iPad/Safari користувач міг бачити інтро або `...`, але не міг зайти в гру.
+
+Що зроблено:
+
+- `IntroScreen.tsx`: кнопка інтро тепер `▶ Увійти в гру`.
+- `src/legacy/game.js`:
+  - `handleAppGesture(event)` слухає `pointerdown`, `click`, `touchstart`;
+  - клік по `#introSkip` не запускає інтро повторно;
+  - `introSkip.onclick` робить `stopPropagation`, `focusApp()`, `finishIntro()`;
+  - `beginIntroAfterGesture()` має guard через `introStarted`;
+  - автостарт інтро через `introAutoStartTimer` запускається лише якщо `sIntro` активний і інтро ще не стартувало.
+
+Перевірка конфлікту запуску:
+
+- `touchstart/pointerdown/click` можуть прийти разом, але повторний старт блокується `introStarted`.
+- Кнопка входу відсікається через `skipPressed`.
+- `npm.cmd run build` проходить.
+
+## Роботрон і голос
+
+Файли:
+
+- `src/audio/voiceManifest.js`
+- `src/audio/tts.js`
+- `public/audio/voice/robot_intro_*.mp3`
+- `src/legacy/game.js`
+
+Що важливо:
+
+- Усі 11 інтро-фраз Роботрона мають mp3.
+- Для `Слава Україні` додано окремий ключ у manifest без прапора, щоб нормалізація тексту знаходила файл.
+- У `drawBot()` виправляли неправильний canvas context: всередині intro robot renderer має бути `ix.fill()` / `ix.stroke()`, не `ctx.fill()`.
+- `drawBot wrong ctx calls` має бути `0`, якщо перевіряти блок `drawBot`.
+
+## Поточні реалізовані фічі
+
+У грі вже є багато фіч, які користувач просив по ходу:
+
+- Київ і Львів з різними дорогами.
+- Дощовий Київ, сонячні/міські варіанти, вибір часу доби в меню.
+- Дорога з перспективою, смугами, стрілками руху, конусами, ямами, калюжами, трафіком.
+- Львівська бруківка, кав'ярня, будинки, трамвай.
+- Роботрон на інтро, голосові репліки, скін `Неоновий Роботрон`, танець з Андрієм.
+- Марічка: модель, історія з проєктом, озвучені фрази, участь у фіналі школи.
+- Магазин скінів і апгрейдів.
+- Рюкзак бонусів.
+- Квести, ланцюжок Марічки, досягнення/колекція.
+- Міні-мапа/прогрес рівня.
+- Зброя: пістолет у Львові, мініган, апгрейди зброї.
+- Київський бос-машина/трансформер.
+- Секретні маршрути: метро/тунелі/дахи/переходи.
+- Фініш зі школою: Андрій заходить у школу.
+
+## Типові ризики
+
+1. GitHub Pages cache:
+   - після push відкривати з query string, наприклад:
+     `https://yehorkoshel-arch.github.io/game/?v=<commit>`
+   - на iPad/Safari може триматися старий bundle.
+
+2. Голосові файли:
+   - не додавати ключ у `voiceManifest.js`, якщо mp3 не існує в `public/audio/voice`.
+   - якщо згенеровано нові mp3, перевірити manifest.
+
+3. `game.js` encoding:
+   - не переписувати весь файл через UTF-8 без перевірки.
+   - після редагування завжди `node --check src/legacy/game.js`.
+
+4. Не робити push без прохання користувача.
+   - користувач часто просить: "commit", "push", або "Push робимо руками, ти тільки commit".
+   - Якщо не просив push, не пушити.
+
+## Рекомендований наступний крок
+
+Якщо користувач знову каже, що не може зайти:
+
+1. Перевірити deployed commit або попросити/перевірити Actions.
+2. Дати URL з cache bust:
+   `https://yehorkoshel-arch.github.io/game/?v=<останній_commit>`
+3. Якщо проблема лишається, тимчасово додати debug text на intro:
+   - показувати `introStarted`, `iState`, `iPhase`;
+   - або зробити кнопку `Увійти в гру` повністю незалежною від intro logic: напряму `showScreen("sMenu")`, `cancelSpeech()`, `cancelAnimationFrame(iRaf)`.
 
 ## Короткий промпт для нового чату
 
-Продовж розробку гри в `C:\Users\Yehor\Documents\Codex\2026-06-03\github-repo\work\game`. Прочитай `HANDOFF.md`, перевір `git status` і `git diff`. Треба доробити незавершену фічу: реакції міста, бонусні монети з вікон, секретний дід з балкона і апгрейди зброї в магазині. Не пушити без окремого прохання.
+Продовж розробку гри в `C:\Users\Yehor\Documents\Codex\2026-06-03\github-repo\work\game`. Спочатку прочитай `HANDOFF.md`, перевір `git status --short --branch`, `node --check src/legacy/game.js` і `npm.cmd run build`. Основна логіка в `src/legacy/game.js`, файл має проблемне кодування, тому редагуй його обережно через PowerShell Encoding.Default. Не пушити без окремого прохання.
