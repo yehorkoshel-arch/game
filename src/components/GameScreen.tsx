@@ -33,7 +33,7 @@ export function GameScreen() {
           Вогонь
         </button>
         <button className="cbtn" id="cBonus" style={{ borderColor: '#41666e', color: '#9ee8ff' }} type="button">
-          {"\ud83c\udf92"} Р‘РѕРЅСѓСЃ
+          🎒 Бонус
         </button>
       </div>
     </div>

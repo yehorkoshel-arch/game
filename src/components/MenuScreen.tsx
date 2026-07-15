@@ -19,7 +19,7 @@ export function MenuScreen() {
         <span id="achievementReadyBadge" className="quest-ready-badge">0</span>
       </button>
       <button className="collection-icon-btn" id="btnCollectionOpen" title="Колекція" type="button">
-        ▣
+        ◧
       </button>
       <div className="lang-bar">
         <button className="lbtn active" data-lang="uk" type="button">
@@ -49,7 +49,7 @@ export function MenuScreen() {
         МАГАЗИН
       </button>
       <button className="mbtn mbtn-backpack" id="btnBackpackOpen" type="button">
-        {"\ud83c\udf92"} Рюкзак
+        🎒 Рюкзак
       </button>
       <div className="loc-tabs" id="locTabs">
         <button className="loc-tab active" data-loc="0" type="button">
