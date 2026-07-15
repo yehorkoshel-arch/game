@@ -1411,8 +1411,10 @@ let finishX = 9999,
   schoolDialogueStep = 0,
   schoolDialogueDone = false,
   schoolExitTimer = 0,
+  schoolWalkTimer = 0,
   winTimer = 0,
   levelClearTimer = 0;
+  levelCompleteLocked = false;
 let levelMissions = [],
   levelMissionStats = {},
   levelMissionReward = 0,
@@ -3302,7 +3304,20 @@ function fireAndriiWeapon() {
   sfxMachineGunBurst();
 }
 
+function prepareNextLevelTransition() {
+  spd = 0;
+  levelClearTimer = 0;
+  schoolEnterTimer = 0;
+  schoolExitTimer = 0;
+  schoolWalkTimer = 0;
+  schoolDialogueStep = 0;
+  schoolDialogueDone = false;
+  pSlide = false;
+  slideT = 0;
+}
+
 function nextLevel() {
+  prepareNextLevelTransition();
   currentLevel++;
   // зберігаємо прогрес для поточної локації
   if (currentLocation === 0)
@@ -3404,6 +3419,7 @@ function startLevel() {
   schoolDialogueStep = 0;
   schoolDialogueDone = false;
   schoolExitTimer = 0;
+  schoolWalkTimer = 0;
   bossActive = false;
   bossDefeated = false;
   bossTransform = 0;
@@ -3417,6 +3433,7 @@ function startLevel() {
   resetLevelMissions();
   winTimer = 0;
   levelClearTimer = 0;
+  levelCompleteLocked = false;
   andriiFirstObs = false;
   andriiCooldown = 0;
   bubbleText = "";
@@ -5106,7 +5123,7 @@ function drawFinishSchool(x) {
   const doorX = x + schoolW / 2;
   const doorOpen =
     gameState === "schoolEnter"
-      ? Math.min(schoolExitTimer / 30, 1)
+      ? Math.min(schoolWalkTimer / 30, 1)
       : 0;
   ctx.fillStyle = "#101419";
   ctx.fillRect(doorX - 20, GND - 45, 40, 45);
@@ -5444,7 +5461,7 @@ function drawPlayer() {
     ctx.translate(-x, -y);
   }
   if (gameState === "schoolEnter") {
-    const progress = Math.min(schoolExitTimer / 94, 1);
+    const progress = Math.min(schoolWalkTimer / 94, 1);
     const ease = 1 - Math.pow(1 - progress, 3);
     const doorX = finishX + 249;
     const startX = LANES[pLane];
@@ -9109,7 +9126,7 @@ function drawSchoolMarichkaScene() {
   const holdingProject = schoolDialogueStep < 2;
 
   if (schoolDialogueDone) {
-    const enterProgress = Math.min(schoolExitTimer / 94, 1);
+    const enterProgress = Math.min(schoolWalkTimer / 94, 1);
     const enterEase = 1 - Math.pow(1 - enterProgress, 3);
     x = waitX + (doorX - waitX) * enterEase;
     const scale = 1 - Math.max(0, enterProgress - 0.46) * 0.7;
@@ -9147,9 +9164,9 @@ function drawSchoolMarichkaScene() {
 }
 
 function drawSchoolFinaleScene() {
-  if (gameState !== "schoolEnter" || !schoolDialogueDone || schoolExitTimer < 42)
+  if (gameState !== "schoolEnter" || !schoolDialogueDone || schoolWalkTimer < 42)
     return;
-  const reveal = Math.min((schoolExitTimer - 42) / 34, 1);
+  const reveal = Math.min((schoolWalkTimer - 42) / 34, 1);
   const panelY = 48 + (1 - reveal) * 18;
 
   ctx.save();
@@ -9254,6 +9271,9 @@ function drawTckScene() {
 }
 
 function completeLevelAfterSchool() {
+  if (levelCompleteLocked) return;
+  levelCompleteLocked = true;
+  spd = 0;
   const lv = getLvl();
   const isFinalLevel = currentLevel >= getLevels().length - 1;
   addQuestProgress("levels");
@@ -9316,7 +9336,10 @@ function update() {
   }
   if (gameState === "schoolEnter") {
     schoolEnterTimer++;
-    if (schoolDialogueDone) schoolExitTimer++;
+    if (schoolDialogueDone) {
+      schoolExitTimer++;
+      schoolWalkTimer++;
+    }
     fr++;
     pY = GND;
     pVY = 0;
@@ -9335,7 +9358,11 @@ function update() {
           schoolDialogueDone = true;
         });
     }
-    if ((schoolDialogueDone && schoolExitTimer >= 160) || schoolEnterTimer >= 700)
+    if (!schoolDialogueDone && schoolEnterTimer >= 360) {
+      schoolDialogueStep = 0;
+      schoolDialogueDone = true;
+    }
+    if ((schoolDialogueDone && schoolWalkTimer >= 160) || schoolEnterTimer >= 700)
       completeLevelAfterSchool();
     return;
   }
@@ -9561,6 +9588,7 @@ function update() {
       schoolDialogueStep = 0;
       schoolDialogueDone = false;
       schoolExitTimer = 0;
+      schoolWalkTimer = 0;
       spd = 0;
       obs = [];
       bullets = [];
