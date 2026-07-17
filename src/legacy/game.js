@@ -4040,7 +4040,7 @@ function drawRealRoad(timePeriod) {
   const bottomHalf = ROAD_BOTTOM_HALF;
   const laneEdgeRatios = ROAD_LANE_EDGE_RATIOS;
   const isNight = timePeriod === "time-night";
-  const isLvivRoad = false;
+  const isLvivRoad = currentLocation === 1;
 
   ctx.fillStyle = isNight ? "#223421" : "#7fa568";
   ctx.fillRect(0, horizonY, W, bottomY - horizonY);
@@ -4197,7 +4197,7 @@ function drawRealRoad(timePeriod) {
 }
 
 function drawRoadRunTrack() {
-  const isLvivRoad = false;
+  const isLvivRoad = currentLocation === 1;
   const horizonY = GND - 132;
   const bottomY = H + 18;
   const cx = W / 2;
@@ -6675,7 +6675,7 @@ function drawObs(o) {
     x = roadPoint.x;
     const y = roadPoint.y - 24;
     const bob = Math.sin(fr * 0.12 + (o.phase || 0)) * 1.5;
-    const isLvivRoad = false;
+    const isLvivRoad = currentLocation === 1;
     ctx.save();
     ctx.translate(x, roadPoint.y);
     ctx.scale(roadPoint.scale, roadPoint.scale);
