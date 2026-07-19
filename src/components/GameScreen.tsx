@@ -2,6 +2,21 @@ export function GameScreen() {
   return (
     <div id="sGame" className="screen">
       <canvas id="gc" width={680} height={420} />
+      <div id="endPanel" className="end-panel" aria-live="polite">
+        <div className="end-panel-title" id="endPanelTitle">Результат</div>
+        <div className="end-panel-stats" id="endPanelStats">0 очок · 0 монет</div>
+        <div className="end-panel-actions">
+          <button className="end-panel-btn primary" id="btnRetryRun" type="button">
+            Ще раз
+          </button>
+          <button className="end-panel-btn" id="btnNextRun" type="button">
+            Далі
+          </button>
+          <button className="end-panel-btn" id="btnEndMenu" type="button">
+            В меню
+          </button>
+        </div>
+      </div>
       <div id="hud">
         <div className="hud-l">
           {"\u2665"} <span id="hLives">0</span> &nbsp;&nbsp; <span id="hScore">763</span> <span id="hudPts">очок</span>
