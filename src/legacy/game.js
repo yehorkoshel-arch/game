@@ -4495,31 +4495,30 @@ function drawRoadsideSigns() {
 
 function drawLvivTram() {
   if (currentLocation !== 1) return;
-  const railY1 = GND + 18;
-  const railY2 = GND + 38;
-  ctx.save();
-  ctx.strokeStyle = "rgba(60,50,42,0.68)";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(0, railY1);
-  ctx.lineTo(W, railY1);
-  ctx.moveTo(0, railY2);
-  ctx.lineTo(W, railY2);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(220,205,176,0.4)";
-  ctx.lineWidth = 1.5;
-  for (let x = -40 + ((bgOff * 1.2) % 56); x < W + 60; x += 56) {
-    ctx.beginPath();
-    ctx.moveTo(x, railY1 - 5);
-    ctx.lineTo(x + 18, railY2 + 6);
-    ctx.stroke();
-  }
-
   const tramX = W + 190 - ((bgOff * 0.36) % (W + 430));
   const tramY = GND - 118;
-  if (tramX < -260 || tramX > W + 120) {
-    ctx.restore();
-    return;
+  if (tramX < -260 || tramX > W + 120) return;
+
+  ctx.save();
+  const railY1 = GND - 2;
+  const railY2 = GND + 10;
+  const railStart = Math.max(-20, tramX - 36);
+  const railEnd = Math.min(W + 20, tramX + 220);
+  ctx.strokeStyle = "rgba(60,50,42,0.58)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(railStart, railY1);
+  ctx.lineTo(railEnd, railY1);
+  ctx.moveTo(railStart, railY2);
+  ctx.lineTo(railEnd, railY2);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(220,205,176,0.34)";
+  ctx.lineWidth = 1.4;
+  for (let x = railStart + ((bgOff * 0.9) % 44); x < railEnd; x += 44) {
+    ctx.beginPath();
+    ctx.moveTo(x, railY1 - 2);
+    ctx.lineTo(x + 14, railY2 + 3);
+    ctx.stroke();
   }
 
   ctx.fillStyle = "rgba(0,0,0,0.24)";
