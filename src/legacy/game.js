@@ -9126,56 +9126,135 @@ function drawLevelMissionHud() {
   ctx.restore();
 }
 
-function drawLevelMissionIntroOverlay() {
+function getCityStartCopy() {
   const lvNames = getLevelNames(currentLocation, lang);
+  const district = lvNames[currentLevel] || "";
+  if (lang === "uk") {
+    return currentLocation === 0
+      ? {
+          city: "\u041a\u0438\u0457\u0432",
+          district,
+          tip: "\u0420\u043e\u0431\u043e\u0442\u0440\u043e\u043d: \u0441\u043f\u043e\u0447\u0430\u0442\u043a\u0443 \u0440\u043e\u0437\u0436\u0435\u043d\u0438\u0441\u044f, \u043f\u043e\u0442\u0456\u043c \u0437\u0431\u0438\u0440\u0430\u0439 \u043c\u043e\u043d\u0435\u0442\u0438.",
+          phaseClear: "\u0420\u043e\u0437\u0433\u0456\u043d: \u0434\u043e\u0440\u043e\u0433\u0430 \u0447\u0438\u0441\u0442\u0430",
+          phaseCoins: "\u041c\u043e\u043d\u0435\u0442\u0438 \u043f\u043e\u043f\u0435\u0440\u0435\u0434\u0443",
+          phaseDanger: "\u0423\u0432\u0430\u0433\u0430: \u043f\u043e\u0447\u0438\u043d\u0430\u044e\u0442\u044c\u0441\u044f \u043f\u0435\u0440\u0435\u0448\u043a\u043e\u0434\u0438",
+        }
+      : {
+          city: "\u041b\u044c\u0432\u0456\u0432",
+          district,
+          tip: "\u0420\u043e\u0431\u043e\u0442\u0440\u043e\u043d: \u043d\u0430 \u0431\u0440\u0443\u043a\u0456\u0432\u0446\u0456 \u0440\u043e\u0437\u0436\u0435\u043d\u0438\u0441\u044f \u0456 \u043f\u0438\u043b\u044c\u043d\u0443\u0439 \u043a\u043e\u043d\u0443\u0441\u0438.",
+          phaseClear: "\u0420\u043e\u0437\u0433\u0456\u043d: \u0431\u0440\u0443\u043a\u0456\u0432\u043a\u0430 \u0447\u0438\u0441\u0442\u0430",
+          phaseCoins: "\u041c\u043e\u043d\u0435\u0442\u0438 \u043f\u043e\u043f\u0435\u0440\u0435\u0434\u0443",
+          phaseDanger: "\u0423\u0432\u0430\u0433\u0430: \u043a\u043e\u043d\u0443\u0441\u0438 \u0456 \u0441\u0430\u043c\u043e\u043a\u0430\u0442\u0438 \u043d\u0430 \u0441\u0442\u0430\u0440\u0442\u0456",
+        };
+  }
+  return currentLocation === 0
+    ? {
+        city: "Kyiv",
+        district,
+        tip: "Robotron: accelerate first, then collect coins.",
+        phaseClear: "Warm-up: road is clear",
+        phaseCoins: "Coins ahead",
+        phaseDanger: "Warning: obstacles begin",
+      }
+    : {
+        city: "Lviv",
+        district,
+        tip: "Robotron: warm up on the cobblestones and watch the cones.",
+        phaseClear: "Warm-up: road is clear",
+        phaseCoins: "Coins ahead",
+        phaseDanger: "Warning: obstacles begin",
+      };
+}
+function drawStartPhaseBanner() {
+  if (gameState !== "run" || fr > START_SAFE_FRAMES + 120) return;
+  const copy = getCityStartCopy();
+  const text = fr < START_EMPTY_FRAMES || totalDist < START_EMPTY_DISTANCE
+    ? copy.phaseClear
+    : fr < START_SAFE_FRAMES || totalDist < START_SAFE_DISTANCE
+      ? copy.phaseCoins
+      : copy.phaseDanger;
+  const alpha = Math.min(1, fr / 24, (START_SAFE_FRAMES + 120 - fr) / 36);
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, alpha) * 0.94;
+  const x = W / 2;
+  const y = 58;
+  ctx.fillStyle = "rgba(10, 14, 28, 0.84)";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - 128, y - 16, 256, 30, 8);
+  else ctx.rect(x - 128, y - 16, 256, 30);
+  ctx.fill();
+  ctx.strokeStyle = "#ffd700";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = "#f6fbff";
+  ctx.font = "bold 11px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(text, x, y + 3);
+  ctx.restore();
+}
+function drawLevelMissionIntroOverlay() {
+  const copy = getCityStartCopy();
   ctx.save();
   ctx.fillStyle = "rgba(5,10,20,0.76)";
   ctx.fillRect(0, 0, W, H);
   ctx.textAlign = "center";
+
+  ctx.fillStyle = "rgba(15,24,42,0.9)";
+  ctx.strokeStyle = currentLocation === 0 ? "rgba(98,214,255,0.55)" : "rgba(255,215,0,0.5)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(W / 2 - 210, 44, 420, 76, 12);
+  else ctx.rect(W / 2 - 210, 44, 420, 76);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = currentLocation === 0 ? "#62d6ff" : "#ffd45c";
+  ctx.font = "bold 30px sans-serif";
+  ctx.fillText(copy.city, W / 2, 76);
+  ctx.fillStyle = "#f2f7ff";
+  ctx.font = "bold 15px sans-serif";
+  ctx.fillText(`\u0420\u0456\u0432\u0435\u043d\u044c ${currentLevel + 1}: ${copy.district}`, W / 2, 98);
+  ctx.fillStyle = "#aabbcc";
+  ctx.font = "12px sans-serif";
+  ctx.fillText(copy.tip, W / 2, 114);
+
   ctx.fillStyle = "#ffd700";
-  ctx.font = "bold 28px sans-serif";
-  ctx.fillText(gt("levelMissions"), W / 2, 92);
-  ctx.fillStyle = "#d8e7ff";
-  ctx.font = "14px sans-serif";
-  ctx.fillText(
-    `Рівень ${currentLevel + 1}: ${lvNames[currentLevel] || ""}`,
-    W / 2,
-    118,
-  );
+  ctx.font = "bold 20px sans-serif";
+  ctx.fillText(gt("levelMissions"), W / 2, 145);
 
   const cardX = W / 2 - 205;
-  const cardY = 142;
+  const cardY = 164;
   const cardW = 410;
   ctx.fillStyle = "rgba(15,24,42,0.92)";
   ctx.strokeStyle = "rgba(255,215,0,0.42)";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(cardX, cardY, cardW, 126, 10);
-  else ctx.rect(cardX, cardY, cardW, 126);
+  if (ctx.roundRect) ctx.roundRect(cardX, cardY, cardW, 116, 10);
+  else ctx.rect(cardX, cardY, cardW, 116);
   ctx.fill();
   ctx.stroke();
 
   ctx.textAlign = "left";
   levelMissions.forEach((mission, index) => {
-    const y = cardY + 30 + index * 33;
+    const y = cardY + 28 + index * 30;
     ctx.fillStyle = "#6bcb77";
-    ctx.font = "bold 16px sans-serif";
+    ctx.font = "bold 15px sans-serif";
     ctx.fillText(`${index + 1}.`, cardX + 24, y);
     ctx.fillStyle = "#f2f7ff";
-    ctx.font = "bold 15px sans-serif";
+    ctx.font = "bold 14px sans-serif";
     ctx.fillText(mission.title, cardX + 54, y);
     ctx.fillStyle = "#ffd700";
-    ctx.font = "12px sans-serif";
+    ctx.font = "11px sans-serif";
     ctx.fillText(gt("missionReward", LEVEL_MISSION_REWARD), cardX + 290, y);
   });
 
   ctx.textAlign = "center";
   ctx.fillStyle = "#aabbcc";
   ctx.font = "13px sans-serif";
-  ctx.fillText(gt("startMissions"), W / 2, 300);
+  ctx.fillText(gt("startMissions"), W / 2, 304);
   ctx.restore();
 }
-
 function drawWinOverlay() {
   const L = t();
   const alpha = Math.min(winTimer / 30, 0.75);
@@ -11124,6 +11203,7 @@ function loop() {
   if (gameState === "run") {
     drawHUDCanvas();
     drawDistBar();
+    drawStartPhaseBanner();
     drawSecretRouteHUD();
     drawRoadEventBanner();
     drawChaseBanner();
