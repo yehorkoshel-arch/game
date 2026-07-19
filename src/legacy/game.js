@@ -1449,8 +1449,10 @@ const LEVEL_MISSION_REWARD = 50;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
-const START_SAFE_FRAMES = 210;
-const START_SAFE_DISTANCE = 18;
+const START_EMPTY_FRAMES = 180;
+const START_EMPTY_DISTANCE = 14;
+const START_SAFE_FRAMES = 300;
+const START_SAFE_DISTANCE = 28;
 const FINISH_APPROACH_DISTANCE = 10;
 const SCHOOL_BELL_FRAMES = 30 * 60;
 const SCHOOL_BELL_REWARD = 75;
@@ -10409,6 +10411,7 @@ function update() {
     160 - Math.floor(spd * 6),
     settingDiff === "hard" ? 75 : settingDiff === "easy" ? 118 : 96,
   );
+  const startEmpty = fr < START_EMPTY_FRAMES || totalDist < START_EMPTY_DISTANCE;
   const startSafe = fr < START_SAFE_FRAMES || totalDist < START_SAFE_DISTANCE;
   updateRoadEvent(startSafe);
   updateChaseMode(startSafe);
@@ -10445,7 +10448,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
-    !startSafe &&
+    !startEmpty &&
     fr > 70 &&
     fr % 110 === 0 &&
     totalDist < FDIST - 50
