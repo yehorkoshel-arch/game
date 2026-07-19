@@ -2240,6 +2240,8 @@ function buildLevelBar() {
 }
 
 
+const ENABLE_DEBUG_MENU = false;
+
 function buildDebugLevelBar() {
   const bar = document.getElementById("debugLevelBar");
   if (!bar) return;
@@ -2340,8 +2342,10 @@ function applyLang() {
     .querySelectorAll(".lbtn")
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
   buildLevelBar();
-  buildDebugLevelBar();
-  buildDebugPresetBar();
+  if (ENABLE_DEBUG_MENU) {
+    buildDebugLevelBar();
+    buildDebugPresetBar();
+  }
   buildShop();
   buildSettings();
 }

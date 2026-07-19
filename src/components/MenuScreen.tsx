@@ -1,7 +1,7 @@
 import { DancingAndrii } from './DancingAndrii';
 
 export function MenuScreen() {
-  const showDebugPanel = import.meta.env.DEV;
+  const showDebugPanel = false;
 
   return (
     <div id="sMenu" className="screen">
