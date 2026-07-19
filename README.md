@@ -4,15 +4,14 @@
 
 ## Структура
 
-- `index.html` - точка входу Vite і import map для browser TTS.
+- `index.html` - точка входу Vite для GitHub Pages.
 - `src/App.tsx` - основна React-збірка екранів і підключення ігрової логіки після монтування.
 - `src/components/` - окремі React-компоненти екранів гри.
 - `src/data/gameData.js` - тексти інтерфейсу, скіни та назви локацій.
 - `src/levels/levelFactory.js` - генерація рівнів, палітр трас і наборів перешкод.
-- `src/audio/tts.js` - українська системна озвучка і прапорець експериментального Piper TTS.
+- `src/audio/tts.js` - відтворення готових аудіофайлів реплік і fallback для інших мов.
 - `src/audio/voiceManifest.js` - manifest готових аудіофайлів для реплік.
 - `public/audio/voice/` - місце для `.webm`/`.mp3`/`.wav` озвучки.
-- `public/voice-recorder.html` - сторінка для запису реплік через мікрофон.
 - `src/state/saveState.js` - читання та запис прогресу гри в браузері.
 - `src/ui/dom.js` - невеликі DOM-helper-и для фокуса, екранів і тексту.
 - `src/main.tsx` - запуск React.
