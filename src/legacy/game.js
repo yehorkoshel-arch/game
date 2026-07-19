@@ -10445,6 +10445,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     fr > 70 &&
     fr % 110 === 0 &&
     totalDist < FDIST - 50
