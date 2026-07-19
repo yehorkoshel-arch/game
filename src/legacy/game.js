@@ -1420,6 +1420,7 @@ let bgOff = 0,
   raf = null;
 let loopActive = false;
 let fireCooldown = 0;
+let lastRoadHazardSpawnFrame = -9999;
 let lightningFlash = 0,
   nextLightning = 240;
 let startVoiceTimer = null;
@@ -1450,10 +1451,12 @@ const LEVEL_MISSION_REWARD = 50;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
-const START_EMPTY_FRAMES = 180;
-const START_EMPTY_DISTANCE = 14;
-const START_SAFE_FRAMES = 300;
-const START_SAFE_DISTANCE = 28;
+const START_EMPTY_FRAMES = 210;
+const START_EMPTY_DISTANCE = 18;
+const START_SAFE_FRAMES = 360;
+const START_SAFE_DISTANCE = 38;
+const ROAD_SPAWN_X = W + 150;
+const BONUS_SPAWN_X = W + 130;
 const FINISH_APPROACH_DISTANCE = 10;
 const SCHOOL_BELL_FRAMES = 30 * 60;
 const SCHOOL_BELL_REWARD = 75;
@@ -3891,6 +3894,7 @@ function startLevel() {
   bullets = [];
   playerBullets = [];
   fireCooldown = 0;
+  lastRoadHazardSpawnFrame = -9999;
   bgOff = 0;
   lightningFlash = 0;
   nextLightning = 160 + ((Math.random() * 180) | 0);
@@ -4017,7 +4021,13 @@ function hudUp() {
 const cv = document.getElementById("gc"),
   ctx = cv.getContext("2d");
 
+function reserveRoadHazardSpawn(minFrames = 58) {
+  if (fr - lastRoadHazardSpawnFrame < minFrames) return false;
+  lastRoadHazardSpawnFrame = fr;
+  return true;
+}
 function spawnObs() {
+  if (!reserveRoadHazardSpawn()) return;
   const lv = getLvl();
   const types = lv.obsTypes;
   const eventRoadwork = isRoadEvent("lviv_roadwork");
@@ -4041,7 +4051,7 @@ function spawnObs() {
         : "hole"
       : types[Math.floor(Math.random() * types.length)];
   obs.push({
-    x: W + 30,
+    x: ROAD_SPAWN_X,
     lane: Math.floor(Math.random() * 3),
     type,
     vx: type === "scooter" ? 1.8 : 0,
@@ -4049,9 +4059,10 @@ function spawnObs() {
   });
 }
 function spawnCrosswalk() {
+  if (!reserveRoadHazardSpawn(72)) return;
   const green = Math.random() < 0.58;
   obs.push({
-    x: W + 50,
+    x: ROAD_SPAWN_X,
     lane: 1,
     type: "crosswalk",
     green,
@@ -4061,6 +4072,7 @@ function spawnCrosswalk() {
   robotRadio(green ? "radioCrosswalkGreen" : "radioCrosswalkRed", 360);
 }
 function spawnTrafficCar() {
+  if (!reserveRoadHazardSpawn(82)) return;
   const lane = Math.floor(Math.random() * 3);
   const palette =
     currentLocation === 1
@@ -4076,7 +4088,7 @@ function spawnTrafficCar() {
         ];
   const colors = palette[(currentLevel + lane + fr) % palette.length];
   obs.push({
-    x: W + 70,
+    x: ROAD_SPAWN_X,
     lane,
     type: "traffic_car",
     vx: 0.55 + Math.random() * 0.95,
@@ -4089,27 +4101,28 @@ function spawnTrafficCar() {
 function spawnCoin() {
   const l = Math.floor(Math.random() * 3),
     hi = Math.random() < 0.35;
-  coins.push({ x: W + 20, lane: l, y: hi ? GND - 70 : GND, done: false });
+  coins.push({ x: BONUS_SPAWN_X, lane: l, y: hi ? GND - 70 : GND, done: false });
 }
 function spawnMagnet() {
   const lane = Math.floor(Math.random() * 3);
-  magnets.push({ x: W + 30, lane, y: GND - 36, phase: Math.random() * Math.PI * 2 });
+  magnets.push({ x: ROAD_SPAWN_X, lane, y: GND - 36, phase: Math.random() * Math.PI * 2 });
 }
 function spawnChestnut() {
   if (currentLocation !== 0) return;
   const lane = Math.floor(Math.random() * 3);
-  chestnuts.push({ x: W + 35, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
+  chestnuts.push({ x: BONUS_SPAWN_X, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
 function spawnCoffee() {
   if (currentLocation !== 1) return;
   const lane = Math.floor(Math.random() * 3);
-  coffees.push({ x: W + 35, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
+  coffees.push({ x: BONUS_SPAWN_X, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
 function spawnRescueBus() {
   if (secretRoute?.active || bossActive || gameState !== "run") return;
+  if (!reserveRoadHazardSpawn(90)) return;
   const lane = Math.floor(Math.random() * 3);
   rescueBuses.push({
-    x: W + 70,
+    x: ROAD_SPAWN_X,
     lane,
     y: GND - 46,
     phase: Math.random() * Math.PI * 2,
@@ -4118,11 +4131,11 @@ function spawnRescueBus() {
 }
 function spawnShield() {
   const lane = Math.floor(Math.random() * 3);
-  shields.push({ x: W + 30, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
+  shields.push({ x: ROAD_SPAWN_X, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
 function spawnSuperJump() {
   const lane = Math.floor(Math.random() * 3);
-  superJumps.push({ x: W + 30, lane, y: GND - 40, phase: Math.random() * Math.PI * 2 });
+  superJumps.push({ x: ROAD_SPAWN_X, lane, y: GND - 40, phase: Math.random() * Math.PI * 2 });
 }
 function spawnCityGift(secret = false) {
   if (secretRoute?.active || bossActive || gameState !== "run") return;
@@ -4164,7 +4177,7 @@ function spawnPostcard() {
   const card = pool[(Math.random() * pool.length) | 0];
   const lane = Math.floor(Math.random() * 3);
   postcardItems.push({
-    x: W + 45,
+    x: BONUS_SPAWN_X,
     y: GND - 52,
     lane,
     cardId: card.id,
