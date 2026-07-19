@@ -4303,7 +4303,7 @@ function drawRoadRunTrack() {
   ctx.fill();
   ctx.restore();
 }
-function getPerspectiveLanePoint(lane = pLane, t = 0.78) {
+function getPerspectiveLanePoint(lane = pLane, t = 0.78, laneInset = 1) {
   const horizonY = GND - 132;
   const bottomY = H + 18;
   const cx = W / 2;
@@ -4313,9 +4313,13 @@ function getPerspectiveLanePoint(lane = pLane, t = 0.78) {
   const safeT = Math.max(0, Math.min(1, t));
   const half = topHalf + (bottomHalf - topHalf) * safeT;
   return {
-    x: cx + half * (laneRatios[lane] || 0),
+    x: cx + half * (laneRatios[lane] || 0) * laneInset,
     y: horizonY + (bottomY - horizonY) * safeT,
   };
+}
+
+function getRoadObjectLanePoint(lane = pLane, t = 0.78) {
+  return getPerspectiveLanePoint(lane, t, 0.82);
 }
 
 function getRoadObstacleDepth(o) {
@@ -4333,7 +4337,7 @@ function isRoadObjectReady(o) {
 
 function getScooterRoadPoint(o) {
   const depth = getRoadObstacleDepth(o);
-  const point = getPerspectiveLanePoint(o.lane, 0.12 + depth * 0.5);
+  const point = getRoadObjectLanePoint(o.lane, 0.12 + depth * 0.5);
   return {
     x: point.x,
     y: Math.min(GND, point.y),
@@ -4343,7 +4347,7 @@ function getScooterRoadPoint(o) {
 
 function getTrafficCarRoadPoint(o) {
   const depth = getRoadObstacleDepth(o);
-  const point = getPerspectiveLanePoint(o.lane, 0.1 + depth * 0.55);
+  const point = getRoadObjectLanePoint(o.lane, 0.1 + depth * 0.55);
   return {
     x: point.x,
     y: Math.min(GND + 2, point.y + 6),
@@ -4353,7 +4357,7 @@ function getTrafficCarRoadPoint(o) {
 
 function getConeRoadPoint(o) {
   const depth = getRoadObstacleDepth(o);
-  const point = getPerspectiveLanePoint(o.lane, 0.14 + depth * 0.5);
+  const point = getRoadObjectLanePoint(o.lane, 0.14 + depth * 0.5);
   return {
     x: point.x,
     y: Math.min(GND + 4, point.y + 4),
@@ -4363,7 +4367,7 @@ function getConeRoadPoint(o) {
 
 function getSmallRoadPoint(o, yLift = 0) {
   const depth = getRoadObstacleDepth(o);
-  const point = getPerspectiveLanePoint(o.lane, 0.14 + depth * 0.52);
+  const point = getRoadObjectLanePoint(o.lane, 0.14 + depth * 0.52);
   const scale = 0.5 + depth * 0.5;
   return {
     x: point.x,
