@@ -1429,6 +1429,7 @@ let roadEvent = null,
   roadEventCooldown = 0;
 let chaseMode = null,
   chaseCooldown = 0;
+let achievementToast = null;
 let bossActive = false,
   bossDefeated = false,
   bossTransform = 0,
@@ -2088,6 +2089,50 @@ function updateChaseMode(startSafe) {
 function markChaseHit() {
   if (chaseMode?.timer > 0) chaseMode.clean = false;
 }
+function showAchievementToast(item, reward = 0, unlockedSkins = []) {
+  if (!item) return;
+  const skinNames = unlockedSkins.map((skin) => skin.name).filter(Boolean).join(", ");
+  achievementToast = {
+    title: item.title,
+    reward,
+    skinNames,
+    timer: 240,
+    life: 240,
+  };
+  sfxCoin();
+}
+function drawAchievementToast() {
+  if (!achievementToast?.timer) return;
+  const t = achievementToast;
+  const fade = Math.min(1, t.timer / 28, (t.life - t.timer) / 18);
+  const y = 128 - Math.sin((1 - t.timer / t.life) * Math.PI) * 5;
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, fade);
+  ctx.fillStyle = "rgba(10, 14, 28, 0.9)";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(W / 2 - 165, y - 30, 330, 64, 10);
+  else ctx.rect(W / 2 - 165, y - 30, 330, 64);
+  ctx.fill();
+  ctx.strokeStyle = "#ffd700";
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.fillStyle = "#ffd700";
+  ctx.font = "bold 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("\u0414\u043e\u0441\u044f\u0433\u043d\u0435\u043d\u043d\u044f \u0432\u0456\u0434\u043a\u0440\u0438\u0442\u043e", W / 2, y - 12);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 14px sans-serif";
+  ctx.fillText(t.title, W / 2, y + 5);
+  ctx.fillStyle = "#cfe6ff";
+  ctx.font = "10px sans-serif";
+  const bottom = t.skinNames
+    ? `\u041d\u043e\u0432\u0438\u0439 \u0441\u043a\u0456\u043d: ${t.skinNames}`
+    : `\u0417\u0430\u0431\u0435\u0440\u0438 +${t.reward}\u20b4 \u0443 \u0434\u043e\u0441\u044f\u0433\u043d\u0435\u043d\u043d\u044f\u0445`;
+  ctx.fillText(bottom, W / 2, y + 21);
+  ctx.restore();
+  t.timer--;
+  if (t.timer <= 0) achievementToast = null;
+}
 function drawChaseBanner() {
   if (!chaseMode?.timer || gameState !== "run") return;
   const a = Math.min(1, chaseMode.intro / 24, chaseMode.timer / 34);
@@ -2205,12 +2250,17 @@ function getAchievementProgress(item) {
 function addAchievementProgress(id, amount = 1) {
   const item = ACHIEVEMENTS.find((achievement) => achievement.id === id);
   if (!item) return;
+  const wasDone = getAchievementProgress(item) >= item.target;
   achievementStats[id] = Math.min(
     item.target,
     Math.max(0, Number(achievementStats[id]) || 0) + amount,
   );
-  const skinUnlocked = syncAchievementSkins();
-  if (skinUnlocked) saveGame();
+  const isDone = getAchievementProgress(item) >= item.target;
+  const unlockedSkins = syncAchievementSkins();
+  if (!wasDone && isDone) {
+    showAchievementToast(item, getAchievementReward(item), unlockedSkins);
+  }
+  if (unlockedSkins.length) saveGame();
   updateAchievementReadyBadge();
   const screen = document.getElementById("sAchievements");
   if (screen?.classList.contains("active")) buildAchievements();
@@ -2232,14 +2282,14 @@ function isAchievementComplete(id) {
   return Boolean(item) && getAchievementProgress(item) >= item.target;
 }
 function syncAchievementSkins() {
-  let changed = false;
+  const unlocked = [];
   SKINS_BASE.forEach((skin) => {
     if (!skin.unlockAchievement || owned.includes(skin.id)) return;
     if (!isAchievementComplete(skin.unlockAchievement)) return;
     owned.push(skin.id);
-    changed = true;
+    unlocked.push(skin);
   });
-  return changed;
+  return unlocked;
 }
 function updateAchievementReadyBadge() {
   const badge = document.getElementById("achievementReadyBadge");
@@ -3083,7 +3133,7 @@ function appendUpgradeAction(parent, text, disabled = false) {
 function buildShop() {
   const L = t(),
     grid = document.getElementById("shopGrid");
-  if (syncAchievementSkins()) saveGame();
+  if (syncAchievementSkins().length) saveGame();
   grid.innerHTML = "";
   SKINS_BASE.forEach((sk, i) => {
     const unlockedByAchievement = !sk.unlockAchievement || isAchievementComplete(sk.unlockAchievement);
@@ -11066,6 +11116,7 @@ function loop() {
     drawSecretRouteHUD();
     drawRoadEventBanner();
     drawChaseBanner();
+    drawAchievementToast();
   }
   if (gameState === "win") {
     drawConfetti();
