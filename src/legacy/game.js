@@ -9595,8 +9595,9 @@ function update() {
   const diffMult = { easy: 0.75, normal: 1.0, hard: 1.4 }[settingDiff] || 1.0;
   const speedUpgradeMult = getSpeedUpgradeMult();
   const coffeeBoost = coffeeTimer > 0 ? 0.38 : 0;
-  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult * speedUpgradeMult + coffeeBoost;
-  const maxS = lv.maxSpd * diffMult * speedUpgradeMult + coffeeBoost;
+  const rescueBusBoost = rescueBusTimer > 0 ? 0.72 : 0;
+  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult * speedUpgradeMult + coffeeBoost + rescueBusBoost;
+  const maxS = lv.maxSpd * diffMult * speedUpgradeMult + coffeeBoost + rescueBusBoost;
   const accel = 0.0012 * diffMult * (1 + currentLevel * 0.15);
   const pct = Math.min(totalDist / FDIST, 1);
   if (pct < 0.5) {
@@ -9844,6 +9845,7 @@ function update() {
   if (magnetTimer > 0) magnetTimer--;
   if (chestnutTimer > 0) chestnutTimer--;
   if (coffeeTimer > 0) coffeeTimer--;
+  if (rescueBusTimer > 0) rescueBusTimer--;
   if (superJumpTimer > 0) superJumpTimer--;
   if (coinComboTimer > 0) {
     coinComboTimer--;
@@ -10048,6 +10050,7 @@ function update() {
   coffees.forEach((c) => (c.x -= spd));
   shields.forEach((s) => (s.x -= spd));
   superJumps.forEach((j) => (j.x -= spd));
+  rescueBuses.forEach((bus) => (bus.x -= spd + 0.55));
   postcardItems.forEach((item) => (item.x -= spd));
   cityGifts.forEach((gift) => {
     gift.x += gift.vx - spd * 0.12;
@@ -10197,6 +10200,7 @@ function update() {
   coffees = coffees.filter((c) => c.x > -50);
   shields = shields.filter((s) => s.x > -50);
   superJumps = superJumps.filter((j) => j.x > -50);
+  rescueBuses = rescueBuses.filter((bus) => bus.x > -80);
   cityGifts = cityGifts.filter((gift) => gift.life > 0 && gift.x > -30);
 
   const pr = pRect(),
@@ -10508,6 +10512,7 @@ function loop() {
   drawSecretRouteEntrance();
   drawFinishLine();
   superJumps.forEach(drawSuperJumpItem);
+  rescueBuses.forEach(drawRescueBus);
   shields.forEach(drawShieldItem);
   coffees.forEach(drawCoffeePower);
   chestnuts.forEach(drawChestnutPower);
