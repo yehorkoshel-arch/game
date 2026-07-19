@@ -1423,6 +1423,7 @@ let fireCooldown = 0;
 let lightningFlash = 0,
   nextLightning = 240;
 let startVoiceTimer = null;
+let levelIntroTimer = null;
 let robotRadioCooldown = 0;
 let marichkaVoiceCooldown = 0;
 let roadEvent = null,
@@ -3828,6 +3829,10 @@ function startLevel() {
     clearTimeout(startVoiceTimer);
   }
   startVoiceTimer = null;
+  if (levelIntroTimer) {
+    clearTimeout(levelIntroTimer);
+  }
+  levelIntroTimer = null;
   robotRadioCooldown = 0;
   roadEvent = null;
   roadEventCooldown = 260;
@@ -3930,11 +3935,19 @@ function startLevel() {
     if (raf) cancelAnimationFrame(raf);
     loop();
   }
+  levelIntroTimer = setTimeout(() => {
+    levelIntroTimer = null;
+    if (gameState === "missionIntro") beginLevelRun();
+  }, 1400);
   // Андрій кричить на старті з затримкою
 }
 
 function beginLevelRun() {
   if (gameState !== "missionIntro") return;
+  if (levelIntroTimer) {
+    clearTimeout(levelIntroTimer);
+    levelIntroTimer = null;
+  }
   focusApp();
   gameState = "run";
   startVoiceTimer = setTimeout(() => {
@@ -3970,6 +3983,10 @@ function stopGame() {
   if (startVoiceTimer) {
     clearTimeout(startVoiceTimer);
     startVoiceTimer = null;
+  }
+  if (levelIntroTimer) {
+    clearTimeout(levelIntroTimer);
+    levelIntroTimer = null;
   }
   if (raf) {
     cancelAnimationFrame(raf);
