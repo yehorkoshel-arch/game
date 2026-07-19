@@ -1353,6 +1353,7 @@ let pLane = 1,
   puddleSlow = 0,
   magnetTimer = 0,
   chestnutTimer = 0,
+  coffeeTimer = 0,
   superJumpTimer = 0,
   shieldCharges = 0,
   bonusBackpack = [],
@@ -1362,6 +1363,7 @@ let obs = [],
   coins = [],
   magnets = [],
   chestnuts = [],
+  coffees = [],
   shields = [],
   superJumps = [],
   cityGifts = [],
@@ -3447,6 +3449,7 @@ function startLevel() {
   puddleSlow = 0;
   magnetTimer = 0;
   chestnutTimer = 0;
+  coffeeTimer = 0;
   superJumpTimer = 0;
   shieldCharges = getStartingShieldCharges();
   fillBackpackFromInventory();
@@ -3454,6 +3457,7 @@ function startLevel() {
   coins = [];
   magnets = [];
   chestnuts = [];
+  coffees = [];
   shields = [];
   superJumps = [];
   cityGifts = [];
@@ -3648,6 +3652,11 @@ function spawnChestnut() {
   if (currentLocation !== 0) return;
   const lane = Math.floor(Math.random() * 3);
   chestnuts.push({ x: W + 35, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
+}
+function spawnCoffee() {
+  if (currentLocation !== 1) return;
+  const lane = Math.floor(Math.random() * 3);
+  coffees.push({ x: W + 35, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
 function spawnShield() {
   const lane = Math.floor(Math.random() * 3);
@@ -7601,6 +7610,46 @@ function drawChestnutPower(c) {
   ctx.restore();
 }
 
+function drawCoffeePower(c) {
+  const p = getSmallRoadPoint(c, 38);
+  const x = p.x;
+  const y = p.y + Math.sin(fr * 0.12 + (c.phase || 0)) * 4 * p.scale;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(p.scale, p.scale);
+  ctx.translate(-x, -y);
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 31);
+  glow.addColorStop(0, "rgba(255, 210, 120, 0.75)");
+  glow.addColorStop(1, "rgba(255, 210, 120, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, 31, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#f7efe0";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - 14, y - 14, 25, 24, 6);
+  else ctx.rect(x - 14, y - 14, 25, 24);
+  ctx.fill();
+  ctx.strokeStyle = "#8b5a2b";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(x + 11, y - 4, 8, -Math.PI / 2, Math.PI / 2);
+  ctx.stroke();
+  ctx.fillStyle = "#7a3f16";
+  ctx.beginPath();
+  ctx.ellipse(x - 2, y - 7, 10, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.72)";
+  ctx.lineWidth = 1.5;
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath();
+    ctx.moveTo(x + i * 6, y - 21);
+    ctx.quadraticCurveTo(x + i * 6 - 5, y - 28, x + i * 6 + 1, y - 35);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawShieldItem(s) {
   const p = getSmallRoadPoint(s, 38);
   const x = p.x;
@@ -8286,6 +8335,15 @@ function drawHUDCanvas() {
     ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(shieldCharges > 1 ? "SHIELD x" + shieldCharges : "SHIELD", 14, 46);
+  }
+  if (coffeeTimer > 0) {
+    const remain = Math.max(0, Math.min(1, coffeeTimer / 520));
+    ctx.fillStyle = "rgba(122, 63, 22, 0.62)";
+    ctx.fillRect(10, 76, 92, 6);
+    ctx.fillStyle = "#ffd28a";
+    ctx.fillRect(10, 76, 92 * remain, 6);
+    ctx.font = "bold 10px sans-serif";
+    ctx.fillText("LVIV COFFEE", 14, 73);
   }
   if (superJumpTimer > 0) {
     const jw = 86;
@@ -9442,8 +9500,9 @@ function update() {
   const FDIST = getFinishDistance();
   const diffMult = { easy: 0.75, normal: 1.0, hard: 1.4 }[settingDiff] || 1.0;
   const speedUpgradeMult = getSpeedUpgradeMult();
-  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult * speedUpgradeMult;
-  const maxS = lv.maxSpd * diffMult * speedUpgradeMult;
+  const coffeeBoost = coffeeTimer > 0 ? 0.38 : 0;
+  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult * speedUpgradeMult + coffeeBoost;
+  const maxS = lv.maxSpd * diffMult * speedUpgradeMult + coffeeBoost;
   const accel = 0.0012 * diffMult * (1 + currentLevel * 0.15);
   const pct = Math.min(totalDist / FDIST, 1);
   if (pct < 0.5) {
@@ -9562,6 +9621,7 @@ function update() {
     coins = [];
     magnets = [];
     chestnuts = [];
+    coffees = [];
     shields = [];
     superJumps = [];
     cityGifts = [];
@@ -9688,6 +9748,7 @@ function update() {
   }
   if (magnetTimer > 0) magnetTimer--;
   if (chestnutTimer > 0) chestnutTimer--;
+  if (coffeeTimer > 0) coffeeTimer--;
   if (superJumpTimer > 0) superJumpTimer--;
   if (coinComboTimer > 0) {
     coinComboTimer--;
@@ -9812,6 +9873,17 @@ function update() {
   )
     spawnChestnut();
   if (
+    currentLocation === 1 &&
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    coffeeTimer <= 0 &&
+    fr % 720 === 260 &&
+    totalDist > 110 &&
+    totalDist < FDIST - 170
+  )
+    spawnCoffee();
+  if (
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
@@ -9878,6 +9950,7 @@ function update() {
   });
   magnets.forEach((m) => (m.x -= spd));
   chestnuts.forEach((c) => (c.x -= spd));
+  coffees.forEach((c) => (c.x -= spd));
   shields.forEach((s) => (s.x -= spd));
   superJumps.forEach((j) => (j.x -= spd));
   postcardItems.forEach((item) => (item.x -= spd));
@@ -10026,6 +10099,7 @@ function update() {
   coins = coins.filter((c) => !c.done && c.x > -20);
   magnets = magnets.filter((m) => m.x > -50);
   chestnuts = chestnuts.filter((c) => c.x > -50);
+  coffees = coffees.filter((c) => c.x > -50);
   shields = shields.filter((s) => s.x > -50);
   superJumps = superJumps.filter((j) => j.x > -50);
   cityGifts = cityGifts.filter((gift) => gift.life > 0 && gift.x > -30);
@@ -10060,6 +10134,26 @@ function update() {
     sfxCoin();
     addParts(point.x, point.y, "#ffd45c");
     showAndriiBubble("\u041a\u0438\u0457\u0432\u0441\u044c\u043a\u0438\u0439 \u043a\u0430\u0448\u0442\u0430\u043d! \u041c\u043e\u043d\u0435\u0442\u0438 x2!");
+    hudUp();
+    return false;
+  });
+  coffees = coffees.filter((c) => {
+    if (c.lane !== pLane) return true;
+    const point = getSmallRoadPoint(c, 38);
+    const cr = {
+      x: point.x - 24 * point.scale,
+      y: point.y - 26 * point.scale,
+      w: 48 * point.scale,
+      h: 52 * point.scale,
+    };
+    if (!hit(pr, cr)) return true;
+    coffeeTimer = Math.max(coffeeTimer, 520);
+    runCoins += 15;
+    addQuestProgress("coins", 15);
+    addLevelMissionProgress("coins", 15);
+    sfxCoin();
+    addParts(point.x, point.y, "#d99a48");
+    showAndriiBubble("\u041b\u044c\u0432\u0456\u0432\u0441\u044c\u043a\u0430 \u043a\u0430\u0432\u0430! +15\u20b4 \u0456 \u0448\u0432\u0438\u0434\u0448\u0438\u0439 \u0440\u0438\u0432\u043e\u043a!");
     hudUp();
     return false;
   });
@@ -10315,6 +10409,7 @@ function loop() {
   drawFinishLine();
   superJumps.forEach(drawSuperJumpItem);
   shields.forEach(drawShieldItem);
+  coffees.forEach(drawCoffeePower);
   chestnuts.forEach(drawChestnutPower);
   magnets.forEach(drawMagnet);
   coins.forEach(drawCoin);
