@@ -148,6 +148,10 @@ canvas{display:block}
 .achievement-count{margin-top:4px;font-size:10px;color:#8291ad}
 .achievement-status{min-width:82px;text-align:center;font-size:10px;font-weight:800;color:#8291ad}
 .achievement-item.complete .achievement-status{color:#ffd700}
+.achievement-claim{min-width:92px;padding:6px 8px;border:1px solid #ffd700;border-radius:6px;background:#ffd700;color:#17192a;font-size:10px;font-weight:900;cursor:pointer}
+.achievement-claim:hover{background:#ffe45c}
+.achievement-item.claimed{border-color:#285b42;background:#14261f}
+.achievement-item.claimed .achievement-icon{border-color:#5dcc8b;color:#5dcc8b;background:#10261d}
 .collection-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .collection-rewards{grid-column:1/-1;display:grid;grid-template-columns:1fr;gap:8px}
 .collection-reward{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid #293754;border-radius:8px;background:#142038}

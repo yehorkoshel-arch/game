@@ -172,6 +172,10 @@ let achievementSeen =
   save.achievementSeen && typeof save.achievementSeen === "object"
     ? save.achievementSeen
     : {};
+let achievementRewards =
+  save.achievementRewards && typeof save.achievementRewards === "object"
+    ? save.achievementRewards
+    : {};
 const CITY_POSTCARDS = [
   {
     id: "kyiv_maidan",
@@ -433,6 +437,7 @@ function saveGame() {
     marichkaChainStats,
     achievementStats,
     achievementSeen,
+    achievementRewards,
     weaponUpgrades,
     playerUpgrades,
     backpackSlots,
@@ -2204,6 +2209,8 @@ function addAchievementProgress(id, amount = 1) {
     item.target,
     Math.max(0, Number(achievementStats[id]) || 0) + amount,
   );
+  const skinUnlocked = syncAchievementSkins();
+  if (skinUnlocked) saveGame();
   updateAchievementReadyBadge();
   const screen = document.getElementById("sAchievements");
   if (screen?.classList.contains("active")) buildAchievements();
@@ -2211,8 +2218,28 @@ function addAchievementProgress(id, amount = 1) {
 function getReadyAchievementCount() {
   return ACHIEVEMENTS.filter((item) => {
     const done = getAchievementProgress(item) >= item.target;
-    return done && !achievementSeen[item.id];
+    return done && !achievementRewards[item.id];
   }).length;
+}
+function getAchievementReward(item) {
+  if (!item) return 0;
+  if (item.id === "boss") return 200;
+  if (item.id === "clean_chase" || item.id === "road_events3") return 150;
+  return 100;
+}
+function isAchievementComplete(id) {
+  const item = ACHIEVEMENTS.find((achievement) => achievement.id === id);
+  return Boolean(item) && getAchievementProgress(item) >= item.target;
+}
+function syncAchievementSkins() {
+  let changed = false;
+  SKINS_BASE.forEach((skin) => {
+    if (!skin.unlockAchievement || owned.includes(skin.id)) return;
+    if (!isAchievementComplete(skin.unlockAchievement)) return;
+    owned.push(skin.id);
+    changed = true;
+  });
+  return changed;
 }
 function updateAchievementReadyBadge() {
   const badge = document.getElementById("achievementReadyBadge");
@@ -2228,9 +2255,16 @@ function buildAchievements() {
   ACHIEVEMENTS.forEach((item) => {
     const progress = getAchievementProgress(item);
     const done = progress >= item.target;
+    const claimed = Boolean(achievementRewards[item.id]);
+    const reward = getAchievementReward(item);
     if (done) achievementSeen[item.id] = true;
+    const status = done
+      ? claimed
+        ? `<div class="achievement-status">\u041e\u0442\u0440\u0438\u043c\u0430\u043d\u043e</div>`
+        : `<button class="achievement-claim" data-achievement-id="${item.id}" type="button">\u0417\u0430\u0431\u0440\u0430\u0442\u0438 +${reward}\u20b4</button>`
+      : `<div class="achievement-status">\u0412 \u043f\u0440\u043e\u0446\u0435\u0441\u0456</div>`;
     const card = document.createElement("article");
-    card.className = "achievement-item" + (done ? " complete" : "");
+    card.className = "achievement-item" + (done ? " complete" : "") + (claimed ? " claimed" : "");
     card.innerHTML = `
       <div class="achievement-icon">${item.icon}</div>
       <div class="achievement-copy">
@@ -2241,7 +2275,7 @@ function buildAchievements() {
         </div>
         <div class="achievement-count">${progress} / ${item.target}</div>
       </div>
-      <div class="achievement-status">${done ? "\u041e\u0442\u0440\u0438\u043c\u0430\u043d\u043e" : "\u0412 \u043f\u0440\u043e\u0446\u0435\u0441\u0456"}</div>
+      ${status}
     `;
     list.appendChild(card);
   });
@@ -2839,6 +2873,17 @@ function drawSkinPreview(canvas, sk) {
     c.stroke();
   }
 
+  if (sk.id === "chase_master") {
+    c.strokeStyle = "#ffd14a";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(cx - 10, by - 42);
+    c.lineTo(cx + 10, by - 28);
+    c.moveTo(cx + 10, by - 42);
+    c.lineTo(cx - 10, by - 28);
+    c.stroke();
+  }
+
   // scarf / belt accent
   if (sk.scarf) {
     c.fillStyle = sk.scarf;
@@ -2930,6 +2975,15 @@ function drawSkinPreview(canvas, sk) {
     c.lineTo(cx + 6, by - 54);
     c.closePath();
     c.fill();
+  } else if (sk.id === "chase_master") {
+    c.fillStyle = sk.hat;
+    c.beginPath();
+    c.arc(cx, by - 62, 13, Math.PI, 0);
+    c.fill();
+    c.fillStyle = "#ff4fa3";
+    c.fillRect(cx - 10, by - 60, 20, 3);
+    c.fillStyle = "#ffd14a";
+    c.fillRect(cx + 6, by - 66, 10, 3);
   } else if (sk.id === "shadow_agent") {
     c.fillStyle = sk.hair;
     c.beginPath();
@@ -3029,12 +3083,16 @@ function appendUpgradeAction(parent, text, disabled = false) {
 function buildShop() {
   const L = t(),
     grid = document.getElementById("shopGrid");
+  if (syncAchievementSkins()) saveGame();
   grid.innerHTML = "";
   SKINS_BASE.forEach((sk, i) => {
+    const unlockedByAchievement = !sk.unlockAchievement || isAchievementComplete(sk.unlockAchievement);
+    const lockedByAchievement = Boolean(sk.unlockAchievement) && !unlockedByAchievement;
     const div = document.createElement("div");
     div.className =
       "sitem" +
       (sk.exclusive ? " exclusive" : "") +
+      (lockedByAchievement ? " locked" : "") +
       (owned.includes(sk.id) ? " owned" : "") +
       (selectedSkin === sk.id ? " selected" : "");
     const cv2 = document.createElement("canvas");
@@ -3047,11 +3105,14 @@ function buildShop() {
     if (sk.exclusive) {
       const badge = document.createElement("div");
       badge.className = "sitem-exclusive";
-      badge.textContent = "ЕКСКЛЮЗИВ";
+      badge.textContent = lockedByAchievement ? "\u041d\u0410\u0413\u041e\u0420\u041e\u0414\u0410" : "\u0415\u041a\u0421\u041a\u041b\u042e\u0417\u0418\u0412";
       div.appendChild(badge);
     }
     const pr = document.createElement("div");
-    if (selectedSkin === sk.id) {
+    if (lockedByAchievement) {
+      pr.className = "sitem-price locked";
+      pr.textContent = "\u0412\u0456\u0434\u043a\u0440\u0438\u0439: \u0427\u0438\u0441\u0442\u0430 \u0432\u0442\u0435\u0447\u0430";
+    } else if (selectedSkin === sk.id) {
       pr.className = "sitem-owned";
       pr.textContent = L.owned;
     } else if (owned.includes(sk.id)) {
@@ -3059,12 +3120,13 @@ function buildShop() {
       pr.textContent = L.equip;
     } else {
       pr.className = "sitem-price";
-      pr.textContent = sk.price + "₴";
+      pr.textContent = sk.price + "\u20b4";
     }
     div.appendChild(cv2);
     div.appendChild(nm);
     div.appendChild(pr);
     div.onclick = () => {
+      if (lockedByAchievement) return;
       if (owned.includes(sk.id)) {
         selectedSkin = sk.id;
         saveGame();
@@ -3259,6 +3321,19 @@ document.getElementById("btnBackAchievements").onclick = () => {
   saveGame();
   syncCoins();
   showScreen("sMenu");
+};
+document.getElementById("achievementList").onclick = (event) => {
+  const button = event.target.closest(".achievement-claim");
+  if (!button) return;
+  const item = ACHIEVEMENTS.find((achievement) => achievement.id === button.dataset.achievementId);
+  if (!item || achievementRewards[item.id] || getAchievementProgress(item) < item.target) return;
+  const reward = getAchievementReward(item);
+  achievementRewards[item.id] = true;
+  totalCoins += reward;
+  syncCoins();
+  saveGame();
+  buildAchievements();
+  sfxCoin();
 };
 document.getElementById("btnBackCollection").onclick = () => {
   saveGame();
@@ -6065,6 +6140,15 @@ function drawPlayer() {
       ctx.lineTo(x - 12, y - 12);
       ctx.closePath();
       ctx.fill();
+    } else if (sk.id === "chase_master") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x - 18, y - 18, 13, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "#ff4fa3";
+      ctx.fillRect(x - 28, y - 18, 20, 3);
+      ctx.fillStyle = "#ffd14a";
+      ctx.fillRect(x - 10, y - 24, 10, 3);
     } else if (sk.id === "shadow_agent") {
       ctx.fillStyle = "#050505";
       ctx.fillRect(x - 27, y - 17, 8, 4);
@@ -6220,6 +6304,16 @@ function drawPlayer() {
       ctx.beginPath();
       ctx.moveTo(x + 27, y + 3);
       ctx.lineTo(x + 30, y + 8);
+      ctx.stroke();
+    }
+    if (sk.id === "chase_master") {
+      ctx.strokeStyle = "#ffd14a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y - 39);
+      ctx.lineTo(x + 10, y - 22);
+      ctx.moveTo(x + 10, y - 39);
+      ctx.lineTo(x - 10, y - 22);
       ctx.stroke();
     }
     if (sk.id === "firefighter") {
@@ -6390,6 +6484,23 @@ function drawPlayer() {
       ctx.fill();
       ctx.fillRect(x - 8, y - 55, 6, 2);
       ctx.fillRect(x + 2, y - 55, 6, 2);
+    } else if (sk.id === "chase_master") {
+      ctx.fillStyle = sk.hat;
+      ctx.beginPath();
+      ctx.arc(x, y - 58, 13, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "#ff4fa3";
+      ctx.fillRect(x - 10, y - 58, 20, 4);
+      ctx.fillStyle = "#ffd14a";
+      ctx.fillRect(x + 8, y - 64, 11, 3);
+      ctx.strokeStyle = "rgba(255,79,163,0.55)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 24, footY - 9);
+      ctx.lineTo(x - 43, footY - 9);
+      ctx.moveTo(x + 18, footY - 8);
+      ctx.lineTo(x + 38, footY - 8);
+      ctx.stroke();
     } else if (sk.id === "shadow_agent") {
       ctx.fillStyle = sk.hair;
       ctx.beginPath();

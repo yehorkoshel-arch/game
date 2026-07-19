@@ -114,6 +114,12 @@ export const SKINS_BASE=[
     shoes:'#ff5c5c', scarf:'#28c8d8', mask:'#dceaf2', hat:'#f4f7fa',
     body:'#e7eef4', head:'#b9d9e8', scarfCol:'#28c8d8'
   },
+  {
+    id:'chase_master', name:'\u041c\u0430\u0439\u0441\u0442\u0435\u0440 \u043f\u043e\u0433\u043e\u043d\u0456', price:0, exclusive:true, unlockAchievement:'clean_chase',
+    shirt:'#241128', shorts:'#10141f', skin:'#d7a77e', hair:'#111827',
+    shoes:'#ffd14a', scarf:'#ff4fa3', mask:null, hat:'#1a2034',
+    body:'#241128', head:'#d7a77e', scarfCol:'#ff4fa3'
+  },
 ];
 
 // ── ЛОКАЦІЇ ───────────────────────────────────────────────────────────────────
