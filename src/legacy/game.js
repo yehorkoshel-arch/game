@@ -1387,6 +1387,8 @@ let robotRadioCooldown = 0;
 let marichkaVoiceCooldown = 0;
 let roadEvent = null,
   roadEventCooldown = 0;
+let chaseMode = null,
+  chaseCooldown = 0;
 let bossActive = false,
   bossDefeated = false,
   bossTransform = 0,
@@ -1400,6 +1402,8 @@ let secretRoute = null;
 const BOSS_MAX_HP = 18;
 const SECRET_ROUTE_DURATION = 520;
 const SECRET_ROUTE_REWARD = 30;
+const CHASE_REWARD = 45;
+const CHASE_CLEAN_BONUS = 20;
 const LEVEL_MISSION_REWARD = 50;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
@@ -1976,6 +1980,85 @@ function updateRoadEvent(startSafe) {
     if (roadEvent.timer <= 0) roadEvent = null;
   }
   maybeStartRoadEvent(startSafe);
+}
+function startChaseMode() {
+  if (chaseMode?.timer > 0 || chaseCooldown > 0) return;
+  chaseMode = { timer: 720, intro: 90, clean: true, rewarded: false };
+  chaseCooldown = 1050;
+  chaserX = Math.max(chaserX, LANES[0] - 250);
+  lightningFlash = Math.max(lightningFlash, 8);
+  showAndriiBubble("\u0420\u043e\u0431\u043e\u0442\u0440\u043e\u043d: \u0420\u0435\u0436\u0438\u043c \u043f\u043e\u0433\u043e\u043d\u0456! \u0422\u0440\u0438\u043c\u0430\u0439\u0441\u044f!", true);
+}
+function maybeStartChaseMode(startSafe) {
+  if (gameState !== "run" || startSafe || bossActive || secretRoute?.active) return;
+  if (chaseMode?.timer > 0 || chaseCooldown > 0) return;
+  if (totalDist < 170 || totalDist > getFinishDistance() - 190) return;
+  if (fr % 520 !== 260 || Math.random() > 0.5) return;
+  startChaseMode();
+}
+function completeChaseMode() {
+  if (!chaseMode || chaseMode.rewarded) return;
+  chaseMode.rewarded = true;
+  const reward = CHASE_REWARD + (chaseMode.clean ? CHASE_CLEAN_BONUS : 0);
+  runCoins += reward;
+  totalCoins += reward;
+  addQuestProgress("coins", reward);
+  addLevelMissionProgress("coins", reward);
+  addParts(px, pY - 45, chaseMode.clean ? "#ffd700" : "#9fd8ff");
+  showAndriiBubble(
+    chaseMode.clean
+      ? `\u041f\u043e\u0433\u043e\u043d\u044e \u0432\u0438\u0442\u0440\u0438\u043c\u0430\u043d\u043e \u0431\u0435\u0437 \u0443\u0434\u0430\u0440\u0443! +${reward}\u20b4`
+      : `\u041f\u043e\u0433\u043e\u043d\u044e \u0432\u0438\u0442\u0440\u0438\u043c\u0430\u043d\u043e! +${reward}\u20b4`,
+    true,
+  );
+  sfxCoin();
+  hudUp();
+}
+function updateChaseMode(startSafe) {
+  if (chaseCooldown > 0) chaseCooldown--;
+  if (chaseMode?.timer > 0) {
+    chaseMode.timer--;
+    if (chaseMode.intro > 0) chaseMode.intro--;
+    if (!bossActive && !secretRoute?.active) {
+      const target = LANES[0] - 190 + Math.sin(fr * 0.08) * 12;
+      chaserX += (target - chaserX) * 0.018;
+    }
+    if (chaseMode.timer % 180 === 40) {
+      lightningFlash = Math.max(lightningFlash, 5);
+    }
+    if (chaseMode.timer <= 0) {
+      completeChaseMode();
+      chaseMode = null;
+    }
+  }
+  maybeStartChaseMode(startSafe);
+}
+function markChaseHit() {
+  if (chaseMode?.timer > 0) chaseMode.clean = false;
+}
+function drawChaseBanner() {
+  if (!chaseMode?.timer || gameState !== "run") return;
+  const a = Math.min(1, chaseMode.intro / 24, chaseMode.timer / 34);
+  const remain = Math.max(1, Math.ceil(chaseMode.timer / 60));
+  ctx.save();
+  ctx.globalAlpha = 0.94 * a;
+  const pulse = 0.5 + Math.sin(fr * 0.26) * 0.5;
+  ctx.fillStyle = `rgba(80, 8, 28, ${0.82 + pulse * 0.08})`;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(W / 2 - 130, 80, 260, 42, 8);
+  else ctx.rect(W / 2 - 130, 80, 260, 42);
+  ctx.fill();
+  ctx.strokeStyle = "#ff69b4";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = "#ffd700";
+  ctx.font = "bold 13px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("\u0420\u0415\u0416\u0418\u041c \u041f\u041e\u0413\u041e\u041d\u0406", W / 2, 96);
+  ctx.fillStyle = "#ffe6f2";
+  ctx.font = "10px sans-serif";
+  ctx.fillText(`\u0412\u0438\u0442\u0440\u0438\u043c\u0430\u0439 ${remain}\u0441 \u0456 \u043e\u0442\u0440\u0438\u043c\u0430\u0439 \u0431\u043e\u043d\u0443\u0441`, W / 2, 112);
+  ctx.restore();
 }
 function drawRoadEventBanner() {
   if (!roadEvent?.timer || gameState !== "run") return;
@@ -3567,6 +3650,8 @@ function startLevel() {
   robotRadioCooldown = 0;
   roadEvent = null;
   roadEventCooldown = 260;
+  chaseMode = null;
+  chaseCooldown = 360;
   currentLevel = getPlayableLevel(currentLevel);
   const tckSceneKey = currentLocation + ":" + currentLevel;
   if (currentLocation === 0 && currentLevel === 0 && !marichkaProjectSceneSeen) {
@@ -10070,7 +10155,7 @@ function update() {
     }
   }
   if (!bossActive && !secretRoute?.active && chaserX < LANES[0] - 100)
-    chaserX += 0.5 + (spd - 2.8) * 0.1;
+    chaserX += (chaseMode?.timer > 0 ? 1.05 : 0.5) + (spd - 2.8) * 0.1;
   if (chaserX > -10 && chaserX < LANES[0] - 130) speakMarichkaSupport();
   const laneObstacle = obs.find(
     (o) =>
@@ -10111,6 +10196,7 @@ function update() {
   );
   const startSafe = fr < START_SAFE_FRAMES || totalDist < START_SAFE_DISTANCE;
   updateRoadEvent(startSafe);
+  updateChaseMode(startSafe);
   if (
     !bossActive &&
     !bossDefeated &&
@@ -10608,6 +10694,7 @@ function update() {
       if (absorbShieldHit(b.x, b.y, "#58beff")) return false;
       resetCoinCombo();
       resetTrickCombo();
+      markChaseHit();
       lives--;
       inv = getDamageInvulnerabilityTime();
       flash = 22;
@@ -10710,6 +10797,7 @@ function update() {
       }
       resetCoinCombo();
       resetTrickCombo();
+      markChaseHit();
       lives--;
       inv = getDamageInvulnerabilityTime();
       flash = 22;
@@ -10819,6 +10907,7 @@ function loop() {
     drawDistBar();
     drawSecretRouteHUD();
     drawRoadEventBanner();
+    drawChaseBanner();
   }
   if (gameState === "win") {
     drawConfetti();
