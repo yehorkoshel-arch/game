@@ -4452,6 +4452,26 @@ function drawGreetingWindow(x, y, w, h, personIdx) {
   }
 }
 
+function drawCityBuildingWindows(x, y, w, h, accent = "#ffd66b") {
+  const top = Math.max(y + 18, 72);
+  const bottom = Math.min(y + h - 18, GND - 18);
+  if (bottom <= top) return;
+  ctx.save();
+  ctx.fillStyle = "rgba(20,34,48,0.7)";
+  ctx.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx.lineWidth = 1;
+  const stepX = w > 90 ? 28 : 24;
+  const stepY = 32;
+  for (let wy = top; wy < bottom; wy += stepY) {
+    for (let wx = x + 14; wx < x + w - 12; wx += stepX) {
+      const lit = Math.sin(wx * 0.05 + wy * 0.03 + fr * 0.015) > 0.35;
+      ctx.fillStyle = lit ? accent : "rgba(20,34,48,0.72)";
+      ctx.fillRect(wx, wy, 13, 18);
+      ctx.strokeRect(wx + 0.5, wy + 0.5, 12, 17);
+    }
+  }
+  ctx.restore();
+}
 function drawGreetingBuildings(x, location) {
   const secretGrandpaVisible = Math.floor(fr / 480) % 3 === 1;
   const people = [
@@ -5215,6 +5235,17 @@ function drawKyivMaidanScene() {
     ctx.textAlign = "center";
     ctx.fillText("\u041c\u0410\u0419\u0414\u0410\u041d", x + 471, GND - 112);
     ctx.textAlign = "left";
+    ctx.fillStyle = "#5d7691";
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 4; col++) {
+        const wx = x + 414 + col * 30;
+        const wy = GND - 88 + row * 32;
+        ctx.fillRect(wx, wy, 18, 20);
+        ctx.fillStyle = "rgba(255,236,155,0.7)";
+        ctx.fillRect(wx + 3, wy + 3, 12, 14);
+        ctx.fillStyle = "#5d7691";
+      }
+    }
 
     for (const fx of [x + 270, x + 620]) {
       ctx.strokeStyle = "#2b3340";
@@ -5268,10 +5299,13 @@ function drawBG() {
     const x = bx - off;
     ctx.fillStyle = lv.bldA;
     ctx.fillRect(x, 80, 100, H - 130);
+    drawCityBuildingWindows(x, 80, 100, H - 130, lv.loc === 1 ? "#ffe0a3" : "#ffd66b");
     ctx.fillStyle = lv.bldB;
     ctx.fillRect(x + 120, 110, 70, H - 160);
+    drawCityBuildingWindows(x + 120, 110, 70, H - 160, lv.loc === 1 ? "#f4c27a" : "#9ed8ff");
     ctx.fillStyle = lv.bldC;
     ctx.fillRect(x + 210, 60, 50, H - 110);
+    drawCityBuildingWindows(x + 210, 60, 50, H - 110, lv.loc === 1 ? "#ffe0a3" : "#ffd66b");
     drawGreetingBuildings(x, lv.loc);
   }
 
