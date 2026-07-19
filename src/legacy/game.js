@@ -4302,6 +4302,15 @@ function getRoadObstacleDepth(o) {
   return Math.max(0, Math.min(1, (W + 40 - o.x) / (W + 120)));
 }
 
+function getRoadSpawnAlpha(o) {
+  const depth = getRoadObstacleDepth(o);
+  return Math.max(0, Math.min(1, (depth - 0.02) / 0.14));
+}
+
+function isRoadObjectReady(o) {
+  return getRoadObstacleDepth(o) > 0.12;
+}
+
 function getScooterRoadPoint(o) {
   const depth = getRoadObstacleDepth(o);
   const point = getPerspectiveLanePoint(o.lane, 0.12 + depth * 0.5);
@@ -6685,7 +6694,10 @@ function drawObs(o) {
     const y = roadPoint.y - 24;
     const bob = Math.sin(fr * 0.12 + (o.phase || 0)) * 1.5;
     const isLvivRoad = currentLocation === 1;
+    const spawnAlpha = getRoadSpawnAlpha(o);
+    if (spawnAlpha <= 0) return;
     ctx.save();
+    ctx.globalAlpha *= spawnAlpha;
     ctx.translate(x, roadPoint.y);
     ctx.scale(roadPoint.scale, roadPoint.scale);
     ctx.translate(-x, -roadPoint.y);
@@ -6722,7 +6734,7 @@ function drawObs(o) {
     ctx.fill();
 
     ctx.fillStyle = o.glass || "#9fd8ff";
-    ctx.globalAlpha = 0.86;
+    ctx.globalAlpha = 0.86 * spawnAlpha;
     ctx.beginPath();
     ctx.moveTo(x - 16, y - 15 + bob);
     ctx.lineTo(x - 7, y - 28 + bob);
@@ -6730,7 +6742,7 @@ function drawObs(o) {
     ctx.lineTo(x + 23, y - 15 + bob);
     ctx.closePath();
     ctx.fill();
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = spawnAlpha;
 
     ctx.fillStyle = "#101521";
     for (const wx of [-27, 27]) {
@@ -6765,7 +6777,10 @@ function drawObs(o) {
     x = p.x;
     const y = p.y;
     const blink = 0.75 + Math.sin(fr * 0.18 + (o.phase || 0)) * 0.25;
+    const spawnAlpha = getRoadSpawnAlpha(o);
+    if (spawnAlpha <= 0) return;
     ctx.save();
+    ctx.globalAlpha *= spawnAlpha;
     ctx.translate(x, y);
     ctx.scale(p.scale, p.scale);
     ctx.translate(-x, -y);
@@ -6886,8 +6901,11 @@ function drawObs(o) {
     const p = getSmallRoadPoint(o, 0);
     x = p.x;
     const y = p.y;
+    const spawnAlpha = getRoadSpawnAlpha(o);
+    if (spawnAlpha <= 0) return;
     ctx.fillStyle = "rgba(0,0,0,0.34)";
     ctx.save();
+    ctx.globalAlpha *= spawnAlpha;
     ctx.translate(x, y);
     ctx.scale(p.scale, p.scale);
     ctx.translate(-x, -y);
@@ -6916,8 +6934,11 @@ function drawObs(o) {
     x = p.x;
     const y = p.y;
     const shine = Math.sin(fr * 0.08 + x * 0.01) * 3;
+    const spawnAlpha = getRoadSpawnAlpha(o);
+    if (spawnAlpha <= 0) return;
     ctx.fillStyle = "rgba(0,0,0,0.2)";
     ctx.save();
+    ctx.globalAlpha *= spawnAlpha;
     ctx.translate(x, y);
     ctx.scale(p.scale, p.scale);
     ctx.translate(-x, -y);
@@ -6943,8 +6964,11 @@ function drawObs(o) {
     x = p.x;
     const y = p.y;
     const slick = Math.sin(fr * 0.09 + x * 0.02) * 4;
+    const spawnAlpha = getRoadSpawnAlpha(o);
+    if (spawnAlpha <= 0) return;
     ctx.fillStyle = "rgba(0,0,0,0.3)";
     ctx.save();
+    ctx.globalAlpha *= spawnAlpha;
     ctx.translate(x, y);
     ctx.scale(p.scale, p.scale);
     ctx.translate(-x, -y);
@@ -7426,7 +7450,11 @@ function drawScooterRider(o) {
   const phase = fr * 0.32 + (o.wheelPhase || 0);
   const bob = Math.sin(phase) * 2;
 
+  const spawnAlpha = getRoadSpawnAlpha(o);
+  if (spawnAlpha <= 0) return;
+
   ctx.save();
+  ctx.globalAlpha *= spawnAlpha;
   ctx.translate(x, y);
   ctx.scale(roadPoint.scale, roadPoint.scale);
   ctx.translate(-x, -y);
@@ -10252,6 +10280,11 @@ function update() {
 
   obs.forEach((o) => {
     if (o.lane !== pLane) return;
+    if (
+      ["hole", "puddle", "oil", "cone", "scooter", "traffic_car"].includes(o.type) &&
+      !isRoadObjectReady(o)
+    )
+      return;
     if (o.type === "puddle") {
       if (!o.triggered && hit(pr, oRect(o))) {
         o.triggered = true;
