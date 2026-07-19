@@ -5275,7 +5275,6 @@ function drawBG() {
     drawGreetingBuildings(x, lv.loc);
   }
 
-  drawLvivCoffeeScene();
   drawKyivMaidanScene();
   drawLvivTram();
   drawRealRoad(timePeriod);
