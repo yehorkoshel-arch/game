@@ -3672,7 +3672,8 @@ function spawnRescueBus() {
     phase: Math.random() * Math.PI * 2,
   });
   showAndriiBubble("\u0420\u044f\u0442\u0443\u0432\u0430\u043b\u044c\u043d\u0438\u0439 \u0430\u0432\u0442\u043e\u0431\u0443\u0441 \u0434\u043e \u0448\u043a\u043e\u043b\u0438!");
-}function spawnShield() {
+}
+function spawnShield() {
   const lane = Math.floor(Math.random() * 3);
   shields.push({ x: W + 30, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
@@ -3685,6 +3686,8 @@ function spawnCityGift(secret = false) {
   const lane = Math.floor(Math.random() * 3);
   const sourceX = LANES[lane] + (Math.random() - 0.5) * 80;
   const sourceY = secret ? 88 : 120 + Math.random() * 74;
+  const kind = secret && Math.random() < 0.35 ? "shield" : "coin";
+  const value = kind === "shield" ? 0 : secret ? 12 : 4;
   cityGifts.push({
     x: sourceX,
     y: sourceY,
@@ -3693,12 +3696,15 @@ function spawnCityGift(secret = false) {
     lane,
     vx: (LANES[lane] - sourceX) / 70,
     vy: secret ? 1.25 : 1.65,
-    value: secret ? 12 : 4,
+    value,
+    kind,
     life: 170,
     secret,
   });
   showAndriiBubble(
-    secret
+    kind === "shield"
+      ? "\u0414\u0456\u0434 \u0437 \u0431\u0430\u043b\u043a\u043e\u043d\u0430 \u043a\u0438\u0434\u0430\u0454 \u0449\u0438\u0442!"
+      : secret
       ? "\u0414\u0456\u0434 \u0437 \u0431\u0430\u043b\u043a\u043e\u043d\u0430 \u0434\u0430\u0454 \u0431\u043e\u043d\u0443\u0441!"
       : "\u0411\u0456\u0436\u0438, \u0410\u043d\u0434\u0440\u0456\u044e!",
   );
@@ -7854,7 +7860,7 @@ function drawRescueBus(bus) {
   ctx.fillStyle = "#1f4b8f";
   ctx.font = "bold 11px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("SCHOOL BUS", x, y - 59);
+  ctx.fillText("\u0428\u041a\u041e\u041b\u0410", x, y - 59);
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 10px sans-serif";
   ctx.fillText("+20", x, y - 28);
@@ -7869,17 +7875,17 @@ function drawCityGift(gift) {
   ctx.save();
   ctx.globalAlpha = Math.min(1, gift.life / 24);
   const glow = ctx.createRadialGradient(x, y, 0, x, y, gift.secret ? 28 : 22);
-  glow.addColorStop(0, gift.secret ? "rgba(255,247,178,0.95)" : "rgba(255,255,210,0.8)");
+  glow.addColorStop(0, gift.kind === "shield" ? "rgba(88,190,255,0.95)" : gift.secret ? "rgba(255,247,178,0.95)" : "rgba(255,255,210,0.8)");
   glow.addColorStop(1, "rgba(255,215,0,0)");
   ctx.fillStyle = glow;
   ctx.beginPath();
   ctx.arc(x, y, gift.secret ? 28 : 22, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = gift.secret ? "#ffd45c" : "#ffd700";
+  ctx.fillStyle = gift.kind === "shield" ? "#58beff" : gift.secret ? "#ffd45c" : "#ffd700";
   ctx.beginPath();
   ctx.arc(x, y, gift.secret ? 12 : 9, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = gift.secret ? "#0057b7" : "#b8860b";
+  ctx.strokeStyle = gift.kind === "shield" ? "#e7f8ff" : gift.secret ? "#0057b7" : "#b8860b";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.arc(x, y, gift.secret ? 12 : 9, 0, Math.PI * 2);
@@ -7887,7 +7893,7 @@ function drawCityGift(gift) {
   ctx.fillStyle = "#6b4b00";
   ctx.font = gift.secret ? "bold 12px sans-serif" : "bold 10px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("+" + gift.value, x, y + 4);
+  ctx.fillText(gift.kind === "shield" ? "\u0429" : "+" + gift.value, x, y + 4);
   ctx.textAlign = "left";
   ctx.restore();
 }
@@ -8437,6 +8443,15 @@ function drawHUDCanvas() {
     ctx.fillRect(10, 76, 92 * remain, 6);
     ctx.font = "bold 10px sans-serif";
     ctx.fillText("LVIV COFFEE", 14, 73);
+  }
+  if (rescueBusTimer > 0) {
+    const remain = Math.max(0, Math.min(1, rescueBusTimer / 330));
+    ctx.fillStyle = "rgba(31, 75, 143, 0.62)";
+    ctx.fillRect(10, 86, 92, 6);
+    ctx.fillStyle = "#f5c542";
+    ctx.fillRect(10, 86, 92 * remain, 6);
+    ctx.font = "bold 10px sans-serif";
+    ctx.fillText("BUS BOOST", 14, 83);
   }
   if (superJumpTimer > 0) {
     const jw = 86;
@@ -10004,6 +10019,16 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    rescueBusTimer <= 0 &&
+    fr % 980 === 440 &&
+    totalDist > 160 &&
+    totalDist < FDIST - 220
+  )
+    spawnRescueBus();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
     fr % 260 === 80 &&
     totalDist < FDIST - 80
   )
@@ -10282,13 +10307,43 @@ function update() {
     collectBackpackBonus("jump", point.x, point.y, "#fff36a");
     return false;
   });
+  rescueBuses = rescueBuses.filter((bus) => {
+    if (bus.lane !== pLane || !isRoadObjectReady(bus)) return true;
+    const point = getSmallRoadPoint(bus, 18);
+    const br = {
+      x: point.x - 48 * point.scale,
+      y: point.y - 58 * point.scale,
+      w: 96 * point.scale,
+      h: 70 * point.scale,
+    };
+    if (!hit(pr, br)) return true;
+    rescueBusTimer = Math.max(rescueBusTimer, 330);
+    runCoins += 20;
+    addQuestProgress("coins", 20);
+    addLevelMissionProgress("coins", 20);
+    totalDist = Math.min(getFinishDistance() - 65, totalDist + 35);
+    obs = obs.filter((o) => Math.abs(o.x - bus.x) > 210 || o.lane !== bus.lane);
+    sfxCoin();
+    addParts(point.x, point.y, "#f5c542");
+    addParts(LANES[pLane], pY - 30, "#9fd8ff");
+    showAndriiBubble("\u0410\u0432\u0442\u043e\u0431\u0443\u0441 \u043f\u0456\u0434\u0432\u0456\u0437! +20\u20b4");
+    hudUp();
+    return false;
+  });
   cityGifts = cityGifts.filter((gift) => {
     const gr = { x: gift.x - 16, y: gift.y - 16, w: 32, h: 32 };
     if (!hit(pr, gr)) return true;
-    runCoins += gift.value;
-    addQuestProgress("coins", gift.value);
+    if (gift.kind === "shield") {
+      shieldCharges = Math.min(getMaxShieldCharges(), shieldCharges + 1);
+      addParts(gift.x, gift.y, "#58beff");
+      showAndriiBubble("\u041b\u044e\u0434\u0438 \u0443 \u0432\u0456\u043a\u043d\u0430\u0445 \u0434\u0430\u043b\u0438 \u0449\u0438\u0442!");
+    } else {
+      runCoins += gift.value;
+      addQuestProgress("coins", gift.value);
+      addLevelMissionProgress("coins", gift.value);
+      addParts(gift.x, gift.y, gift.secret ? "#ffd45c" : "#ffd700");
+    }
     sfxCoin();
-    addParts(gift.x, gift.y, gift.secret ? "#ffd45c" : "#ffd700");
     hudUp();
     return false;
   });
