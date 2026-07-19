@@ -4713,12 +4713,28 @@ function drawRoadsideLvivCoffeeScene() {
   ctx.restore();
 }
 
+function clipOutsideRoad() {
+  const horizonY = GND - 132;
+  const bottomY = H + 18;
+  const cx = W / 2;
+  const topHalf = ROAD_TOP_HALF + 18;
+  const bottomHalf = ROAD_BOTTOM_HALF + 18;
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  ctx.moveTo(cx - topHalf, horizonY - 8);
+  ctx.lineTo(cx + topHalf, horizonY - 8);
+  ctx.lineTo(cx + bottomHalf, bottomY);
+  ctx.lineTo(cx - bottomHalf, bottomY);
+  ctx.closePath();
+  ctx.clip("evenodd");
+}
 function drawKyivMaidanScene() {
   if (currentLocation !== 0) return;
   const off = (bgOff * 0.18) % 760;
   for (let base = -760; base < W + 760; base += 760) {
     const x = base - off;
     ctx.save();
+    clipOutsideRoad();
 
     ctx.fillStyle = "rgba(0,0,0,0.18)";
     ctx.beginPath();
