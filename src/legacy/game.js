@@ -2258,6 +2258,7 @@ function addAchievementProgress(id, amount = 1) {
   const isDone = getAchievementProgress(item) >= item.target;
   const unlockedSkins = syncAchievementSkins();
   if (!wasDone && isDone) {
+    achievementSeen[id] = false;
     showAchievementToast(item, getAchievementReward(item), unlockedSkins);
   }
   if (unlockedSkins.length) saveGame();
@@ -2302,23 +2303,25 @@ function buildAchievements() {
   const list = document.getElementById("achievementList");
   if (!list) return;
   list.innerHTML = "";
+  let seenChanged = false;
   ACHIEVEMENTS.forEach((item) => {
     const progress = getAchievementProgress(item);
     const done = progress >= item.target;
     const claimed = Boolean(achievementRewards[item.id]);
     const reward = getAchievementReward(item);
-    if (done) achievementSeen[item.id] = true;
+    const isNew = done && !achievementSeen[item.id];
+    const newBadge = isNew ? `<span class="achievement-new">\u041d\u041e\u0412\u0415</span>` : "";
     const status = done
       ? claimed
         ? `<div class="achievement-status">\u041e\u0442\u0440\u0438\u043c\u0430\u043d\u043e</div>`
         : `<button class="achievement-claim" data-achievement-id="${item.id}" type="button">\u0417\u0430\u0431\u0440\u0430\u0442\u0438 +${reward}\u20b4</button>`
       : `<div class="achievement-status">\u0412 \u043f\u0440\u043e\u0446\u0435\u0441\u0456</div>`;
     const card = document.createElement("article");
-    card.className = "achievement-item" + (done ? " complete" : "") + (claimed ? " claimed" : "");
+    card.className = "achievement-item" + (done ? " complete" : "") + (claimed ? " claimed" : "") + (isNew ? " new" : "");
     card.innerHTML = `
       <div class="achievement-icon">${item.icon}</div>
       <div class="achievement-copy">
-        <div class="achievement-title">${item.title}</div>
+        <div class="achievement-title">${item.title}${newBadge}</div>
         <div class="achievement-desc">${item.desc}</div>
         <div class="achievement-progress">
           <div class="achievement-progress-fill" style="width:${(progress / item.target) * 100}%"></div>
@@ -2328,8 +2331,12 @@ function buildAchievements() {
       ${status}
     `;
     list.appendChild(card);
+    if (isNew) {
+      achievementSeen[item.id] = true;
+      seenChanged = true;
+    }
   });
-  saveGame();
+  if (seenChanged) saveGame();
   updateAchievementReadyBadge();
 }
 function buildCollection() {

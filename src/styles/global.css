@@ -138,9 +138,11 @@ canvas{display:block}
 .achievement-list{display:grid;grid-template-columns:1fr;gap:10px}
 .achievement-item{display:grid;grid-template-columns:48px 1fr auto;gap:11px;align-items:center;min-height:78px;padding:10px;border:1px solid #293754;border-radius:8px;background:#182139}
 .achievement-item.complete{border-color:#756426;background:#211f20}
+.achievement-item.new{box-shadow:0 0 0 1px rgba(255,215,0,.45),0 0 18px rgba(255,215,0,.12)}
 .achievement-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #4c6f8d;background:#101833;color:#7ed7ff;font-size:18px;font-weight:900}
 .achievement-item.complete .achievement-icon{border-color:#ffd700;color:#ffd700;background:#251f0a}
-.achievement-title{font-size:13px;font-weight:800;color:#e5ebf7}
+.achievement-title{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;color:#e5ebf7}
+.achievement-new{display:inline-flex;align-items:center;height:16px;padding:0 5px;border-radius:4px;background:#ffd700;color:#17192a;font-size:8px;font-weight:900;letter-spacing:.3px}
 .achievement-desc{margin-top:2px;font-size:11px;color:#8291ad}
 .achievement-progress{height:6px;margin-top:7px;border-radius:3px;overflow:hidden;background:#28334b}
 .achievement-progress-fill{height:100%;background:#55b9e9}
