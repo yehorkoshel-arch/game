@@ -3978,6 +3978,7 @@ function startGame() {
 }
 function stopGame() {
   gameState = "stopped";
+  loopActive = false;
   tckScene = null;
   cancelSpeech();
   if (startVoiceTimer) {
@@ -11178,6 +11179,19 @@ function update() {
   if (fr % 15 === 0) hudUp();
 }
 
+function recoverGameLoop(reason) {
+  if (gameState === "stopped") return;
+  console.error("Kyiv Runner recovered game loop", reason);
+  loopActive = false;
+  if (raf) cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(loop);
+}
+window.addEventListener("error", (event) => {
+  recoverGameLoop(event.error || event.message);
+});
+window.addEventListener("unhandledrejection", (event) => {
+  recoverGameLoop(event.reason);
+});
 function loop() {
   if (gameState === "stopped") return;
   loopActive = true;
