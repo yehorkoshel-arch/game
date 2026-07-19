@@ -9881,6 +9881,7 @@ function update() {
   if (inv > 0) inv--;
   if (fireCooldown > 0) fireCooldown--;
   if (robotRadioCooldown > 0) robotRadioCooldown--;
+  if (bubbleQuietTimer > 0) bubbleQuietTimer--;
   if (marichkaVoiceCooldown > 0) marichkaVoiceCooldown--;
   if (lightningFlash > 0) lightningFlash--;
   if (isStormWeather()) {
@@ -10697,10 +10698,15 @@ function speakMarichkaHint(key, cooldown = 640) {
 
 // Bubble над гравцем
 let bubbleText = "",
-  bubbleTimer = 0;
-function showAndriiBubble(text) {
+  bubbleTimer = 0,
+  bubbleQuietTimer = 0;
+function showAndriiBubble(text, force = false) {
+  if (!force && gameState === "run") {
+    if (bubbleQuietTimer > 0 || bubbleTimer > 35) return;
+    bubbleQuietTimer = 90;
+  }
   bubbleText = text;
-  bubbleTimer = 160;
+  bubbleTimer = 130;
 }
 function drawAndriiBubble() {
   if (bubbleTimer <= 0) return;
