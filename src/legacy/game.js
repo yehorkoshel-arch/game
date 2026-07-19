@@ -1401,6 +1401,8 @@ const LEVEL_MISSION_REWARD = 50;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
+const START_SAFE_FRAMES = 210;
+const START_SAFE_DISTANCE = 18;
 const FINISH_APPROACH_DISTANCE = 10;
 const SCHOOL_BELL_FRAMES = 30 * 60;
 const SCHOOL_BELL_REWARD = 75;
@@ -9954,10 +9956,12 @@ function update() {
     160 - Math.floor(spd * 6),
     settingDiff === "hard" ? 55 : 80,
   );
+  const startSafe = fr < START_SAFE_FRAMES || totalDist < START_SAFE_DISTANCE;
   if (
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     fr % interval === 0 &&
     totalDist < FDIST - 100
   )
@@ -9966,6 +9970,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     fr % 540 === 160 &&
     totalDist > 90 &&
     totalDist < FDIST - 150
@@ -9975,6 +9980,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     fr % 460 === 260 &&
     totalDist > 120 &&
     totalDist < FDIST - 170
@@ -9984,6 +9990,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    fr > 70 &&
     fr % 110 === 0 &&
     totalDist < FDIST - 50
   )
@@ -9992,6 +9999,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     fr % 620 === 180 &&
     totalDist > 80 &&
     totalDist < FDIST - 160
@@ -10002,6 +10010,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     chestnutTimer <= 0 &&
     fr % 720 === 260 &&
     totalDist > 110 &&
@@ -10013,6 +10022,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     coffeeTimer <= 0 &&
     fr % 720 === 260 &&
     totalDist > 110 &&
@@ -10023,6 +10033,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     shieldCharges <= 0 &&
     fr % 760 === 300 &&
     totalDist > 100 &&
@@ -10033,6 +10044,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     superJumpTimer <= 0 &&
     fr % 840 === 420 &&
     totalDist > 120 &&
@@ -10043,6 +10055,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     rescueBusTimer <= 0 &&
     fr % 980 === 440 &&
     totalDist > 160 &&
@@ -10053,6 +10066,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     fr % 260 === 80 &&
     totalDist < FDIST - 80
   )
@@ -10061,6 +10075,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     fr % 780 === 220 &&
     totalDist < FDIST - 120
   )
@@ -10069,6 +10084,7 @@ function update() {
     !bossActive &&
     !bossDefeated &&
     !secretRoute?.active &&
+    !startSafe &&
     fr % 900 === 520 &&
     totalDist > 130 &&
     totalDist < FDIST - 170
