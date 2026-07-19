@@ -363,13 +363,14 @@ function getStartingShieldCharges() {
   const defense = getPlayerUpgradeLevel("defense");
   if (defense >= 3) return 2;
   if (defense >= 2) return 1;
-  return 0;
+  return settingDiff === "easy" || settingDiff === "normal" ? 1 : 0;
 }
 function getMaxShieldCharges() {
   return getPlayerUpgradeLevel("defense") >= 3 ? 2 : 1;
 }
 function getDamageInvulnerabilityTime() {
-  return 75 + getPlayerUpgradeLevel("defense") * 12;
+  const diffBonus = settingDiff === "easy" ? 45 : settingDiff === "normal" ? 25 : 10;
+  return 105 + diffBonus + getPlayerUpgradeLevel("defense") * 16;
 }
 function saveGame() {
   saveGameSave({
@@ -3585,13 +3586,13 @@ const cv = document.getElementById("gc"),
 function spawnObs() {
   const lv = getLvl();
   const types = lv.obsTypes;
-  const roadworkChance = Math.min(0.08 + currentLevel * 0.01, 0.16);
+  const roadworkChance = Math.min(0.055 + currentLevel * 0.008, 0.12);
   const oilChance = isStormWeather()
-    ? 0.08
-    : Math.min(0.045 + currentLevel * 0.006, 0.1);
+    ? 0.055
+    : Math.min(0.03 + currentLevel * 0.004, 0.075);
   const hazardChance = Math.min(
-    (isStormWeather() ? 0.28 : 0.14) + currentLevel * 0.012,
-    isStormWeather() ? 0.42 : 0.28,
+    (isStormWeather() ? 0.2 : 0.1) + currentLevel * 0.009,
+    isStormWeather() ? 0.32 : 0.22,
   );
   const type =
     Math.random() < roadworkChance
@@ -9954,7 +9955,7 @@ function update() {
 
   const interval = Math.max(
     160 - Math.floor(spd * 6),
-    settingDiff === "hard" ? 55 : 80,
+    settingDiff === "hard" ? 75 : settingDiff === "easy" ? 118 : 96,
   );
   const startSafe = fr < START_SAFE_FRAMES || totalDist < START_SAFE_DISTANCE;
   if (
