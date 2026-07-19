@@ -2198,8 +2198,11 @@ function handleAppGesture(event) {
   const introScreen = document.getElementById("sIntro");
   const introActive = introScreen?.classList.contains("active");
   const skipPressed = event?.target?.closest?.("#introSkip");
-  if (introActive && !skipPressed) beginIntroAfterGesture();
-  if (gameState === "missionIntro") beginLevelRun();
+  if (introActive && !skipPressed) {
+    beginIntroAfterGesture();
+    return;
+  }
+  act("AppGesture");
 }
 const appRoot = document.getElementById("app");
 appRoot.addEventListener("pointerdown", handleAppGesture, { passive: true });
@@ -3215,10 +3218,7 @@ function act(c) {
     return;
   }
   if (gameState === "win") {
-    stopGame();
-    showScreen("sMenu");
-    syncCoins();
-    buildLevelBar();
+    restartCompletedRun();
     return;
   }
   if (gameState === "levelClear") {
@@ -3537,6 +3537,14 @@ function beginLevelRun() {
 }
 
 function restartLevel() {
+  showScreen("sGame");
+  startLevel();
+}
+
+function restartCompletedRun() {
+  stopGame();
+  currentLevel = 0;
+  showScreen("sGame");
   startLevel();
 }
 
