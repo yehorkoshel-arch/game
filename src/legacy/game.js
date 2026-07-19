@@ -1354,6 +1354,7 @@ let pLane = 1,
   magnetTimer = 0,
   chestnutTimer = 0,
   coffeeTimer = 0,
+  rescueBusTimer = 0,
   superJumpTimer = 0,
   shieldCharges = 0,
   bonusBackpack = [],
@@ -1364,6 +1365,7 @@ let obs = [],
   magnets = [],
   chestnuts = [],
   coffees = [],
+  rescueBuses = [],
   shields = [],
   superJumps = [],
   cityGifts = [],
@@ -3450,6 +3452,7 @@ function startLevel() {
   magnetTimer = 0;
   chestnutTimer = 0;
   coffeeTimer = 0;
+  rescueBusTimer = 0;
   superJumpTimer = 0;
   shieldCharges = getStartingShieldCharges();
   fillBackpackFromInventory();
@@ -3458,6 +3461,7 @@ function startLevel() {
   magnets = [];
   chestnuts = [];
   coffees = [];
+  rescueBuses = [];
   shields = [];
   superJumps = [];
   cityGifts = [];
@@ -3658,7 +3662,17 @@ function spawnCoffee() {
   const lane = Math.floor(Math.random() * 3);
   coffees.push({ x: W + 35, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
-function spawnShield() {
+function spawnRescueBus() {
+  if (secretRoute?.active || bossActive || gameState !== "run") return;
+  const lane = Math.floor(Math.random() * 3);
+  rescueBuses.push({
+    x: W + 70,
+    lane,
+    y: GND - 46,
+    phase: Math.random() * Math.PI * 2,
+  });
+  showAndriiBubble("\u0420\u044f\u0442\u0443\u0432\u0430\u043b\u044c\u043d\u0438\u0439 \u0430\u0432\u0442\u043e\u0431\u0443\u0441 \u0434\u043e \u0448\u043a\u043e\u043b\u0438!");
+}function spawnShield() {
   const lane = Math.floor(Math.random() * 3);
   shields.push({ x: W + 30, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
@@ -7796,6 +7810,57 @@ function drawSuperJumpAura() {
   ctx.restore();
 }
 
+function drawRescueBus(bus) {
+  const p = getSmallRoadPoint(bus, 18);
+  const x = p.x;
+  const y = p.y + Math.sin(fr * 0.12 + (bus.phase || 0)) * 2 * p.scale;
+  const spawnAlpha = getRoadSpawnAlpha(bus);
+  if (spawnAlpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha *= spawnAlpha;
+  ctx.translate(x, y);
+  ctx.scale(p.scale, p.scale);
+  ctx.translate(-x, -y);
+
+  ctx.fillStyle = "rgba(0,0,0,0.24)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 12, 58, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#f5c542";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - 58, y - 52, 116, 48, 10);
+  else ctx.rect(x - 58, y - 52, 116, 48);
+  ctx.fill();
+  ctx.fillStyle = "#2f5f9f";
+  ctx.fillRect(x - 48, y - 43, 23, 17);
+  ctx.fillRect(x - 18, y - 43, 23, 17);
+  ctx.fillRect(x + 12, y - 43, 23, 17);
+  ctx.fillStyle = "#fff4b8";
+  ctx.fillRect(x + 42, y - 39, 12, 10);
+  ctx.fillStyle = "#334155";
+  ctx.fillRect(x - 52, y - 19, 104, 5);
+  ctx.fillStyle = "#1d2b3f";
+  for (const wx of [-38, 38]) {
+    ctx.beginPath();
+    ctx.arc(x + wx, y - 1, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#9fd8ff";
+    ctx.beginPath();
+    ctx.arc(x + wx, y - 1, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#1d2b3f";
+  }
+  ctx.fillStyle = "#1f4b8f";
+  ctx.font = "bold 11px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("SCHOOL BUS", x, y - 59);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 10px sans-serif";
+  ctx.fillText("+20", x, y - 28);
+  ctx.textAlign = "left";
+  ctx.restore();
+}
 function drawCityGift(gift) {
   const bob = Math.sin(fr * 0.16 + gift.x * 0.04) * 3;
   const x = gift.x;
@@ -8868,6 +8933,7 @@ function beginStoryScene(kind, sceneKey = null) {
   slideT = 0;
   obs = [];
   coins = [];
+  rescueBuses = [];
   cityGifts = [];
   postcardItems = [];
   parts = [];
@@ -9650,7 +9716,8 @@ function update() {
     magnets = [];
     chestnuts = [];
     coffees = [];
-    shields = [];
+  rescueBuses = [];
+  shields = [];
     superJumps = [];
     cityGifts = [];
     postcardItems = [];
