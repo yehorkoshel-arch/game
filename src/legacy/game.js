@@ -11179,31 +11179,33 @@ function update() {
   if (fr % 15 === 0) hudUp();
 }
 
+function logFrameGuard(label, error, item = null) {
+  if (fr % 180 !== 0) return;
+  console.warn("Kyiv Runner frame guard", label, error, item || "");
+}
 function safeCall(label, fn) {
   try {
     return fn();
   } catch (error) {
-    console.error("Kyiv Runner frame guard", label, error);
+    logFrameGuard(label, error);
     return null;
   }
 }
 function safeDrawEach(label, list, drawFn) {
-  if (!Array.isArray(list)) return [];
-  const safe = [];
-  list.forEach((item) => {
+  if (!Array.isArray(list)) return list;
+  for (let i = list.length - 1; i >= 0; i--) {
     try {
-      drawFn(item);
-      safe.push(item);
+      drawFn(list[i]);
     } catch (error) {
-      console.error("Kyiv Runner removed broken object", label, error, item);
+      logFrameGuard(label, error, list[i]);
+      list.splice(i, 1);
     }
-  });
-  return safe;
+  }
+  return list;
 }
 function recoverGameLoop(reason) {
-  if (gameState === "stopped") return;
-  console.error("Kyiv Runner recovered game loop", reason);
-  loopActive = false;
+  if (gameState === "stopped" || loopActive) return;
+  logFrameGuard("loop", reason);
   if (raf) cancelAnimationFrame(raf);
   raf = requestAnimationFrame(loop);
 }
@@ -11215,6 +11217,7 @@ window.addEventListener("unhandledrejection", (event) => {
 });
 function loop() {
   if (gameState === "stopped") return;
+  raf = null;
   loopActive = true;
   try {
     ctx.clearRect(0, 0, W, H);
@@ -11275,8 +11278,7 @@ function loop() {
     safeCall("end-panel", updateEndPanel);
     safeCall("update", update);
   } catch (error) {
-    recoverGameLoop(error);
-    return;
+    logFrameGuard("loop", error);
   } finally {
     loopActive = false;
     if (gameState !== "stopped") raf = requestAnimationFrame(loop);
