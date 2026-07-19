@@ -1385,6 +1385,8 @@ let lightningFlash = 0,
 let startVoiceTimer = null;
 let robotRadioCooldown = 0;
 let marichkaVoiceCooldown = 0;
+let roadEvent = null,
+  roadEventCooldown = 0;
 let bossActive = false,
   bossDefeated = false,
   bossTransform = 0,
@@ -1916,14 +1918,96 @@ function drawTimeOfDaySky(lv) {
   }
   return period;
 }
+function isRoadEvent(type) {
+  return roadEvent?.type === type && roadEvent.timer > 0;
+}
+function getRoadEventTitle(type) {
+  const titles = {
+    kyiv_storm: "\u0417\u043b\u0438\u0432\u0430 \u0432 \u041a\u0438\u0454\u0432\u0456",
+    kyiv_traffic: "\u0417\u0430\u0442\u043e\u0440 \u043d\u0430 \u0434\u043e\u0440\u043e\u0437\u0456",
+    lviv_tram: "\u0422\u0440\u0430\u043c\u0432\u0430\u0439\u043d\u0430 \u0445\u0432\u0438\u043b\u044f",
+    lviv_roadwork: "\u0420\u0435\u043c\u043e\u043d\u0442 \u0431\u0440\u0443\u043a\u0456\u0432\u043a\u0438",
+  };
+  return titles[type] || "\u041f\u043e\u0434\u0456\u044f \u043d\u0430 \u0434\u043e\u0440\u043e\u0437\u0456";
+}
+function getRoadEventHint(type) {
+  const hints = {
+    kyiv_storm: "\u041e\u0431\u0435\u0440\u0435\u0436\u043d\u043e \u043a\u0430\u043b\u044e\u0436\u0456 \u0442\u0430 \u0431\u043b\u0438\u0441\u043a\u0430\u0432\u043a\u0430",
+    kyiv_traffic: "\u041c\u0430\u0448\u0438\u043d\u0438 \u0457\u0434\u0443\u0442\u044c \u0447\u0430\u0441\u0442\u0456\u0448\u0435",
+    lviv_tram: "\u0422\u0440\u0438\u043c\u0430\u0439\u0441\u044f \u0441\u043c\u0443\u0433\u0438 \u0431\u0456\u043b\u044f \u0442\u0440\u0430\u043c\u0432\u0430\u044f",
+    lviv_roadwork: "\u041a\u043e\u043d\u0443\u0441\u0438 \u0456 \u044f\u043c\u0438 \u043d\u0430 \u0431\u0440\u0443\u043a\u0456\u0432\u0446\u0456",
+  };
+  return hints[type] || "\u0411\u0443\u0434\u044c \u0443\u0432\u0430\u0436\u043d\u0438\u0439";
+}
+function getRainIntensity() {
+  return isRoadEvent("kyiv_storm") ? 1.65 : 1;
+}
 function isStormWeather() {
   return currentLocation === 0 && (gameState === "run" || gameState === "schoolEnter");
+}
+function startRoadEvent(type) {
+  if (!type || roadEvent?.timer > 0) return;
+  roadEvent = { type, timer: 520, intro: 90 };
+  roadEventCooldown = 820;
+  const title = getRoadEventTitle(type);
+  const hint = getRoadEventHint(type);
+  showAndriiBubble(`\u0420\u043e\u0431\u043e\u0442\u0440\u043e\u043d: ${title}. ${hint}`, true);
+  if (type === "kyiv_storm") {
+    lightningFlash = 18;
+    nextLightning = 120;
+    sfxThunder();
+  }
+}
+function maybeStartRoadEvent(startSafe) {
+  if (gameState !== "run" || startSafe || bossActive || secretRoute?.active) return;
+  if (totalDist < 115 || totalDist > getFinishDistance() - 180) return;
+  if (roadEvent?.timer > 0 || roadEventCooldown > 0) return;
+  if (fr % 360 !== 140 || Math.random() > 0.55) return;
+  const type = currentLocation === 0
+    ? (Math.random() < 0.52 ? "kyiv_storm" : "kyiv_traffic")
+    : (Math.random() < 0.55 ? "lviv_roadwork" : "lviv_tram");
+  startRoadEvent(type);
+}
+function updateRoadEvent(startSafe) {
+  if (roadEventCooldown > 0) roadEventCooldown--;
+  if (roadEvent?.timer > 0) {
+    roadEvent.timer--;
+    if (roadEvent.intro > 0) roadEvent.intro--;
+    if (roadEvent.timer <= 0) roadEvent = null;
+  }
+  maybeStartRoadEvent(startSafe);
+}
+function drawRoadEventBanner() {
+  if (!roadEvent?.timer || gameState !== "run") return;
+  const a = Math.min(1, roadEvent.intro / 24, roadEvent.timer / 34);
+  const title = getRoadEventTitle(roadEvent.type);
+  const hint = getRoadEventHint(roadEvent.type);
+  const x = W / 2;
+  const y = 44;
+  ctx.save();
+  ctx.globalAlpha = 0.92 * a;
+  ctx.fillStyle = "rgba(10, 14, 28, 0.82)";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - 154, y - 19, 308, 38, 8);
+  else ctx.rect(x - 154, y - 19, 308, 38);
+  ctx.fill();
+  ctx.strokeStyle = isRoadEvent("kyiv_storm") ? "#8fd8ff" : "#ffd700";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = "#ffd700";
+  ctx.font = "bold 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(title, x, y - 3);
+  ctx.fillStyle = "#cfe6ff";
+  ctx.font = "10px sans-serif";
+  ctx.fillText(hint, x, y + 12);
+  ctx.restore();
 }
 function drawStormSkyOverlay() {
   if (!isStormWeather()) return;
   const storm = ctx.createLinearGradient(0, 0, 0, GND);
-  storm.addColorStop(0, "rgba(9, 16, 30, 0.5)");
-  storm.addColorStop(0.65, "rgba(17, 27, 42, 0.32)");
+  storm.addColorStop(0, `rgba(9, 16, 30, ${0.5 + (getRainIntensity() - 1) * 0.16})`);
+  storm.addColorStop(0.65, `rgba(17, 27, 42, ${0.32 + (getRainIntensity() - 1) * 0.12})`);
   storm.addColorStop(1, "rgba(35, 45, 58, 0.12)");
   ctx.fillStyle = storm;
   ctx.fillRect(0, 0, W, GND);
@@ -1960,9 +2044,9 @@ function drawRain() {
   ctx.save();
   ctx.strokeStyle = "rgba(175, 218, 255, 0.58)";
   ctx.lineWidth = 1.4;
-  for (let i = 0; i < 90; i++) {
+  for (let i = 0; i < 90 * getRainIntensity(); i++) {
     const x = (i * 53 + bgOff * 5.2) % (W + 120) - 60;
-    const y = (i * 71 + fr * 16) % (H + 80) - 50;
+    const y = (i * 71 + fr * (16 + (getRainIntensity() - 1) * 6)) % (H + 80) - 50;
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(x - 12, y + 28);
@@ -3481,6 +3565,8 @@ function startLevel() {
   }
   startVoiceTimer = null;
   robotRadioCooldown = 0;
+  roadEvent = null;
+  roadEventCooldown = 260;
   currentLevel = getPlayableLevel(currentLevel);
   const tckSceneKey = currentLocation + ":" + currentLevel;
   if (currentLocation === 0 && currentLevel === 0 && !marichkaProjectSceneSeen) {
@@ -3650,13 +3736,15 @@ const cv = document.getElementById("gc"),
 function spawnObs() {
   const lv = getLvl();
   const types = lv.obsTypes;
-  const roadworkChance = Math.min(0.055 + currentLevel * 0.008, 0.12);
+  const eventRoadwork = isRoadEvent("lviv_roadwork");
+  const eventStorm = isRoadEvent("kyiv_storm");
+  const roadworkChance = Math.min(0.055 + currentLevel * 0.008 + (eventRoadwork ? 0.18 : 0), 0.32);
   const oilChance = isStormWeather()
-    ? 0.055
+    ? (eventStorm ? 0.09 : 0.055)
     : Math.min(0.03 + currentLevel * 0.004, 0.075);
   const hazardChance = Math.min(
-    (isStormWeather() ? 0.2 : 0.1) + currentLevel * 0.009,
-    isStormWeather() ? 0.32 : 0.22,
+    (isStormWeather() ? 0.2 : 0.1) + currentLevel * 0.009 + (eventStorm || eventRoadwork ? 0.08 : 0),
+    isStormWeather() || eventRoadwork ? 0.38 : 0.22,
   );
   const type =
     Math.random() < roadworkChance
@@ -10022,6 +10110,7 @@ function update() {
     settingDiff === "hard" ? 75 : settingDiff === "easy" ? 118 : 96,
   );
   const startSafe = fr < START_SAFE_FRAMES || totalDist < START_SAFE_DISTANCE;
+  updateRoadEvent(startSafe);
   if (
     !bossActive &&
     !bossDefeated &&
@@ -10155,6 +10244,36 @@ function update() {
     totalDist < FDIST - 170
   )
     spawnPostcard();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    !startSafe &&
+    isRoadEvent("kyiv_traffic") &&
+    fr % 210 === 70 &&
+    totalDist < FDIST - 150
+  )
+    spawnTrafficCar();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    !startSafe &&
+    isRoadEvent("lviv_roadwork") &&
+    fr % 145 === 35 &&
+    totalDist < FDIST - 120
+  )
+    spawnObs();
+  if (
+    !bossActive &&
+    !bossDefeated &&
+    !secretRoute?.active &&
+    !startSafe &&
+    isRoadEvent("lviv_tram") &&
+    fr % 240 === 80 &&
+    totalDist < FDIST - 160
+  )
+    spawnTrafficCar();
 
   obs.forEach((o) => (o.x -= spd + (o.vx || 0)));
   coins.forEach((c) => {
@@ -10699,6 +10818,7 @@ function loop() {
     drawHUDCanvas();
     drawDistBar();
     drawSecretRouteHUD();
+    drawRoadEventBanner();
   }
   if (gameState === "win") {
     drawConfetti();
