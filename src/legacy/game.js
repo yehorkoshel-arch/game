@@ -11179,6 +11179,27 @@ function update() {
   if (fr % 15 === 0) hudUp();
 }
 
+function safeCall(label, fn) {
+  try {
+    return fn();
+  } catch (error) {
+    console.error("Kyiv Runner frame guard", label, error);
+    return null;
+  }
+}
+function safeDrawEach(label, list, drawFn) {
+  if (!Array.isArray(list)) return [];
+  const safe = [];
+  list.forEach((item) => {
+    try {
+      drawFn(item);
+      safe.push(item);
+    } catch (error) {
+      console.error("Kyiv Runner removed broken object", label, error, item);
+    }
+  });
+  return safe;
+}
 function recoverGameLoop(reason) {
   if (gameState === "stopped") return;
   console.error("Kyiv Runner recovered game loop", reason);
@@ -11195,67 +11216,72 @@ window.addEventListener("unhandledrejection", (event) => {
 function loop() {
   if (gameState === "stopped") return;
   loopActive = true;
-  ctx.clearRect(0, 0, W, H);
-  if (gameState === "story") {
-    updateEndPanel();
-    if (tckScene?.kind === "marichka_project") drawMarichkaProjectScene();
-    else drawTckScene();
-    update();
-    loopActive = false;
-    if (gameState === "story") raf = requestAnimationFrame(loop);
+  try {
+    ctx.clearRect(0, 0, W, H);
+    if (gameState === "story") {
+      safeCall("story-panel", updateEndPanel);
+      safeCall("story-scene", () => {
+        if (tckScene?.kind === "marichka_project") drawMarichkaProjectScene();
+        else drawTckScene();
+      });
+      safeCall("story-update", update);
+      return;
+    }
+    safeCall("background", drawBG);
+    safeCall("secret-entrance", drawSecretRouteEntrance);
+    safeCall("finish", drawFinishLine);
+    superJumps = safeDrawEach("superJumps", superJumps, drawSuperJumpItem);
+    rescueBuses = safeDrawEach("rescueBuses", rescueBuses, drawRescueBus);
+    shields = safeDrawEach("shields", shields, drawShieldItem);
+    coffees = safeDrawEach("coffees", coffees, drawCoffeePower);
+    chestnuts = safeDrawEach("chestnuts", chestnuts, drawChestnutPower);
+    magnets = safeDrawEach("magnets", magnets, drawMagnet);
+    coins = safeDrawEach("coins", coins, drawCoin);
+    postcardItems = safeDrawEach("postcards", postcardItems, drawPostcardItem);
+    cityGifts = safeDrawEach("cityGifts", cityGifts, drawCityGift);
+    obs = safeDrawEach("obstacles", obs, drawObs);
+    safeCall("boss", drawKyivBoss);
+    safeCall("chaser", drawChaser);
+    safeCall("school-pursuers", drawSchoolPursuersScene);
+    safeCall("school-marichka", drawSchoolMarichkaScene);
+    safeCall("player", drawPlayer);
+    safeCall("school-finale", drawSchoolFinaleScene);
+    safeCall("shield-aura", drawPlayerShieldAura);
+    safeCall("superjump-aura", drawSuperJumpAura);
+    safeCall("rain", drawRain);
+    safeCall("secret-foreground", drawSecretTunnelForeground);
+    safeCall("parts", drawParts);
+    safeCall("bullets", drawBullets);
+    safeCall("bubble", drawAndriiBubble);
+    if (gameState === "run") {
+      safeCall("hud", drawHUDCanvas);
+      safeCall("distance", drawDistBar);
+      safeCall("start-phase", drawStartPhaseBanner);
+      safeCall("secret-hud", drawSecretRouteHUD);
+      safeCall("road-event", drawRoadEventBanner);
+      safeCall("chase", drawChaseBanner);
+      safeCall("achievement-toast", drawAchievementToast);
+    }
+    if (gameState === "win") {
+      safeCall("confetti", drawConfetti);
+      safeCall("win", drawWinOverlay);
+    }
+    if (gameState === "levelClear") {
+      safeCall("confetti-clear", drawConfetti);
+      safeCall("level-clear", drawLevelClearOverlay);
+    }
+    if (gameState === "missionIntro") safeCall("mission-intro", drawLevelMissionIntroOverlay);
+    if (gameState === "idle" || gameState === "over") safeCall("overlay", drawOverlay);
+    safeCall("end-panel", updateEndPanel);
+    safeCall("update", update);
+  } catch (error) {
+    recoverGameLoop(error);
     return;
+  } finally {
+    loopActive = false;
+    if (gameState !== "stopped") raf = requestAnimationFrame(loop);
   }
-  drawBG();
-  drawSecretRouteEntrance();
-  drawFinishLine();
-  superJumps.forEach(drawSuperJumpItem);
-  rescueBuses.forEach(drawRescueBus);
-  shields.forEach(drawShieldItem);
-  coffees.forEach(drawCoffeePower);
-  chestnuts.forEach(drawChestnutPower);
-  magnets.forEach(drawMagnet);
-  coins.forEach(drawCoin);
-  postcardItems.forEach(drawPostcardItem);
-  cityGifts.forEach(drawCityGift);
-  obs.forEach(drawObs);
-  drawKyivBoss();
-  drawChaser();
-  drawSchoolPursuersScene();
-  drawSchoolMarichkaScene();
-  drawPlayer();
-  drawSchoolFinaleScene();
-  drawPlayerShieldAura();
-  drawSuperJumpAura();
-  drawRain();
-  drawSecretTunnelForeground();
-  drawParts();
-  drawBullets();
-  drawAndriiBubble();
-  if (gameState === "run") {
-    drawHUDCanvas();
-    drawDistBar();
-    drawStartPhaseBanner();
-    drawSecretRouteHUD();
-    drawRoadEventBanner();
-    drawChaseBanner();
-    drawAchievementToast();
-  }
-  if (gameState === "win") {
-    drawConfetti();
-    drawWinOverlay();
-  }
-  if (gameState === "levelClear") {
-    drawConfetti();
-    drawLevelClearOverlay();
-  }
-  if (gameState === "missionIntro") drawLevelMissionIntroOverlay();
-  if (gameState === "idle" || gameState === "over") drawOverlay();
-  updateEndPanel();
-  update();
-  loopActive = false;
-  raf = requestAnimationFrame(loop);
 }
-
 // ── INTRO ──────────────────────────────────────────────────────────────────
 const ANDRII_START = [
   "Ну що ж, побігли!",
