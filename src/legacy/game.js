@@ -2425,6 +2425,7 @@ document.querySelectorAll(".lbtn").forEach((b) => {
 
 function showScreen(id) {
   setActiveScreen(id);
+  if (id !== "sGame") updateEndPanel();
   if (id === "sMenu") updateQuestReadyBadge();
   if (id === "sMenu") updateAchievementReadyBadge();
   if (id === "sQuests") buildQuests();
@@ -2439,6 +2440,45 @@ function showScreen(id) {
     }
   }
 }
+function updateEndPanel() {
+  const panel = document.getElementById("endPanel");
+  if (!panel) return;
+  const title = document.getElementById("endPanelTitle");
+  const stats = document.getElementById("endPanelStats");
+  const retry = document.getElementById("btnRetryRun");
+  const next = document.getElementById("btnNextRun");
+  const menu = document.getElementById("btnEndMenu");
+  const isOver = gameState === "over";
+  const isClear = gameState === "levelClear";
+  const isWin = gameState === "win";
+  const active = isOver || isClear || isWin;
+  panel.classList.toggle("active", active);
+  if (!active) return;
+  const levelName = getLevelNames(currentLocation, lang)[getPlayableLevel(currentLevel)] || "";
+  const scoreLine = `${score} ${t().pts || "pts"} · ${runCoins}\u20b4`;
+  if (title) {
+    title.textContent = isOver
+      ? "\u0421\u043f\u0440\u043e\u0431\u0443\u0439 \u0449\u0435 \u0440\u0430\u0437"
+      : isWin
+        ? "\u0424\u0456\u043d\u0456\u0448!"
+        : "\u0420\u0456\u0432\u0435\u043d\u044c \u043f\u0440\u043e\u0439\u0434\u0435\u043d\u043e!";
+  }
+  if (stats) {
+    stats.textContent = `${scoreLine} · ${t().levelLabel || "Level"} ${getPlayableLevel(currentLevel) + 1} ${levelName}`;
+  }
+  if (retry) {
+    retry.hidden = isClear;
+    retry.textContent = isWin
+      ? "\u041f\u043e\u0447\u0430\u0442\u0438 \u0437\u043d\u043e\u0432\u0443"
+      : "\u0429\u0435 \u0440\u0430\u0437";
+  }
+  if (next) {
+    next.hidden = !isClear;
+    next.textContent = "\u0414\u0430\u043b\u0456";
+  }
+  if (menu) menu.textContent = "\u0412 \u043c\u0435\u043d\u044e";
+}
+
 function syncCoins() {
   refreshCoinAchievements();
   setText("menuCoins", totalCoins);
@@ -3094,6 +3134,22 @@ document.getElementById("cMenu").onclick = () => {
   showScreen("sMenu");
   syncCoins();
   saveGame();
+  buildLevelBar();
+};
+document.getElementById("btnRetryRun").onclick = (event) => {
+  event.stopPropagation();
+  if (gameState === "win") restartCompletedRun();
+  else restartLevel();
+};
+document.getElementById("btnNextRun").onclick = (event) => {
+  event.stopPropagation();
+  if (gameState === "levelClear") nextLevel();
+};
+document.getElementById("btnEndMenu").onclick = (event) => {
+  event.stopPropagation();
+  stopGame();
+  showScreen("sMenu");
+  syncCoins();
   buildLevelBar();
 };
 
@@ -10605,6 +10661,7 @@ function loop() {
   loopActive = true;
   ctx.clearRect(0, 0, W, H);
   if (gameState === "story") {
+    updateEndPanel();
     if (tckScene?.kind === "marichka_project") drawMarichkaProjectScene();
     else drawTckScene();
     update();
@@ -10653,6 +10710,7 @@ function loop() {
   }
   if (gameState === "missionIntro") drawLevelMissionIntroOverlay();
   if (gameState === "idle" || gameState === "over") drawOverlay();
+  updateEndPanel();
   update();
   loopActive = false;
   raf = requestAnimationFrame(loop);
