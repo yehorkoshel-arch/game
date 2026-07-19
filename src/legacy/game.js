@@ -4942,12 +4942,12 @@ function drawRoadsideSigns() {
 function drawLvivTram() {
   if (currentLocation !== 1) return;
   const tramX = W + 190 - ((bgOff * 0.36) % (W + 430));
-  const tramY = GND - 118;
+  const tramY = GND - 178;
   if (tramX < -260 || tramX > W + 120) return;
 
   ctx.save();
-  const railY1 = GND - 2;
-  const railY2 = GND + 10;
+  const railY1 = GND - 72;
+  const railY2 = GND - 64;
   const railStart = Math.max(-20, tramX - 36);
   const railEnd = Math.min(W + 20, tramX + 220);
   ctx.strokeStyle = "rgba(60,50,42,0.58)";
@@ -4969,7 +4969,7 @@ function drawLvivTram() {
 
   ctx.fillStyle = "rgba(0,0,0,0.24)";
   ctx.beginPath();
-  ctx.ellipse(tramX + 85, GND + 5, 104, 13, 0, 0, Math.PI * 2);
+  ctx.ellipse(tramX + 85, GND - 68, 104, 11, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.strokeStyle = "#34302b";
@@ -5276,10 +5276,10 @@ function drawBG() {
 
   drawLvivCoffeeScene();
   drawKyivMaidanScene();
+  drawLvivTram();
   drawRealRoad(timePeriod);
   drawRoadRunTrack();
   drawRoadsideLvivCoffeeScene();
-  drawLvivTram();
   drawRoadsideSigns();
 }
 
