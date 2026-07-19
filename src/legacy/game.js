@@ -125,6 +125,41 @@ const ACHIEVEMENTS = [
     target: 1000,
     icon: "\u20b4",
   },
+  {
+    id: "chase_survivor",
+    title: "\u0412\u0442\u0435\u0447\u0430 \u0432\u0434\u0430\u043b\u0430\u0441\u044f",
+    desc: "\u041f\u0435\u0440\u0435\u0436\u0438\u0432\u0438 \u0440\u0435\u0436\u0438\u043c \u043f\u043e\u0433\u043e\u043d\u0456",
+    target: 1,
+    icon: "!",
+  },
+  {
+    id: "clean_chase",
+    title: "\u0427\u0438\u0441\u0442\u0430 \u0432\u0442\u0435\u0447\u0430",
+    desc: "\u041f\u0435\u0440\u0435\u0436\u0438\u0432\u0438 \u043f\u043e\u0433\u043e\u043d\u044e \u0431\u0435\u0437 \u0443\u0434\u0430\u0440\u0443",
+    target: 1,
+    icon: "OK",
+  },
+  {
+    id: "road_events3",
+    title: "\u041c\u0430\u0439\u0441\u0442\u0435\u0440 \u043f\u043e\u0434\u0456\u0439",
+    desc: "\u041f\u0435\u0440\u0435\u0436\u0438\u0432\u0438 3 \u0434\u043e\u0440\u043e\u0436\u043d\u0456 \u043f\u043e\u0434\u0456\u0457",
+    target: 3,
+    icon: "3",
+  },
+  {
+    id: "kyiv_storm_survivor",
+    title: "\u0413\u0435\u0440\u043e\u0439 \u0434\u043e\u0449\u0443",
+    desc: "\u041f\u0435\u0440\u0435\u0436\u0438\u0432\u0438 \u0437\u043b\u0438\u0432\u0443 \u0432 \u041a\u0438\u0454\u0432\u0456",
+    target: 1,
+    icon: "R",
+  },
+  {
+    id: "lviv_event_survivor",
+    title: "\u041b\u044c\u0432\u0456\u0432\u0441\u044c\u043a\u0438\u0439 \u043c\u0430\u043d\u0435\u0432\u0440",
+    desc: "\u041f\u0435\u0440\u0435\u0436\u0438\u0432\u0438 \u0442\u0440\u0430\u043c\u0432\u0430\u0439 \u0430\u0431\u043e \u0440\u0435\u043c\u043e\u043d\u0442 \u0443 \u041b\u044c\u0432\u043e\u0432\u0456",
+    target: 1,
+    icon: "L",
+  },
 ];
 const savedAchievementStats = save.achievementStats || {};
 let achievementStats = Object.fromEntries(
@@ -1972,12 +2007,23 @@ function maybeStartRoadEvent(startSafe) {
     : (Math.random() < 0.55 ? "lviv_roadwork" : "lviv_tram");
   startRoadEvent(type);
 }
+function completeRoadEvent() {
+  if (!roadEvent || roadEvent.rewarded) return;
+  roadEvent.rewarded = true;
+  addAchievementProgress("road_events3");
+  if (roadEvent.type === "kyiv_storm") addAchievementProgress("kyiv_storm_survivor");
+  if (roadEvent.type === "lviv_tram" || roadEvent.type === "lviv_roadwork")
+    addAchievementProgress("lviv_event_survivor");
+}
 function updateRoadEvent(startSafe) {
   if (roadEventCooldown > 0) roadEventCooldown--;
   if (roadEvent?.timer > 0) {
     roadEvent.timer--;
     if (roadEvent.intro > 0) roadEvent.intro--;
-    if (roadEvent.timer <= 0) roadEvent = null;
+    if (roadEvent.timer <= 0) {
+      completeRoadEvent();
+      roadEvent = null;
+    }
   }
   maybeStartRoadEvent(startSafe);
 }
@@ -2001,7 +2047,8 @@ function completeChaseMode() {
   chaseMode.rewarded = true;
   const reward = CHASE_REWARD + (chaseMode.clean ? CHASE_CLEAN_BONUS : 0);
   runCoins += reward;
-  totalCoins += reward;
+  addAchievementProgress("chase_survivor");
+  if (chaseMode.clean) addAchievementProgress("clean_chase");
   addQuestProgress("coins", reward);
   addLevelMissionProgress("coins", reward);
   addParts(px, pY - 45, chaseMode.clean ? "#ffd700" : "#9fd8ff");
