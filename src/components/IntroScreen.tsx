@@ -129,7 +129,8 @@ export function IntroScreen() {
     };
   }, []);
 
-  const startStory = () => {
+  const startStory = (event?: React.MouseEvent<HTMLElement>) => {
+    event?.stopPropagation();
     const win = window as Window & {
       __kyivRunnerStartIntroRequested?: boolean;
       __kyivRunnerLegacyReady?: boolean;
@@ -172,8 +173,11 @@ export function IntroScreen() {
     <div id="sIntro" className="screen active" onClick={startStory}>
       <canvas id="introCanvas" width={340} height={220} />
       <div id="introSubtitle">Натисни на екран, щоб почати.</div>
+      <button id="introStory" type="button" onClick={startStory}>
+        ▷ Розповісти історію
+      </button>
       <button id="introSkip" type="button" onClick={skipIntro}>
-        ▶ Пропустити
+        ▶ Увійти в гру
       </button>
     </div>
   );
