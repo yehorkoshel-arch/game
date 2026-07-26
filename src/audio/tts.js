@@ -81,8 +81,14 @@ export function normalizeSpeechText(text) {
 
 export function playRecordedVoice(text, onDone) {
   const key = normalizeSpeechText(text);
-  const src = resolveVoiceClipSrc(VOICE_CLIPS[key]);
-  if (!src) return false;
+  let src = "";
+  try {
+    src = resolveVoiceClipSrc(VOICE_CLIPS[key]);
+  } catch (err) {
+    console.warn("Recorded voice path failed", err);
+    return false;
+  }
+  if (!src || typeof Audio === "undefined") return false;
 
   cancelSpeech();
   let completed = false;
@@ -116,7 +122,7 @@ export function playRecordedVoice(text, onDone) {
 
 function resolveVoiceClipSrc(src) {
   if (!src) return "";
-  const base = import.meta.env.BASE_URL || "/";
+  const base = import.meta.env?.BASE_URL || "/game/";
   if (src.startsWith("/game/")) return base + src.slice("/game/".length);
   if (src.startsWith("/")) return src;
   return base + src.replace(/^\.?\//, "");
