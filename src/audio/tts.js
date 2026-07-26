@@ -81,7 +81,7 @@ export function normalizeSpeechText(text) {
 
 export function playRecordedVoice(text, onDone) {
   const key = normalizeSpeechText(text);
-  const src = VOICE_CLIPS[key];
+  const src = resolveVoiceClipSrc(VOICE_CLIPS[key]);
   if (!src) return false;
 
   cancelSpeech();
@@ -112,4 +112,12 @@ export function playRecordedVoice(text, onDone) {
     finish();
   });
   return true;
+}
+
+function resolveVoiceClipSrc(src) {
+  if (!src) return "";
+  const base = import.meta.env.BASE_URL || "/";
+  if (src.startsWith("/game/")) return base + src.slice("/game/".length);
+  if (src.startsWith("/")) return src;
+  return base + src.replace(/^\.?\//, "");
 }

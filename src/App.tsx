@@ -11,16 +11,24 @@ import { ShopScreen } from './components/ShopScreen';
 
 export function App() {
   useEffect(() => {
-    (window as Window & { __kyivRunnerLegacyReady?: boolean; __kyivRunnerLegacyFailed?: boolean }).__kyivRunnerLegacyReady = false;
-    (window as Window & { __kyivRunnerLegacyReady?: boolean; __kyivRunnerLegacyFailed?: boolean }).__kyivRunnerLegacyFailed = false;
+    const win = window as Window & {
+      __kyivRunnerFinishIntroRequested?: boolean;
+      __kyivRunnerLegacyReady?: boolean;
+      __kyivRunnerLegacyFailed?: boolean;
+    };
+    win.__kyivRunnerLegacyReady = false;
+    win.__kyivRunnerLegacyFailed = false;
     void import('./legacy/game.js')
       .then(() => {
-        (window as Window & { __kyivRunnerLegacyReady?: boolean }).__kyivRunnerLegacyReady = true;
+        win.__kyivRunnerLegacyReady = true;
         window.dispatchEvent(new Event('kyiv-runner:legacy-ready'));
+        if (win.__kyivRunnerFinishIntroRequested) {
+          window.dispatchEvent(new Event('kyiv-runner:finish-intro'));
+        }
       })
       .catch((error) => {
         console.error('Kyiv Runner legacy game failed to load', error);
-        (window as Window & { __kyivRunnerLegacyFailed?: boolean }).__kyivRunnerLegacyFailed = true;
+        win.__kyivRunnerLegacyFailed = true;
         window.dispatchEvent(new Event('kyiv-runner:legacy-failed'));
       });
   }, []);

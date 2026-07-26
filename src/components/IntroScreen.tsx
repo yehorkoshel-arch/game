@@ -133,7 +133,7 @@ export function IntroScreen() {
     const win = window as Window & { __kyivRunnerFallbackVoicePlayed?: boolean };
     if (win.__kyivRunnerFallbackVoicePlayed) return;
     win.__kyivRunnerFallbackVoicePlayed = true;
-    const audio = new Audio('/game/audio/voice/robot_intro_01.mp3');
+    const audio = new Audio(`${import.meta.env.BASE_URL}audio/voice/robot_intro_01.mp3`);
     audio.volume = 0.95;
     void audio.play().catch(() => {
       win.__kyivRunnerFallbackVoicePlayed = false;
@@ -156,10 +156,10 @@ export function IntroScreen() {
         if (subtitle) subtitle.textContent = 'Гра не завантажилась. Онови сторінку Ctrl + F5.';
         return;
       }
-      if (subtitle) subtitle.textContent = 'Роботрон завантажує гру...';
+      if (subtitle) subtitle.textContent = 'Роботрон завантажує гру... Зачекай секунду.';
       const intro = document.getElementById('sIntro');
       if (!intro?.classList.contains('active')) return;
-    }, 80);
+    }, 160);
   };
 
   return (
