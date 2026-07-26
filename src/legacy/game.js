@@ -4489,28 +4489,44 @@ function drawCityBuildingWindows(x, y, w, h, accent = "#ffd66b") {
   }
   ctx.restore();
 }
-function drawStreetBuilding(x, y, w, h, body, accent, variant = 0) {
+function drawStreetBuilding(x, y, w, h, body, accent, variant = 0, location = 0) {
   const baseY = Math.min(GND + 4, y + h);
   const height = baseY - y;
   if (height <= 24) return;
   const period = getMenuTimeOfDay().className;
   const isNight = period === "time-night";
-  const roof = variant % 3;
-  const trim = isNight ? "rgba(220,230,255,0.16)" : "rgba(255,255,255,0.24)";
+  const isLviv = location === 1;
+  const roof = variant % 4;
+  const trim = isNight ? "rgba(220,230,255,0.16)" : isLviv ? "rgba(255,235,205,0.34)" : "rgba(255,255,255,0.26)";
+  const roofColor = isNight ? "#192334" : isLviv ? "#8a3d32" : "#d8c7a0";
 
   ctx.save();
-  ctx.fillStyle = "rgba(10,14,26,0.22)";
+  ctx.fillStyle = "rgba(10,14,26,0.24)";
   ctx.fillRect(x + 8, y + 10, w, height);
   ctx.fillStyle = body;
   ctx.fillRect(x, y, w, height);
-  ctx.fillStyle = isNight ? "rgba(4,8,18,0.28)" : "rgba(20,32,46,0.16)";
+  ctx.fillStyle = isNight ? "rgba(4,8,18,0.28)" : "rgba(20,32,46,0.15)";
   ctx.fillRect(x + w - 10, y + 8, 10, height - 8);
   ctx.fillStyle = trim;
   ctx.fillRect(x + 6, y + 10, 3, height - 18);
   ctx.fillRect(x + w - 14, y + 10, 3, height - 18);
 
-  ctx.fillStyle = isNight ? "#192334" : "#d8c7a0";
-  if (roof === 0) {
+  ctx.fillStyle = roofColor;
+  if (isLviv) {
+    ctx.beginPath();
+    ctx.moveTo(x - 7, y);
+    ctx.lineTo(x + w / 2, y - 30 - (variant % 2) * 8);
+    ctx.lineTo(x + w + 7, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = isNight ? "#28334a" : "#f1d3a2";
+    for (let c = x + 12; c < x + w - 10; c += 24) {
+      ctx.beginPath();
+      ctx.arc(c, y + 18, 8, Math.PI, 0);
+      ctx.fillRect(c - 8, y + 18, 16, 22);
+      ctx.fill();
+    }
+  } else if (roof === 0) {
     ctx.fillRect(x - 5, y - 9, w + 10, 10);
     ctx.fillRect(x + 9, y - 18, w - 18, 9);
   } else if (roof === 1) {
@@ -4525,17 +4541,27 @@ function drawStreetBuilding(x, y, w, h, body, accent, variant = 0) {
     for (let c = x + 8; c < x + w - 8; c += 18) ctx.fillRect(c, y - 25, 8, 11);
   }
 
+  if (!isLviv && variant % 3 === 2) {
+    ctx.fillStyle = isNight ? "#ffd86b" : "#f0c84b";
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y - 22, 14, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(x + w / 2 - 4, y - 38, 8, 16);
+  }
+
   ctx.fillStyle = isNight ? "rgba(9,15,28,0.72)" : "rgba(36,54,72,0.56)";
   ctx.fillRect(x + 8, baseY - 46, w - 16, 36);
-  ctx.fillStyle = isNight ? "rgba(116,196,255,0.24)" : "rgba(190,232,255,0.58)";
+  ctx.fillStyle = isNight ? "rgba(116,196,255,0.24)" : isLviv ? "rgba(255,236,190,0.62)" : "rgba(190,232,255,0.58)";
   ctx.fillRect(x + 15, baseY - 38, Math.max(22, w * 0.34), 20);
   ctx.fillRect(x + w - Math.max(37, w * 0.34), baseY - 38, Math.max(22, w * 0.34), 20);
   ctx.fillStyle = accent;
   ctx.fillRect(x + 9, baseY - 53, w - 18, 8);
-  ctx.fillStyle = isNight ? "#f3d27a" : "#17335c";
+  ctx.fillStyle = isNight ? "#f3d27a" : isLviv ? "#5a261c" : "#17335c";
   ctx.font = "bold 8px sans-serif";
   ctx.textAlign = "center";
-  const signs = ["\u041a\u0410\u0412\u0410", "\u0410\u041f\u0422\u0415\u041a\u0410", "\u041a\u041d\u0418\u0413\u0418"];
+  const signs = isLviv
+    ? ["\u041a\u0410\u0412\u0410", "\u0426\u0423\u041a\u0415\u0420\u041d\u042f", "\u041a\u041d\u0418\u0413\u0410\u0420\u041d\u042f"]
+    : ["\u0410\u041f\u0422\u0415\u041a\u0410", "\u041c\u0415\u0422\u0420\u041e", "\u041a\u041d\u0418\u0413\u0418"];
   ctx.fillText(signs[variant % signs.length], x + w / 2, baseY - 56);
   ctx.textAlign = "left";
 
@@ -5370,10 +5396,10 @@ function drawBG() {
     const x = bx - off;
     const warm = lv.loc === 1 ? "#ffe0a3" : "#ffd66b";
     const cool = lv.loc === 1 ? "#f4c27a" : "#9ed8ff";
-    drawStreetBuilding(x - 8, 92, 112, H - 142, lv.bldA, warm, 0);
-    drawStreetBuilding(x + 112, 118, 82, H - 168, lv.bldB, cool, 1);
-    drawStreetBuilding(x + 210, 74, 72, H - 124, lv.bldC, warm, 2);
-    drawStreetBuilding(x + 300, 104, 92, H - 154, lv.bldB, cool, 0);
+    drawStreetBuilding(x - 8, lv.loc === 1 ? 104 : 92, 112, H - 142, lv.bldA, warm, 0, lv.loc);
+    drawStreetBuilding(x + 112, lv.loc === 1 ? 116 : 118, 82, H - 168, lv.bldB, cool, 1, lv.loc);
+    drawStreetBuilding(x + 210, lv.loc === 1 ? 94 : 74, 72, H - 124, lv.bldC, warm, 2, lv.loc);
+    drawStreetBuilding(x + 300, lv.loc === 1 ? 108 : 104, 92, H - 154, lv.bldB, cool, 3, lv.loc);
     drawGreetingBuildings(x, lv.loc);
   }
 
