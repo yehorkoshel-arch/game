@@ -131,9 +131,12 @@ export function IntroScreen() {
 
   const startStory = () => {
     const win = window as Window & {
+      __kyivRunnerStartIntroRequested?: boolean;
       __kyivRunnerLegacyReady?: boolean;
       __kyivRunnerLegacyFailed?: boolean;
     };
+    win.__kyivRunnerStartIntroRequested = true;
+    window.dispatchEvent(new Event('kyiv-runner:start-intro'));
     if (win.__kyivRunnerLegacyReady) return;
     const subtitle = document.getElementById('introSubtitle');
     if (win.__kyivRunnerLegacyFailed) {

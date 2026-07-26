@@ -13,6 +13,7 @@ export function App() {
   useEffect(() => {
     const win = window as Window & {
       __kyivRunnerFinishIntroRequested?: boolean;
+      __kyivRunnerStartIntroRequested?: boolean;
       __kyivRunnerLegacyReady?: boolean;
       __kyivRunnerLegacyFailed?: boolean;
     };
@@ -24,6 +25,8 @@ export function App() {
         window.dispatchEvent(new Event('kyiv-runner:legacy-ready'));
         if (win.__kyivRunnerFinishIntroRequested) {
           window.dispatchEvent(new Event('kyiv-runner:finish-intro'));
+        } else if (win.__kyivRunnerStartIntroRequested) {
+          window.dispatchEvent(new Event('kyiv-runner:start-intro'));
         }
       })
       .catch((error) => {

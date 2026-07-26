@@ -11883,8 +11883,14 @@ function startIntro() {
 }
 function beginIntroAfterGesture() {
   if (introStarted) return;
+  window.__kyivRunnerStartIntroRequested = false;
   startIntro();
 }
+window.addEventListener("kyiv-runner:start-intro", () => {
+  focusApp();
+  beginIntroAfterGesture();
+});
+if (window.__kyivRunnerStartIntroRequested) beginIntroAfterGesture();
 const introAutoStartTimer = window.setTimeout(() => {
   const introScreen = document.getElementById("sIntro");
   if (!introStarted && introScreen?.classList.contains("active")) startIntro();
