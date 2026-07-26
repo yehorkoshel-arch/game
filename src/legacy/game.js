@@ -4489,6 +4489,60 @@ function drawCityBuildingWindows(x, y, w, h, accent = "#ffd66b") {
   }
   ctx.restore();
 }
+function drawStreetBuilding(x, y, w, h, body, accent, variant = 0) {
+  const baseY = Math.min(GND + 4, y + h);
+  const height = baseY - y;
+  if (height <= 24) return;
+  const period = getMenuTimeOfDay().className;
+  const isNight = period === "time-night";
+  const roof = variant % 3;
+  const trim = isNight ? "rgba(220,230,255,0.16)" : "rgba(255,255,255,0.24)";
+
+  ctx.save();
+  ctx.fillStyle = "rgba(10,14,26,0.22)";
+  ctx.fillRect(x + 8, y + 10, w, height);
+  ctx.fillStyle = body;
+  ctx.fillRect(x, y, w, height);
+  ctx.fillStyle = isNight ? "rgba(4,8,18,0.28)" : "rgba(20,32,46,0.16)";
+  ctx.fillRect(x + w - 10, y + 8, 10, height - 8);
+  ctx.fillStyle = trim;
+  ctx.fillRect(x + 6, y + 10, 3, height - 18);
+  ctx.fillRect(x + w - 14, y + 10, 3, height - 18);
+
+  ctx.fillStyle = isNight ? "#192334" : "#d8c7a0";
+  if (roof === 0) {
+    ctx.fillRect(x - 5, y - 9, w + 10, 10);
+    ctx.fillRect(x + 9, y - 18, w - 18, 9);
+  } else if (roof === 1) {
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y);
+    ctx.lineTo(x + w / 2, y - 28);
+    ctx.lineTo(x + w + 8, y);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    ctx.fillRect(x - 4, y - 14, w + 8, 14);
+    for (let c = x + 8; c < x + w - 8; c += 18) ctx.fillRect(c, y - 25, 8, 11);
+  }
+
+  ctx.fillStyle = isNight ? "rgba(9,15,28,0.72)" : "rgba(36,54,72,0.56)";
+  ctx.fillRect(x + 8, baseY - 46, w - 16, 36);
+  ctx.fillStyle = isNight ? "rgba(116,196,255,0.24)" : "rgba(190,232,255,0.58)";
+  ctx.fillRect(x + 15, baseY - 38, Math.max(22, w * 0.34), 20);
+  ctx.fillRect(x + w - Math.max(37, w * 0.34), baseY - 38, Math.max(22, w * 0.34), 20);
+  ctx.fillStyle = accent;
+  ctx.fillRect(x + 9, baseY - 53, w - 18, 8);
+  ctx.fillStyle = isNight ? "#f3d27a" : "#17335c";
+  ctx.font = "bold 8px sans-serif";
+  ctx.textAlign = "center";
+  const signs = ["\u041a\u0410\u0412\u0410", "\u0410\u041f\u0422\u0415\u041a\u0410", "\u041a\u041d\u0418\u0413\u0418"];
+  ctx.fillText(signs[variant % signs.length], x + w / 2, baseY - 56);
+  ctx.textAlign = "left";
+
+  drawCityBuildingWindows(x, y, w, height, accent);
+  ctx.restore();
+}
+
 function drawGreetingBuildings(x, location) {
   const secretGrandpaVisible = Math.floor(fr / 480) % 3 === 1;
   const people = [
@@ -5314,15 +5368,12 @@ function drawBG() {
   const off = (bgOff * 0.25) % 400;
   for (let bx = -400; bx < W + 400; bx += 400) {
     const x = bx - off;
-    ctx.fillStyle = lv.bldA;
-    ctx.fillRect(x, 80, 100, H - 130);
-    drawCityBuildingWindows(x, 80, 100, H - 130, lv.loc === 1 ? "#ffe0a3" : "#ffd66b");
-    ctx.fillStyle = lv.bldB;
-    ctx.fillRect(x + 120, 110, 70, H - 160);
-    drawCityBuildingWindows(x + 120, 110, 70, H - 160, lv.loc === 1 ? "#f4c27a" : "#9ed8ff");
-    ctx.fillStyle = lv.bldC;
-    ctx.fillRect(x + 210, 60, 50, H - 110);
-    drawCityBuildingWindows(x + 210, 60, 50, H - 110, lv.loc === 1 ? "#ffe0a3" : "#ffd66b");
+    const warm = lv.loc === 1 ? "#ffe0a3" : "#ffd66b";
+    const cool = lv.loc === 1 ? "#f4c27a" : "#9ed8ff";
+    drawStreetBuilding(x - 8, 92, 112, H - 142, lv.bldA, warm, 0);
+    drawStreetBuilding(x + 112, 118, 82, H - 168, lv.bldB, cool, 1);
+    drawStreetBuilding(x + 210, 74, 72, H - 124, lv.bldC, warm, 2);
+    drawStreetBuilding(x + 300, 104, 92, H - 154, lv.bldB, cool, 0);
     drawGreetingBuildings(x, lv.loc);
   }
 
