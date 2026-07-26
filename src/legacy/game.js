@@ -4439,8 +4439,8 @@ function drawBalconyGrandpa(x, y, wavePhase) {
   ctx.restore();
 }
 
-function drawGreetingWindow(x, y, w, h, personIdx, personScale = 0.72) {
-  ctx.fillStyle = personIdx % 2 === 0 ? "#ffe8a8" : "#f4d7a1";
+function drawGreetingWindow(x, y, w, h, personIdx, personScale = 0.72, muted = false) {
+  ctx.fillStyle = muted ? "rgba(255,226,166,0.72)" : personIdx % 2 === 0 ? "#ffe8a8" : "#f4d7a1";
   if (ctx.roundRect) {
     ctx.beginPath();
     ctx.roundRect(x, y, w, h, 4);
@@ -4604,15 +4604,20 @@ function drawGreetingBuildings(x, location) {
     [226, 188, 30, 38],
   ];
 
-  const lvivWindowShift = location === 1 ? 12 : 0;
-  const lvivPersonScale = location === 1 ? 0.52 : 0.72;
+  const isLvivGreeting = location === 1;
+  const lvivWindowShift = isLvivGreeting ? 14 : 0;
+  const lvivPersonScale = isLvivGreeting ? 0.42 : 0.72;
   for (const [wx, wy, ww, wh] of windows) {
     const person = people.find(
       ([px, py]) => Math.abs(px - wx) < 2 && Math.abs(py - wy) < 2,
     );
-    drawGreetingWindow(x + wx, wy + lvivWindowShift, ww, wh, person ? person[2] : -1, lvivPersonScale);
+    const drawW = isLvivGreeting ? Math.round(ww * 0.72) : ww;
+    const drawH = isLvivGreeting ? Math.round(wh * 0.74) : wh;
+    const drawX = x + wx + (ww - drawW) / 2;
+    const drawY = wy + lvivWindowShift + (wh - drawH) / 2;
+    drawGreetingWindow(drawX, drawY, drawW, drawH, person ? person[2] : -1, lvivPersonScale, isLvivGreeting);
   }
-  if (secretGrandpaVisible) drawBalconyGrandpa(x + 138, 102, x * 0.01);
+  if (secretGrandpaVisible) drawBalconyGrandpa(x + 138, location === 1 ? 116 : 102, x * 0.01);
 
   ctx.save();
   ctx.globalAlpha = 0.9;
