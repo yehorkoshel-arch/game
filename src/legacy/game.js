@@ -4439,7 +4439,7 @@ function drawBalconyGrandpa(x, y, wavePhase) {
   ctx.restore();
 }
 
-function drawGreetingWindow(x, y, w, h, personIdx) {
+function drawGreetingWindow(x, y, w, h, personIdx, personScale = 0.72) {
   ctx.fillStyle = personIdx % 2 === 0 ? "#ffe8a8" : "#f4d7a1";
   if (ctx.roundRect) {
     ctx.beginPath();
@@ -4461,7 +4461,7 @@ function drawGreetingWindow(x, y, w, h, personIdx) {
     drawWindowPerson(
       x + w * 0.5,
       y + h * 0.78,
-      0.72,
+      personScale,
       personIdx * 1.7,
       shirts[personIdx % shirts.length],
     );
@@ -4513,18 +4513,19 @@ function drawStreetBuilding(x, y, w, h, body, accent, variant = 0, location = 0)
 
   ctx.fillStyle = roofColor;
   if (isLviv) {
+    ctx.fillRect(x - 5, y - 10, w + 10, 10);
     ctx.beginPath();
-    ctx.moveTo(x - 7, y);
-    ctx.lineTo(x + w / 2, y - 30 - (variant % 2) * 8);
-    ctx.lineTo(x + w + 7, y);
+    ctx.moveTo(x - 8, y - 10);
+    ctx.lineTo(x + w / 2, y - 28 - (variant % 2) * 5);
+    ctx.lineTo(x + w + 8, y - 10);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = isNight ? "#28334a" : "#f1d3a2";
-    for (let c = x + 12; c < x + w - 10; c += 24) {
-      ctx.beginPath();
-      ctx.arc(c, y + 18, 8, Math.PI, 0);
-      ctx.fillRect(c - 8, y + 18, 16, 22);
-      ctx.fill();
+    ctx.fillStyle = isNight ? "#263448" : "#f2c77f";
+    for (let c = x + 18; c < x + w - 12; c += 32) {
+      ctx.fillRect(c - 6, y + 20, 12, 16);
+      ctx.strokeStyle = isNight ? "rgba(255,226,142,0.22)" : "rgba(92,56,38,0.28)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(c - 6.5, y + 20.5, 13, 16);
     }
   } else if (roof === 0) {
     ctx.fillRect(x - 5, y - 9, w + 10, 10);
@@ -4566,6 +4567,20 @@ function drawStreetBuilding(x, y, w, h, body, accent, variant = 0, location = 0)
   ctx.textAlign = "left";
 
   drawCityBuildingWindows(x, y, w, height, accent);
+  if (isLviv) {
+    ctx.strokeStyle = isNight ? "rgba(255,220,145,0.28)" : "rgba(95,54,35,0.30)";
+    ctx.lineWidth = 1;
+    for (let c = x + 16; c < x + w - 12; c += 30) {
+      const ay = y + 50 + ((variant + Math.floor(c)) % 2) * 12;
+      ctx.beginPath();
+      ctx.arc(c, ay, 7, Math.PI, 0);
+      ctx.stroke();
+      ctx.strokeRect(c - 7, ay, 14, 17);
+    }
+    ctx.fillStyle = isNight ? "rgba(11,18,32,0.42)" : "rgba(112,57,37,0.20)";
+    ctx.fillRect(x + 5, y + 6, w - 10, 3);
+    ctx.fillRect(x + 5, baseY - 62, w - 10, 3);
+  }
   ctx.restore();
 }
 
@@ -4589,11 +4604,13 @@ function drawGreetingBuildings(x, location) {
     [226, 188, 30, 38],
   ];
 
+  const lvivWindowShift = location === 1 ? 12 : 0;
+  const lvivPersonScale = location === 1 ? 0.52 : 0.72;
   for (const [wx, wy, ww, wh] of windows) {
     const person = people.find(
       ([px, py]) => Math.abs(px - wx) < 2 && Math.abs(py - wy) < 2,
     );
-    drawGreetingWindow(x + wx, wy, ww, wh, person ? person[2] : -1);
+    drawGreetingWindow(x + wx, wy + lvivWindowShift, ww, wh, person ? person[2] : -1, lvivPersonScale);
   }
   if (secretGrandpaVisible) drawBalconyGrandpa(x + 138, 102, x * 0.01);
 
