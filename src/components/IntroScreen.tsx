@@ -8,7 +8,13 @@ export function IntroScreen() {
 
     let frame = 0;
     let raf = 0;
+    let stopped = false;
+    const stopFallback = () => {
+      stopped = true;
+      if (raf) window.cancelAnimationFrame(raf);
+    };
     const drawFallbackRobotron = () => {
+      if (stopped) return;
       frame += 1;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -93,13 +99,24 @@ export function IntroScreen() {
       raf = window.requestAnimationFrame(drawFallbackRobotron);
     };
 
+    window.addEventListener('kyiv-runner:legacy-ready', stopFallback);
     drawFallbackRobotron();
-    return () => window.cancelAnimationFrame(raf);
+    return () => {
+      window.removeEventListener('kyiv-runner:legacy-ready', stopFallback);
+      stopFallback();
+    };
   }, []);
 
   const enterGame = () => {
     (window as Window & { __kyivRunnerFinishIntroRequested?: boolean }).__kyivRunnerFinishIntroRequested = true;
     window.dispatchEvent(new Event("kyiv-runner:finish-intro"));
+    window.setTimeout(() => {
+      const intro = document.getElementById('sIntro');
+      const menu = document.getElementById('sMenu');
+      if (!intro?.classList.contains('active')) return;
+      intro.classList.remove('active');
+      menu?.classList.add('active');
+    }, 80);
   };
 
   return (
