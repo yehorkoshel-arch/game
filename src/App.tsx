@@ -11,12 +11,16 @@ import { ShopScreen } from './components/ShopScreen';
 
 export function App() {
   useEffect(() => {
+    (window as Window & { __kyivRunnerLegacyReady?: boolean; __kyivRunnerLegacyFailed?: boolean }).__kyivRunnerLegacyReady = false;
+    (window as Window & { __kyivRunnerLegacyReady?: boolean; __kyivRunnerLegacyFailed?: boolean }).__kyivRunnerLegacyFailed = false;
     void import('./legacy/game.js')
       .then(() => {
+        (window as Window & { __kyivRunnerLegacyReady?: boolean }).__kyivRunnerLegacyReady = true;
         window.dispatchEvent(new Event('kyiv-runner:legacy-ready'));
       })
       .catch((error) => {
         console.error('Kyiv Runner legacy game failed to load', error);
+        (window as Window & { __kyivRunnerLegacyFailed?: boolean }).__kyivRunnerLegacyFailed = true;
         window.dispatchEvent(new Event('kyiv-runner:legacy-failed'));
       });
   }, []);
