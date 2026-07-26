@@ -129,19 +129,22 @@ export function IntroScreen() {
     };
   }, []);
 
-  const playFallbackVoice = () => {
-    const win = window as Window & { __kyivRunnerFallbackVoicePlayed?: boolean };
-    if (win.__kyivRunnerFallbackVoicePlayed) return;
-    win.__kyivRunnerFallbackVoicePlayed = true;
-    const audio = new Audio(`${import.meta.env.BASE_URL}audio/voice/robot_intro_01.mp3`);
-    audio.volume = 0.95;
-    void audio.play().catch(() => {
-      win.__kyivRunnerFallbackVoicePlayed = false;
-    });
+  const startStory = () => {
+    const win = window as Window & {
+      __kyivRunnerLegacyReady?: boolean;
+      __kyivRunnerLegacyFailed?: boolean;
+    };
+    if (win.__kyivRunnerLegacyReady) return;
+    const subtitle = document.getElementById('introSubtitle');
+    if (win.__kyivRunnerLegacyFailed) {
+      if (subtitle) subtitle.textContent = 'Гра не завантажилась. Онови сторінку Ctrl + F5.';
+      return;
+    }
+    if (subtitle) subtitle.textContent = 'Роботрон завантажує історію... Зачекай секунду.';
   };
 
-  const enterGame = () => {
-    playFallbackVoice();
+  const skipIntro = (event?: React.MouseEvent<HTMLButtonElement>) => {
+    event?.stopPropagation();
     const win = window as Window & {
       __kyivRunnerFinishIntroRequested?: boolean;
       __kyivRunnerLegacyReady?: boolean;
@@ -156,18 +159,18 @@ export function IntroScreen() {
         if (subtitle) subtitle.textContent = 'Гра не завантажилась. Онови сторінку Ctrl + F5.';
         return;
       }
-      if (subtitle) subtitle.textContent = 'Роботрон завантажує гру... Зачекай секунду.';
+      if (subtitle) subtitle.textContent = 'Роботрон завантажує меню... Зачекай секунду.';
       const intro = document.getElementById('sIntro');
       if (!intro?.classList.contains('active')) return;
     }, 160);
   };
 
   return (
-    <div id="sIntro" className="screen active">
+    <div id="sIntro" className="screen active" onClick={startStory}>
       <canvas id="introCanvas" width={340} height={220} />
       <div id="introSubtitle">Натисни на екран, щоб почати.</div>
-      <button id="introSkip" type="button" onClick={enterGame}>
-        ▶ Увійти в гру
+      <button id="introSkip" type="button" onClick={skipIntro}>
+        ▶ Пропустити
       </button>
     </div>
   );
