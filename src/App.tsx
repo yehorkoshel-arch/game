@@ -11,7 +11,14 @@ import { ShopScreen } from './components/ShopScreen';
 
 export function App() {
   useEffect(() => {
-    void import('./legacy/game.js');
+    void import('./legacy/game.js')
+      .then(() => {
+        window.dispatchEvent(new Event('kyiv-runner:legacy-ready'));
+      })
+      .catch((error) => {
+        console.error('Kyiv Runner legacy game failed to load', error);
+        window.dispatchEvent(new Event('kyiv-runner:legacy-failed'));
+      });
   }, []);
 
   return (
