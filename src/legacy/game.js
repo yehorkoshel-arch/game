@@ -2506,6 +2506,9 @@ function unlockGameAudio() {
 function handleAppGesture(event) {
   focusApp();
   unlockGameAudio();
+  const uiPressed = event?.target?.closest?.(
+    "button,a,input,select,textarea,.lvl-btn,.loc-tab,.seg-btn,.sitem,.backpack-buy,.quest-claim,.achievement-claim,.collection-claim,.collection-card,.postcard-viewer-close",
+  );
   const introScreen = document.getElementById("sIntro");
   const introActive = introScreen?.classList.contains("active");
   const skipPressed = event?.target?.closest?.("#introSkip");
@@ -2513,6 +2516,7 @@ function handleAppGesture(event) {
     beginIntroAfterGesture();
     return;
   }
+  if (uiPressed) return;
   act("AppGesture");
 }
 const appRoot = document.getElementById("app");
