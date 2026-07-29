@@ -1455,6 +1455,7 @@ const GAME_SPEED_MULT = 0.84;
 const OBSTACLE_SPAWN_GAP_MULT = 1.22;
 const PLAYER_JUMP_GRAVITY = 0.7;
 const PLAYER_SLIDE_FRAMES = 52;
+const LVIV_AUTO_RUN_LEVEL_INDEX = 7;
 const START_EMPTY_FRAMES = 210;
 const START_EMPTY_DISTANCE = 18;
 const START_SAFE_FRAMES = 360;
@@ -3915,7 +3916,7 @@ function startLevel() {
   score = 0;
   runCoins = 0;
   lives = settingLives;
-  spd = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * getSpeedUpgradeMult() * GAME_SPEED_MULT;
+  spd = getLevelStartSpeed(lv);
   fr = 0;
   totalDist = 0;
   coinCombo = 0;
@@ -3991,13 +3992,19 @@ function startLevel() {
   andriiCooldown = 0;
   bubbleText = "";
   bubbleTimer = 0;
-  gameState = "missionIntro";
+  const autoRunLevelIntro = shouldAutoRunLevelIntro();
+  gameState = autoRunLevelIntro ? "run" : "missionIntro";
   saveGame();
   updateFireControl();
   hudUp();
   if (!loopActive) {
     if (raf) cancelAnimationFrame(raf);
     loop();
+  }
+  if (autoRunLevelIntro) {
+    spd = getLevelStartSpeed(lv);
+    setTimeout(() => robotRadio("radioStart", 460), 600);
+    return;
   }
   levelIntroTimer = setTimeout(() => {
     levelIntroTimer = null;
@@ -4115,6 +4122,17 @@ function hudUp() {
 
 const cv = document.getElementById("gc"),
   ctx = cv.getContext("2d");
+
+function getLevelStartSpeed(lv, diffMult = 1, speedUpgradeMult = getSpeedUpgradeMult()) {
+  return Math.max(
+    0.1,
+    Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult * speedUpgradeMult * GAME_SPEED_MULT,
+  );
+}
+
+function shouldAutoRunLevelIntro() {
+  return currentLocation === 1 && currentLevel >= LVIV_AUTO_RUN_LEVEL_INDEX;
+}
 
 function reserveRoadHazardSpawn(minFrames = 58) {
   const safeMinFrames = Math.ceil(minFrames * OBSTACLE_SPAWN_GAP_MULT);
@@ -10303,7 +10321,7 @@ function update() {
   const speedUpgradeMult = getSpeedUpgradeMult();
   const coffeeBoost = coffeeTimer > 0 ? 0.38 : 0;
   const rescueBusBoost = rescueBusTimer > 0 ? 0.72 : 0;
-  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult * speedUpgradeMult * GAME_SPEED_MULT + coffeeBoost + rescueBusBoost;
+  const base = getLevelStartSpeed(lv, diffMult, speedUpgradeMult) + coffeeBoost + rescueBusBoost;
   const maxS = lv.maxSpd * diffMult * speedUpgradeMult * GAME_SPEED_MULT + coffeeBoost + rescueBusBoost;
   const accel = 0.0012 * diffMult * GAME_SPEED_MULT * (1 + currentLevel * 0.15);
   const pct = Math.min(totalDist / FDIST, 1);
