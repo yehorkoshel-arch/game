@@ -1482,13 +1482,13 @@ const W = 680,
   H = 420,
   GND = 270,
   ROAD_RUN_Y = GND + 18,
-  LANES = [150, 340, 530];
+  LANES = [230, 340, 450];
 const ROAD_SPAWN_X = W + 150;
 const BONUS_SPAWN_X = W + 130;
-const ROAD_TOP_HALF = 125;
-const ROAD_BOTTOM_HALF = 270;
-const ROAD_LANE_RATIOS = [-0.58, 0, 0.58];
-const ROAD_LANE_EDGE_RATIOS = [-0.32, 0.32];
+const ROAD_TOP_HALF = 80;
+const ROAD_BOTTOM_HALF = 300;
+const ROAD_LANE_RATIOS = [-0.62, 0, 0.62];
+const ROAD_LANE_EDGE_RATIOS = [-0.31, 0.31];
 
 function getAndriiWeapon(level = currentLevel, location = currentLocation) {
   const levelIndex = Number(level);
@@ -4731,8 +4731,8 @@ function drawGreetingBuildings(x, location) {
 }
 
 function drawRealRoad(timePeriod) {
-  const horizonY = GND - 132;
-  const bottomY = H + 18;
+  const horizonY = GND - 128;
+  const bottomY = H + 24;
   const cx = W / 2;
   const topHalf = ROAD_TOP_HALF;
   const bottomHalf = ROAD_BOTTOM_HALF;
@@ -4740,18 +4740,20 @@ function drawRealRoad(timePeriod) {
   const isNight = timePeriod === "time-night";
   const isLvivRoad = currentLocation === 1;
 
-  ctx.fillStyle = isNight ? "#223421" : "#7fa568";
+  // Background ground base
+  ctx.fillStyle = isNight ? "#1a271c" : "#6a8d57";
   ctx.fillRect(0, horizonY, W, bottomY - horizonY);
 
+  // Main Road Polygon with smooth linear gradient
   const road = ctx.createLinearGradient(0, horizonY, 0, bottomY);
   if (isLvivRoad) {
-    road.addColorStop(0, isNight ? "#4a4d55" : "#a6a8ad");
-    road.addColorStop(0.56, isNight ? "#383c44" : "#92959c");
-    road.addColorStop(1, isNight ? "#2a2e36" : "#787c85");
+    road.addColorStop(0, isNight ? "#42454d" : "#989aa0");
+    road.addColorStop(0.55, isNight ? "#32363e" : "#84878e");
+    road.addColorStop(1, isNight ? "#242830" : "#6c7078");
   } else {
-    road.addColorStop(0, isNight ? "#2c333d" : "#59616a");
-    road.addColorStop(0.55, isNight ? "#242b35" : "#48515a");
-    road.addColorStop(1, isNight ? "#1d2430" : "#333c45");
+    road.addColorStop(0, isNight ? "#252b34" : "#4c535c");
+    road.addColorStop(0.55, isNight ? "#1d232c" : "#3d444d");
+    road.addColorStop(1, isNight ? "#161c24" : "#2d343c");
   }
   ctx.fillStyle = road;
   ctx.beginPath();
@@ -4762,110 +4764,96 @@ function drawRealRoad(timePeriod) {
   ctx.closePath();
   ctx.fill();
 
-  const shoulder = ctx.createLinearGradient(0, horizonY, 0, bottomY);
-  shoulder.addColorStop(0, isNight ? "#2f3744" : "#4f5b66");
-  shoulder.addColorStop(1, isNight ? "#1f2631" : "#2f3944");
-  ctx.strokeStyle = shoulder;
-  ctx.lineWidth = 7;
+  // Perspective Road Shoulders / Curbs
+  const shoulderDark = isNight ? "rgba(20, 26, 35, 0.7)" : "rgba(35, 42, 52, 0.6)";
+  const shoulderLight = isNight ? "rgba(220, 232, 255, 0.6)" : "rgba(255, 255, 255, 0.9)";
+  
+  // Outer dark shoulder edge line
+  ctx.strokeStyle = shoulderDark;
+  ctx.lineWidth = 6;
   ctx.beginPath();
-  ctx.moveTo(cx - topHalf, horizonY);
-  ctx.lineTo(cx - bottomHalf, bottomY);
-  ctx.moveTo(cx + topHalf, horizonY);
-  ctx.lineTo(cx + bottomHalf, bottomY);
+  ctx.moveTo(cx - topHalf * 0.99, horizonY);
+  ctx.lineTo(cx - bottomHalf * 0.99, bottomY);
+  ctx.moveTo(cx + topHalf * 0.99, horizonY);
+  ctx.lineTo(cx + bottomHalf * 0.99, bottomY);
   ctx.stroke();
 
-  ctx.strokeStyle = isNight ? "rgba(235, 242, 255, 0.55)" : "rgba(255, 255, 255, 0.86)";
-  ctx.lineWidth = 4;
+  // Inner white shoulder line
+  ctx.strokeStyle = shoulderLight;
+  ctx.lineWidth = 3.5;
   ctx.beginPath();
-  ctx.moveTo(cx - topHalf, horizonY);
-  ctx.lineTo(cx - bottomHalf, bottomY);
-  ctx.moveTo(cx + topHalf, horizonY);
-  ctx.lineTo(cx + bottomHalf, bottomY);
+  ctx.moveTo(cx - topHalf * 0.95, horizonY);
+  ctx.lineTo(cx - bottomHalf * 0.95, bottomY);
+  ctx.moveTo(cx + topHalf * 0.95, horizonY);
+  ctx.lineTo(cx + bottomHalf * 0.95, bottomY);
   ctx.stroke();
 
-  if (isLvivRoad) {
-    ctx.strokeStyle = isNight ? "rgba(26, 29, 36, 0.28)" : "rgba(92, 88, 82, 0.28)";
-    ctx.lineWidth = 1;
-    const rowOffset = (24 - ((bgOff * 1.35) % 24)) % 24;
-    for (let y = horizonY - 24 + rowOffset; y < bottomY + 24; y += 24) {
-      const t = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
-      const half = topHalf + (bottomHalf - topHalf) * t;
-      ctx.beginPath();
-      ctx.moveTo(cx - half * 0.94, y);
-      ctx.lineTo(cx + half * 0.94, y);
-      ctx.stroke();
-    }
-    ctx.strokeStyle = isNight ? "rgba(255, 232, 188, 0.08)" : "rgba(255, 244, 212, 0.16)";
-    for (let i = 0; i < 34; i++) {
-      const y =
-        horizonY +
-        ((i * 39 - bgOff * 1.4 + (bottomY - horizonY) * 3) %
-          (bottomY - horizonY));
-      const t = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
-      const half = topHalf + (bottomHalf - topHalf) * t;
-      const x = cx - half * 0.82 + ((i * 73) % (half * 1.64));
-      ctx.beginPath();
-      ctx.moveTo(x - 10 - t * 8, y);
-      ctx.lineTo(x + 10 + t * 8, y + 2);
-      ctx.stroke();
-    }
-    ctx.strokeStyle = isNight ? "rgba(44, 37, 32, 0.7)" : "rgba(80, 68, 58, 0.72)";
-    ctx.lineWidth = 3;
-    for (const laneGroove of laneEdgeRatios) {
-      ctx.beginPath();
-      ctx.moveTo(cx + topHalf * laneGroove, horizonY);
-      ctx.lineTo(cx + bottomHalf * laneGroove, bottomY);
-      ctx.stroke();
-    }
-  } else {
-    ctx.strokeStyle = isNight ? "rgba(232, 240, 255, 0.58)" : "rgba(255, 255, 255, 0.86)";
-    ctx.lineCap = "round";
-    const dashOffset = (82 - ((bgOff * 2.15) % 82)) % 82;
-    for (let y = horizonY - 82 + dashOffset; y < bottomY + 82; y += 82) {
-      const y2 = Math.min(bottomY, y + 28);
-      if (y2 <= horizonY) continue;
-      const t1 = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
-      const t2 = Math.max(0, Math.min(1, (y2 - horizonY) / (bottomY - horizonY)));
+  // Standard properly scaled dashed lane lines with perspective
+  ctx.strokeStyle = isNight ? "rgba(235, 243, 255, 0.75)" : "rgba(255, 255, 255, 0.95)";
+  ctx.lineCap = "round";
+
+  const dashCount = 14;
+  const speedMult = 0.007;
+  const animProgress = (bgOff * speedMult) % 1.0;
+
+  for (const laneEdgeRatio of laneEdgeRatios) {
+    for (let i = 0; i < dashCount; i++) {
+      let u = ((i / dashCount) + animProgress) % 1.0;
+      if (u < 0.03) continue; // Avoid horizon cutoff
+
+      // Quadratic perspective mapping for natural speed and distance scaling
+      const t1 = u * u;
+      const y1 = horizonY + (bottomY - horizonY) * t1;
+
+      // Dash length scales dynamically: small near horizon, large near bottom
+      const dashLen = (4 + 32 * u) * u;
+      const y2 = Math.min(bottomY, y1 + dashLen);
+      const t2 = Math.min(1.0, Math.sqrt(Math.max(0, (y2 - horizonY) / (bottomY - horizonY))));
+
       const half1 = topHalf + (bottomHalf - topHalf) * t1;
       const half2 = topHalf + (bottomHalf - topHalf) * t2;
-      ctx.lineWidth = 2.2 + t1 * 2.2;
-      for (const laneMark of laneEdgeRatios) {
-        ctx.beginPath();
-        ctx.moveTo(cx + half1 * laneMark, y);
-        ctx.lineTo(cx + half2 * laneMark, y2);
-        ctx.stroke();
-      }
+
+      const x1 = cx + half1 * laneEdgeRatio;
+      const x2 = cx + half2 * laneEdgeRatio;
+
+      ctx.lineWidth = 1.2 + 4.8 * u;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
     }
-    ctx.lineCap = "butt";
+  }
+  ctx.lineCap = "butt";
+
+  // Lviv Cobblestone Texture with perspective spacing
+  if (isLvivRoad) {
+    ctx.strokeStyle = isNight ? "rgba(255, 232, 188, 0.06)" : "rgba(255, 244, 212, 0.12)";
+    ctx.lineWidth = 1;
+    for (let i = 1; i <= 20; i++) {
+      const u = i / 20;
+      const t = u * u;
+      const y = horizonY + (bottomY - horizonY) * t;
+      const half = topHalf + (bottomHalf - topHalf) * t;
+      ctx.beginPath();
+      ctx.moveTo(cx - half * 0.9, y);
+      ctx.lineTo(cx + half * 0.9, y);
+      ctx.stroke();
+    }
   }
 
-  ctx.fillStyle = isLvivRoad
-    ? isNight ? "rgba(255, 232, 188, 0.04)" : "rgba(255, 238, 199, 0.06)"
-    : isNight ? "rgba(255, 255, 255, 0.032)" : "rgba(255, 255, 255, 0.038)";
-  const roadSpeckles = isLvivRoad ? 46 : 52;
-  for (let i = 0; i < roadSpeckles; i++) {
-    const y =
-      horizonY +
-      ((i * 47 - bgOff * 2.1 + (bottomY - horizonY) * 4) %
-        (bottomY - horizonY));
-    const t = (y - horizonY) / (bottomY - horizonY);
-    const roadWidth = bottomHalf * 1.82;
-    const x = cx - roadWidth / 2 + ((i * 83) % roadWidth);
-    ctx.fillRect(x, y, 1 + t * 2, 1 + t * 1.4);
-  }
-
-  const horizonShade = ctx.createLinearGradient(0, horizonY - 18, 0, horizonY + 28);
-  horizonShade.addColorStop(0, "rgba(15, 18, 38, 0)");
-  horizonShade.addColorStop(0.55, isNight ? "rgba(16, 18, 34, 0.18)" : "rgba(45, 50, 75, 0.12)");
-  horizonShade.addColorStop(1, "rgba(15, 18, 38, 0)");
+  // Smooth horizon blend into background city skyline
+  const horizonShade = ctx.createLinearGradient(0, horizonY - 12, 0, horizonY + 28);
+  horizonShade.addColorStop(0, "rgba(10, 12, 24, 0.3)");
+  horizonShade.addColorStop(0.4, isNight ? "rgba(16, 18, 34, 0.15)" : "rgba(45, 50, 75, 0.1)");
+  horizonShade.addColorStop(1, "rgba(10, 12, 24, 0)");
   ctx.fillStyle = horizonShade;
-  ctx.fillRect(0, horizonY - 18, W, 46);
+  ctx.fillRect(0, horizonY - 12, W, 40);
 
   if (isStormWeather()) {
     const wet = ctx.createLinearGradient(0, horizonY, 0, bottomY);
-    wet.addColorStop(0, "rgba(118, 180, 210, 0.12)");
-    wet.addColorStop(0.6, "rgba(125, 205, 255, 0.2)");
-    wet.addColorStop(1, "rgba(190, 236, 255, 0.1)");
+    wet.addColorStop(0, "rgba(118, 180, 210, 0.1)");
+    wet.addColorStop(0.6, "rgba(125, 205, 255, 0.18)");
+    wet.addColorStop(1, "rgba(190, 236, 255, 0.08)");
     ctx.fillStyle = wet;
     ctx.beginPath();
     ctx.moveTo(cx - topHalf, horizonY);
@@ -4874,101 +4862,30 @@ function drawRealRoad(timePeriod) {
     ctx.lineTo(cx - bottomHalf, bottomY);
     ctx.closePath();
     ctx.fill();
-
-    ctx.strokeStyle = "rgba(213, 244, 255, 0.28)";
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 16; i++) {
-      const y =
-        horizonY +
-        24 +
-        ((i * 53 - bgOff * 1.8 + (bottomY - horizonY) * 4) %
-          (bottomY - horizonY));
-      const t = (y - horizonY) / (bottomY - horizonY);
-      const roadWidth = bottomHalf * 1.2;
-      const x = cx - roadWidth / 2 + ((i * 91) % roadWidth);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x, y + 18 + t * 26);
-      ctx.stroke();
-    }
   }
 }
 
 function drawRoadRunTrack() {
   const isLvivRoad = currentLocation === 1;
-  const horizonY = GND - 132;
-  const bottomY = H + 18;
+  const horizonY = GND - 128;
+  const bottomY = H + 24;
   const cx = W / 2;
   const topHalf = ROAD_TOP_HALF;
   const bottomHalf = ROAD_BOTTOM_HALF;
   const laneRatios = ROAD_LANE_RATIOS;
-  const laneEdgeRatios = ROAD_LANE_EDGE_RATIOS;
-  const roadAt = (t, laneRatio) => {
-    const half = topHalf + (bottomHalf - topHalf) * t;
-    const y = horizonY + (bottomY - horizonY) * t;
-    return { x: cx + half * laneRatio, y, half };
-  };
+
   ctx.save();
-  ctx.fillStyle = isLvivRoad ? "rgba(255, 236, 190, 0.06)" : "rgba(160, 210, 255, 0.06)";
-  ctx.beginPath();
-  ctx.moveTo(cx - topHalf * 0.98, horizonY);
-  ctx.lineTo(cx + topHalf * 0.98, horizonY);
-  ctx.lineTo(cx + bottomHalf * 0.92, bottomY);
-  ctx.lineTo(cx - bottomHalf * 0.92, bottomY);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = isLvivRoad
-    ? "rgba(255, 220, 160, 0.18)"
-    : "rgba(220, 238, 255, 0.2)";
-  ctx.lineCap = "round";
-  ctx.setLineDash([24, 22]);
-  for (const laneRatio of laneEdgeRatios) {
-    ctx.beginPath();
-    for (let step = 0; step <= 18; step++) {
-      const t = 0.04 + step * 0.052;
-      const p = roadAt(t, laneRatio);
-      if (step === 0) ctx.moveTo(p.x, p.y);
-      else ctx.lineTo(p.x, p.y);
-      ctx.lineWidth = 1 + t * 3.4;
-    }
-    ctx.stroke();
-  }
-  ctx.setLineDash([]);
-
-  const arrowBase = (bgOff * 0.012) % 0.24;
-  ctx.strokeStyle = isLvivRoad
-    ? "rgba(255, 245, 205, 0.28)"
-    : "rgba(230, 246, 255, 0.32)";
-  ctx.fillStyle = isLvivRoad
-    ? "rgba(255, 220, 130, 0.16)"
-    : "rgba(98, 214, 255, 0.14)";
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  for (const laneRatio of laneRatios) {
-    for (let i = 0; i < 3; i++) {
-      const t = 0.18 + ((i * 0.24 + arrowBase) % 0.68);
-      const p = roadAt(t, laneRatio);
-      const size = 8 + t * 20;
-      ctx.lineWidth = 1.2 + t * 2.4;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y - size * 0.9);
-      ctx.lineTo(p.x - size * 0.44, p.y + size * 0.1);
-      ctx.lineTo(p.x, p.y - size * 0.18);
-      ctx.lineTo(p.x + size * 0.44, p.y + size * 0.1);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    }
-  }
-
   const activeRatio = laneRatios[pLane] || 0;
-  const active = roadAt(0.72, activeRatio);
-  const pulse = 0.45 + Math.sin(fr * 0.12) * 0.12;
+  const t = 0.72;
+  const half = topHalf + (bottomHalf - topHalf) * t;
+  const activeX = cx + half * activeRatio;
+  const activeY = horizonY + (bottomY - horizonY) * t;
+  const pulse = 0.35 + Math.sin(fr * 0.12) * 0.1;
+
   ctx.globalAlpha = pulse;
-  ctx.fillStyle = isLvivRoad ? "rgba(255, 211, 120, 0.18)" : "rgba(98, 214, 255, 0.18)";
+  ctx.fillStyle = isLvivRoad ? "rgba(255, 211, 120, 0.16)" : "rgba(98, 214, 255, 0.16)";
   ctx.beginPath();
-  ctx.ellipse(active.x, ROAD_RUN_Y + 10, 58, 16, 0, 0, Math.PI * 2);
+  ctx.ellipse(activeX, activeY + 6, 54, 14, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -5575,18 +5492,7 @@ function drawSecretRouteBackground() {
       const sx = -80 + ((bgOff * 1.2 + s * 90) % (W + 160));
       ctx.fillRect(sx, GND + 40, 55, 5);
     }
-    ctx.strokeStyle = "#8b969d";
-    ctx.lineWidth = 4;
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.moveTo(LANES[i] - 35, GND + 18);
-      ctx.lineTo(LANES[i] - 35, H);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(LANES[i] + 35, GND + 18);
-      ctx.lineTo(LANES[i] + 35, H);
-      ctx.stroke();
-    }
+
   } else if (route.id === "roofs") {
     const sky = ctx.createLinearGradient(0, 0, 0, H);
     sky.addColorStop(0, "#254b70");
