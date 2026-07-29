@@ -30,7 +30,7 @@ const savedOwned = Array.isArray(save.owned)
   : [];
 let lang = VALID_LANGUAGES.has(save.lang) ? save.lang : "uk",
   totalCoins = Math.max(0, Number(save.totalCoins) || 0),
-  owned = [...new Set(["default", ...savedOwned])],
+  owned = [...new Set(["default", "marichka", ...savedOwned])],
   selectedSkin =
     VALID_SKIN_IDS.has(save.selectedSkin) && owned.includes(save.selectedSkin)
       ? save.selectedSkin
@@ -2852,6 +2852,77 @@ function buildBackpack() {
   });
 }
 
+function drawMarichkaPreview(c, cx, by) {
+  c.save();
+  c.fillStyle = "rgba(0,0,0,0.22)";
+  c.beginPath();
+  c.ellipse(cx, by + 1, 14, 4, 0, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = "#f0d0a8";
+  c.fillRect(cx - 8, by - 14, 6, 14);
+  c.fillRect(cx + 2, by - 14, 6, 14);
+  c.fillStyle = "#ffd23f";
+  c.fillRect(cx - 9, by - 1, 9, 4);
+  c.fillRect(cx, by - 1, 9, 4);
+  c.fillStyle = "#ffe45c";
+  c.beginPath();
+  c.moveTo(cx - 16, by - 15);
+  c.lineTo(cx - 11, by - 42);
+  c.quadraticCurveTo(cx, by - 49, cx + 11, by - 42);
+  c.lineTo(cx + 16, by - 15);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = "#1f5b8f";
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(cx, by - 47);
+  c.lineTo(cx, by - 18);
+  c.moveTo(cx - 10, by - 39);
+  c.lineTo(cx + 10, by - 39);
+  c.stroke();
+  c.fillStyle = "#1f5b8f";
+  c.beginPath();
+  if (c.roundRect) c.roundRect(cx - 11, by - 57, 22, 18, 4);
+  else c.rect(cx - 11, by - 57, 22, 18);
+  c.fill();
+  c.strokeStyle = "#f0d0a8";
+  c.lineWidth = 4;
+  c.lineCap = "round";
+  c.beginPath();
+  c.moveTo(cx - 10, by - 52);
+  c.lineTo(cx - 19, by - 35);
+  c.moveTo(cx + 10, by - 52);
+  c.lineTo(cx + 19, by - 35);
+  c.stroke();
+  c.fillStyle = "#f0d0a8";
+  c.beginPath();
+  c.arc(cx, by - 69, 12, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = "#3a1a0a";
+  c.beginPath();
+  c.arc(cx, by - 76, 13, Math.PI, 0);
+  c.fill();
+  c.strokeStyle = "#3a1a0a";
+  c.lineWidth = 5;
+  c.beginPath();
+  c.moveTo(cx - 11, by - 73);
+  c.quadraticCurveTo(cx - 20, by - 57, cx - 16, by - 40);
+  c.moveTo(cx + 11, by - 73);
+  c.quadraticCurveTo(cx + 20, by - 57, cx + 16, by - 40);
+  c.stroke();
+  [[-13,-82,"#0057b7"],[-6,-85,"#ffd700"],[2,-84,"#0057b7"],[10,-82,"#ffd700"]].forEach(([fx, fy, col]) => {
+    c.fillStyle = col;
+    c.beginPath();
+    c.arc(cx + fx, by + fy, 4, 0, Math.PI * 2);
+    c.fill();
+  });
+  c.fillStyle = "#263238";
+  c.beginPath();
+  c.arc(cx - 4, by - 70, 1.6, 0, Math.PI * 2);
+  c.arc(cx + 4, by - 70, 1.6, 0, Math.PI * 2);
+  c.fill();
+  c.restore();
+}
 function drawSkinPreview(canvas, sk) {
   const c = canvas.getContext("2d");
   const w = 52,
@@ -2861,6 +2932,10 @@ function drawSkinPreview(canvas, sk) {
     by = h - 4; // base y (feet)
   if (sk.id === "robotron_neon") {
     drawRobotronPreview(c, cx, by);
+    return;
+  }
+  if (sk.id === "marichka") {
+    drawMarichkaPreview(c, cx, by);
     return;
   }
 
@@ -6201,6 +6276,12 @@ function drawPlayer() {
     ctx.globalAlpha = 1;
     return;
   }
+  if (sk.id === "marichka") {
+    drawPlayableMarichka(x, y);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    return;
+  }
 
   const onRoad = y >= GND - 1 && !pSlide;
   const speedLevel = getPlayerUpgradeLevel("speed");
@@ -6776,6 +6857,27 @@ function drawPlayer() {
   ctx.globalAlpha = 1;
 }
 
+function drawPlayableMarichka(x, y) {
+  const onRoad = y >= GND - 1 && !pSlide;
+  const speedLevel = getPlayerUpgradeLevel("speed");
+  const step = onRoad
+    ? Math.sin(fr * (0.24 + Math.min(spd, 5) * 0.045 + speedLevel * 0.03)) * (9 + speedLevel)
+    : Math.sin(fr * 0.18) * 5;
+
+  ctx.save();
+  if (pSlide) {
+    ctx.translate(x, y - 8);
+    ctx.rotate(-0.2);
+    ctx.scale(1.08, 0.72);
+    ctx.translate(-x, -y + 8);
+    drawMarichkaRemodel(x - 4, y + 10, { step: 0 });
+    drawAndriiWeapon(x + 2, y + 8, true);
+  } else {
+    drawMarichkaRemodel(x, y, { step });
+    drawAndriiWeapon(x, y, false);
+  }
+  ctx.restore();
+}
 function drawNeonRobotron(x, y) {
   const run = Math.sin(fr * 0.3) * 7;
   const pulse = 0.55 + Math.sin(fr * 0.16) * 0.25;
@@ -7096,7 +7198,7 @@ function drawMarichkaRemodel(x, y, options = {}) {
 }
 
 function drawChaser() {
-  if (gameState === "win" || gameState === "schoolEnter") return;
+  if (gameState === "win" || gameState === "schoolEnter" || getSkin().id === "marichka") return;
   const dangerPct = Math.min(Math.max((chaserX + 100) / (LANES[0] - 80), 0), 1);
   const chasePoint = getPerspectiveLanePoint(pLane, 0.43 + dangerPct * 0.05);
   const cx = chasePoint.x;
