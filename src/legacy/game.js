@@ -1451,6 +1451,10 @@ const LEVEL_MISSION_REWARD = 50;
 const LEVEL_CLEAR_INPUT_DELAY = 150;
 const LEVEL_CLEAR_AUTO_DELAY = 360;
 const LEVEL_START_SPEED_CAP = 2.54;
+const GAME_SPEED_MULT = 0.84;
+const OBSTACLE_SPAWN_GAP_MULT = 1.22;
+const PLAYER_JUMP_GRAVITY = 0.7;
+const PLAYER_SLIDE_FRAMES = 52;
 const START_EMPTY_FRAMES = 210;
 const START_EMPTY_DISTANCE = 18;
 const START_SAFE_FRAMES = 360;
@@ -3707,7 +3711,7 @@ function act(c) {
   if (c === "ArrowDown") {
     if (tryEnterSecretRoute()) return;
     pSlide = true;
-    slideT = 44;
+    slideT = PLAYER_SLIDE_FRAMES;
     noteTrick("slide");
     addQuestProgress("slides");
   }
@@ -3911,7 +3915,7 @@ function startLevel() {
   score = 0;
   runCoins = 0;
   lives = settingLives;
-  spd = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * getSpeedUpgradeMult();
+  spd = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * getSpeedUpgradeMult() * GAME_SPEED_MULT;
   fr = 0;
   totalDist = 0;
   coinCombo = 0;
@@ -4113,7 +4117,8 @@ const cv = document.getElementById("gc"),
   ctx = cv.getContext("2d");
 
 function reserveRoadHazardSpawn(minFrames = 58) {
-  if (fr - lastRoadHazardSpawnFrame < minFrames) return false;
+  const safeMinFrames = Math.ceil(minFrames * OBSTACLE_SPAWN_GAP_MULT);
+  if (fr - lastRoadHazardSpawnFrame < safeMinFrames) return false;
   lastRoadHazardSpawnFrame = fr;
   return true;
 }
@@ -10298,9 +10303,9 @@ function update() {
   const speedUpgradeMult = getSpeedUpgradeMult();
   const coffeeBoost = coffeeTimer > 0 ? 0.38 : 0;
   const rescueBusBoost = rescueBusTimer > 0 ? 0.72 : 0;
-  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult * speedUpgradeMult + coffeeBoost + rescueBusBoost;
-  const maxS = lv.maxSpd * diffMult * speedUpgradeMult + coffeeBoost + rescueBusBoost;
-  const accel = 0.0012 * diffMult * (1 + currentLevel * 0.15);
+  const base = Math.min(lv.baseSpd, LEVEL_START_SPEED_CAP) * diffMult * speedUpgradeMult * GAME_SPEED_MULT + coffeeBoost + rescueBusBoost;
+  const maxS = lv.maxSpd * diffMult * speedUpgradeMult * GAME_SPEED_MULT + coffeeBoost + rescueBusBoost;
+  const accel = 0.0012 * diffMult * GAME_SPEED_MULT * (1 + currentLevel * 0.15);
   const pct = Math.min(totalDist / FDIST, 1);
   if (pct < 0.5) {
     spd = Math.min(base + fr * accel, maxS);
@@ -10534,7 +10539,7 @@ function update() {
 
   pY += pVY;
   const wasAirborne = pY < GND;
-  pVY += 0.75;
+  pVY += PLAYER_JUMP_GRAVITY;
   if (pY >= GND) {
     if (wasAirborne && pVY > 3) sfxLand();
     pY = GND;
@@ -10614,10 +10619,11 @@ function update() {
   }
   bgOff += spd;
 
-  const interval = Math.max(
+  const baseObstacleInterval = Math.max(
     160 - Math.floor(spd * 6),
     settingDiff === "hard" ? 75 : settingDiff === "easy" ? 118 : 96,
   );
+  const interval = Math.ceil(baseObstacleInterval * OBSTACLE_SPAWN_GAP_MULT);
   const startEmpty = fr < START_EMPTY_FRAMES || totalDist < START_EMPTY_DISTANCE;
   const startSafe = fr < START_SAFE_FRAMES || totalDist < START_SAFE_DISTANCE;
   updateRoadEvent(startSafe);
