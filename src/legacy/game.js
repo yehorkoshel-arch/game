@@ -4577,7 +4577,8 @@ function drawCityBuildingWindows(x, y, w, h, accent = "#ffd66b") {
   ctx.restore();
 }
 function drawStreetBuilding(x, y, w, h, body, accent, variant = 0, location = 0) {
-  const baseY = Math.min(GND + 4, y + h);
+  const skylineBaseY = GND - 112;
+  const baseY = Math.min(skylineBaseY, y + h);
   const height = baseY - y;
   if (height <= 24) return;
   const period = getMenuTimeOfDay().className;
@@ -4858,32 +4859,6 @@ function drawRoadRunTrack() {
   };
 
   ctx.save();
-  const arrowBase = (bgOff * 0.012) % 0.24;
-  ctx.strokeStyle = isLvivRoad
-    ? "rgba(255, 245, 205, 0.24)"
-    : "rgba(230, 246, 255, 0.28)";
-  ctx.fillStyle = isLvivRoad
-    ? "rgba(255, 220, 130, 0.13)"
-    : "rgba(98, 214, 255, 0.12)";
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  for (const laneRatio of laneRatios) {
-    for (let i = 0; i < 3; i++) {
-      const t = 0.18 + ((i * 0.24 + arrowBase) % 0.68);
-      const p = roadAt(t, laneRatio);
-      const size = 8 + t * 20;
-      ctx.lineWidth = 1.1 + t * 2.2;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y - size * 0.9);
-      ctx.lineTo(p.x - size * 0.44, p.y + size * 0.1);
-      ctx.lineTo(p.x, p.y - size * 0.18);
-      ctx.lineTo(p.x + size * 0.44, p.y + size * 0.1);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    }
-  }
-
   const activeRatio = laneRatios[pLane] || 0;
   const t = 0.72;
   const active = roadAt(t, activeRatio);
