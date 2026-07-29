@@ -4577,7 +4577,7 @@ function drawCityBuildingWindows(x, y, w, h, accent = "#ffd66b") {
   ctx.restore();
 }
 function drawStreetBuilding(x, y, w, h, body, accent, variant = 0, location = 0) {
-  const skylineBaseY = GND - 112;
+  const skylineBaseY = GND - 140;
   const baseY = Math.min(skylineBaseY, y + h);
   const height = baseY - y;
   if (height <= 24) return;
