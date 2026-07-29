@@ -4784,19 +4784,6 @@ function drawRealRoad(timePeriod) {
   ctx.lineTo(cx + bottomHalf * 0.95, bottomY);
   ctx.stroke();
 
-  if (isLvivRoad) {
-    ctx.strokeStyle = isNight ? "rgba(18, 20, 26, 0.22)" : "rgba(70, 65, 58, 0.22)";
-    ctx.lineWidth = 1;
-    const rowOffset = (bgOff * 1.35) % 26;
-    for (let y = horizonY - 26 + rowOffset; y < bottomY + 26; y += 26) {
-      const t = roadT(y);
-      const half = roadHalfAt(t);
-      ctx.beginPath();
-      ctx.moveTo(cx - half * 0.88, y);
-      ctx.lineTo(cx + half * 0.88, y);
-      ctx.stroke();
-    }
-  }
 
   ctx.strokeStyle = isNight ? "rgba(235, 243, 255, 0.58)" : "rgba(255, 255, 255, 0.76)";
   ctx.lineCap = "round";
@@ -5067,12 +5054,12 @@ function drawRoadsideSigns() {
 function drawLvivTram() {
   if (currentLocation !== 1) return;
   const tramX = W + 190 - ((bgOff * 0.36) % (W + 430));
-  const tramY = GND - 178;
+  const tramY = GND - 238;
   if (tramX < -260 || tramX > W + 120) return;
 
   ctx.save();
-  const railY1 = GND - 72;
-  const railY2 = GND - 64;
+  const railY1 = GND - 142;
+  const railY2 = GND - 136;
   const railStart = Math.max(-20, tramX - 36);
   const railEnd = Math.min(W + 20, tramX + 220);
   ctx.strokeStyle = "rgba(60,50,42,0.58)";
@@ -5094,7 +5081,7 @@ function drawLvivTram() {
 
   ctx.fillStyle = "rgba(0,0,0,0.24)";
   ctx.beginPath();
-  ctx.ellipse(tramX + 85, GND - 68, 104, 11, 0, 0, Math.PI * 2);
+  ctx.ellipse(tramX + 85, tramY + 108, 104, 11, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.strokeStyle = "#34302b";
@@ -5171,7 +5158,7 @@ function drawLvivCoffeeScene() {
   const off = (bgOff * 0.2) % 520;
   for (let base = -520; base < W + 520; base += 520) {
     const x = base - off;
-    const y = GND - 92;
+    const y = GND - 154;
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.2)";
     ctx.beginPath();
@@ -5211,7 +5198,7 @@ function drawLvivCoffeeScene() {
     ctx.arc(x + 108, y + 58, 2, 0, Math.PI * 2);
     ctx.fill();
 
-    const tableY = GND - 16;
+    const tableY = GND - 78;
     ctx.strokeStyle = "#3f2a1f";
     ctx.lineWidth = 3;
     for (const tx of [x + 36, x + 160]) {
@@ -5242,23 +5229,23 @@ function drawLvivCoffeeScene() {
       ctx.strokeStyle = "#15171c";
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(lx, GND);
-      ctx.lineTo(lx, GND - 92);
+      ctx.moveTo(lx, GND - 62);
+      ctx.lineTo(lx, GND - 154);
       ctx.stroke();
       ctx.fillStyle = "#15171c";
       ctx.beginPath();
-      ctx.arc(lx, GND - 95, 11, Math.PI, 0);
+      ctx.arc(lx, GND - 157, 11, Math.PI, 0);
       ctx.fill();
-      const lampGlow = ctx.createRadialGradient(lx, GND - 82, 0, lx, GND - 82, 24);
+      const lampGlow = ctx.createRadialGradient(lx, GND - 144, 0, lx, GND - 144, 24);
       lampGlow.addColorStop(0, "rgba(255,218,120,0.72)");
       lampGlow.addColorStop(1, "rgba(255,218,120,0)");
       ctx.fillStyle = lampGlow;
       ctx.beginPath();
-      ctx.arc(lx, GND - 82, 24, 0, Math.PI * 2);
+      ctx.arc(lx, GND - 144, 24, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#ffd66d";
       ctx.beginPath();
-      ctx.arc(lx, GND - 82, 6, 0, Math.PI * 2);
+      ctx.arc(lx, GND - 144, 6, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -5412,9 +5399,9 @@ function drawBG() {
 
   drawKyivMaidanScene();
   drawLvivTram();
+  drawRoadsideLvivCoffeeScene();
   drawRealRoad(timePeriod);
   drawRoadRunTrack();
-  drawRoadsideLvivCoffeeScene();
   drawRoadsideSigns();
 }
 
