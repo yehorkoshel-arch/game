@@ -1495,6 +1495,21 @@ const ROAD_BOTTOM_HALF = 300;
 const ROAD_LANE_RATIOS = [-0.62, 0, 0.62];
 const ROAD_LANE_EDGE_RATIOS = [-0.31, 0.31];
 
+function isMarichkaPlayerSelected() {
+  return selectedSkin === "marichka";
+}
+
+function formatActiveCharacterText(text) {
+  if (!isMarichkaPlayerSelected() || typeof text !== "string") return text;
+  return text
+    .replace(/\u0410\u043d\u0434\u0440\u0456\u044e/g, "\u041c\u0430\u0440\u0456\u0447\u043a\u043e")
+    .replace(/\u0410\u043d\u0434\u0440\u0456\u0439/g, "\u041c\u0430\u0440\u0456\u0447\u043a\u0430")
+    .replace(/\u0410\u043d\u0434\u0440\u0456\u044f/g, "\u041c\u0430\u0440\u0456\u0447\u043a\u0438")
+    .replace(/Andrii's/g, "Marichka's")
+    .replace(/Andriis/g, "Marichkas")
+    .replace(/Andrii/g, "Marichka");
+}
+
 function getAndriiWeapon(level = currentLevel, location = currentLocation) {
   const levelIndex = Number(level);
   const locationIndex = Number(location);
@@ -11568,7 +11583,7 @@ function speakAndrii(lines) {
 function speakAndriiForce(lines) {
   andriiCooldown = 300;
   cancelSpeech();
-  const text = lines[Math.floor(Math.random() * lines.length)];
+  const text = formatActiveCharacterText(lines[Math.floor(Math.random() * lines.length)]);
   bubbleText = text;
   bubbleTimer = 260;
   speakAndWait(text);
@@ -11584,13 +11599,13 @@ function speakSceneLine(line) {
   });
 }
 function _doSpeakAndrii(lines) {
-  const text = lines[Math.floor(Math.random() * lines.length)];
+  const text = formatActiveCharacterText(lines[Math.floor(Math.random() * lines.length)]);
   showAndriiBubble(text);
   speakAndWait(text);
 }
 function speakMarichkaSupport() {
   if (marichkaVoiceCooldown > 0 || bubbleTimer > 0 || gameState !== "run") return;
-  const text = getMarichkaLine("run");
+  const text = formatActiveCharacterText(getMarichkaLine("run"));
   marichkaVoiceCooldown = 900;
   bubbleText = getMarichkaLine("name") + ": " + text;
   bubbleTimer = 170;
@@ -11598,7 +11613,7 @@ function speakMarichkaSupport() {
 }
 function speakMarichkaHint(key, cooldown = 640) {
   if (marichkaVoiceCooldown > 0 || bubbleTimer > 0 || gameState !== "run") return;
-  const text = getMarichkaLine(key);
+  const text = formatActiveCharacterText(getMarichkaLine(key));
   if (!text) return;
   marichkaVoiceCooldown = cooldown;
   bubbleText = getMarichkaLine("name") + ": " + text;
@@ -11615,7 +11630,7 @@ function showAndriiBubble(text, force = false) {
     if (bubbleQuietTimer > 0 || bubbleTimer > 35) return;
     bubbleQuietTimer = 90;
   }
-  bubbleText = text;
+  bubbleText = formatActiveCharacterText(text);
   bubbleTimer = 130;
 }
 function drawAndriiBubble() {
