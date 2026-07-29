@@ -2606,18 +2606,18 @@ function startDebugScenario(loc, level, mode = "start") {
   if (mode === "finish") {
     bossDefeated = true;
     totalDist = Math.max(0, getFinishDistance() - FINISH_APPROACH_DISTANCE - 4);
-    showAndriiBubble("Тест фінішу");
+    showAndriiBubble("пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ");
   } else if (mode === "boss") {
     totalDist = Math.max(0, getFinishDistance() - 245);
     bossActive = false;
     bossDefeated = false;
-    showAndriiBubble("Тест боса");
+    showAndriiBubble("пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ");
   } else if (mode === "tram") {
     totalDist = Math.min(160, Math.max(0, getFinishDistance() * 0.28));
-    showAndriiBubble("Тест трамвая");
+    showAndriiBubble("пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
   } else if (mode === "weapon") {
     totalDist = 130;
-    showAndriiBubble("Тест зброї");
+    showAndriiBubble("пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ");
     updateFireControl();
   }
   hudUp();
@@ -2629,10 +2629,10 @@ function buildDebugPresetBar() {
   if (!bar) return;
   bar.innerHTML = "";
   const presets = [
-    { label: "Фініш", loc: currentLocation, level: currentLevel, mode: "finish" },
-    { label: "Бос Київ", loc: 0, level: LEVELS_KYIV.length - 1, mode: "boss" },
-    { label: "Трамвай", loc: 1, level: 2, mode: "tram" },
-    { label: "Зброя", loc: 1, level: 2, mode: "weapon" },
+    { label: "ФіпїЅпїЅпїЅ", loc: currentLocation, level: currentLevel, mode: "finish" },
+    { label: "пїЅпїЅпїЅ пїЅпїЅпїЅ", loc: 0, level: LEVELS_KYIV.length - 1, mode: "boss" },
+    { label: "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ", loc: 1, level: 2, mode: "tram" },
+    { label: "пїЅпїЅпїЅпїЅпїЅ", loc: 1, level: 2, mode: "weapon" },
   ];
   presets.forEach((preset) => {
     const btn = document.createElement("button");
@@ -2741,6 +2741,7 @@ document.querySelectorAll(".lbtn").forEach((b) => {
 function showScreen(id) {
   setActiveScreen(id);
   if (id !== "sGame") updateEndPanel();
+  updatePausePanel();
   if (id === "sMenu") updateQuestReadyBadge();
   if (id === "sMenu") updateAchievementReadyBadge();
   if (id === "sQuests") buildQuests();
@@ -2770,7 +2771,7 @@ function updateEndPanel() {
   panel.classList.toggle("active", active);
   if (!active) return;
   const levelName = getLevelNames(currentLocation, lang)[getPlayableLevel(currentLevel)] || "";
-  const scoreLine = `${score} ${t().pts || "pts"} · ${runCoins}\u20b4`;
+  const scoreLine = `${score} ${t().pts || "pts"} пїЅ ${runCoins}\u20b4`;
   if (title) {
     title.textContent = isOver
       ? "\u0421\u043f\u0440\u043e\u0431\u0443\u0439 \u0449\u0435 \u0440\u0430\u0437"
@@ -2779,7 +2780,7 @@ function updateEndPanel() {
         : "\u0420\u0456\u0432\u0435\u043d\u044c \u043f\u0440\u043e\u0439\u0434\u0435\u043d\u043e!";
   }
   if (stats) {
-    stats.textContent = `${scoreLine} · ${t().levelLabel || "Level"} ${getPlayableLevel(currentLevel) + 1} ${levelName}`;
+    stats.textContent = `${scoreLine} пїЅ ${t().levelLabel || "Level"} ${getPlayableLevel(currentLevel) + 1} ${levelName}`;
   }
   if (retry) {
     retry.hidden = isClear;
@@ -3492,6 +3493,49 @@ document.getElementById("cMenu").onclick = () => {
   saveGame();
   buildLevelBar();
 };
+
+const btnPause = document.getElementById("btnPause");
+if (btnPause) {
+  btnPause.onclick = (e) => {
+    e.stopPropagation();
+    togglePause();
+  };
+}
+const btnPauseHud = document.getElementById("btnPauseHud");
+if (btnPauseHud) {
+  btnPauseHud.onclick = (e) => {
+    e.stopPropagation();
+    togglePause();
+  };
+}
+const btnResume = document.getElementById("btnResume");
+if (btnResume) {
+  btnResume.onclick = (e) => {
+    e.stopPropagation();
+    unpauseGame();
+  };
+}
+const btnRestart = document.getElementById("btnRestart");
+if (btnRestart) {
+  btnRestart.onclick = (e) => {
+    e.stopPropagation();
+    gameState = "run";
+    restartLevel();
+    updatePausePanel();
+  };
+}
+const btnPauseMenu = document.getElementById("btnPauseMenu");
+if (btnPauseMenu) {
+  btnPauseMenu.onclick = (e) => {
+    e.stopPropagation();
+    stopGame();
+    showScreen("sMenu");
+    syncCoins();
+    saveGame();
+    buildLevelBar();
+    updatePausePanel();
+  };
+}
 document.getElementById("btnRetryRun").onclick = (event) => {
   event.stopPropagation();
   if (gameState === "win") restartCompletedRun();
@@ -3602,10 +3646,12 @@ document.addEventListener("keydown", (e) => {
       "Space",
       "KeyF",
       "KeyE",
+      "Escape",
+      "KeyP",
     ].includes(e.code)
   )
     e.preventDefault();
-  const oneShotAction = e.code === "KeyF" || e.code === "KeyE";
+  const oneShotAction = e.code === "KeyF" || e.code === "KeyE" || e.code === "Escape" || e.code === "KeyP";
   if (!keys[e.code] || (oneShotAction && !e.repeat)) {
     keys[e.code] = true;
     act(e.code);
@@ -3621,6 +3667,12 @@ function skipStoryScene() {
   return true;
 }
 function act(c) {
+  if (c === "Escape" || c === "KeyP") {
+    if (gameState === "run" || gameState === "paused") {
+      togglePause();
+      return;
+    }
+  }
   if (gameState === "story") {
     skipStoryScene();
     return;
@@ -4001,6 +4053,41 @@ function stopGame() {
     cancelAnimationFrame(raf);
     raf = null;
   }
+  updatePausePanel();
+}
+
+function togglePause() {
+  if (gameState === "run") {
+    gameState = "paused";
+    if (settingSound) stopMusic();
+  } else if (gameState === "paused") {
+    gameState = "run";
+    if (settingSound) startMusic();
+  }
+  updatePausePanel();
+}
+
+function pauseGame() {
+  if (gameState === "run") {
+    gameState = "paused";
+    if (settingSound) stopMusic();
+    updatePausePanel();
+  }
+}
+
+function unpauseGame() {
+  if (gameState === "paused") {
+    gameState = "run";
+    if (settingSound) startMusic();
+    updatePausePanel();
+  }
+}
+
+function updatePausePanel() {
+  const panel = document.getElementById("pausePanel");
+  if (!panel) return;
+  const isPaused = gameState === "paused";
+  panel.classList.toggle("active", isPaused);
 }
 function hudUp() {
   document.getElementById("hLives").textContent = lives;
@@ -10128,7 +10215,7 @@ function drawSchoolMarichkaScene() {
     );
   } else if (schoolDialogueStep === 2) {
     drawSpeechBox(
-      "Андрій",
+      "пїЅпїЅпїЅпїЅпїЅ",
       getMarichkaLine("thanks"),
       28,
       48,
@@ -11405,7 +11492,7 @@ function loop() {
     safeCall("parts", drawParts);
     safeCall("bullets", drawBullets);
     safeCall("bubble", drawAndriiBubble);
-    if (gameState === "run") {
+    if (gameState === "run" || gameState === "paused") {
       safeCall("hud", drawHUDCanvas);
       safeCall("distance", drawDistBar);
       safeCall("start-phase", drawStartPhaseBanner);
@@ -11425,7 +11512,10 @@ function loop() {
     if (gameState === "missionIntro") safeCall("mission-intro", drawLevelMissionIntroOverlay);
     if (gameState === "idle" || gameState === "over") safeCall("overlay", drawOverlay);
     safeCall("end-panel", updateEndPanel);
-    safeCall("update", update);
+    safeCall("pause-panel", updatePausePanel);
+    if (gameState !== "paused") {
+      safeCall("update", update);
+    }
   } catch (error) {
     logFrameGuard("loop", error);
   } finally {

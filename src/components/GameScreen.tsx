@@ -1,7 +1,10 @@
+import { PauseScreen } from './PauseScreen';
+
 export function GameScreen() {
   return (
     <div id="sGame" className="screen">
       <canvas id="gc" width={680} height={420} />
+      <PauseScreen />
       <div id="endPanel" className="end-panel" aria-live="polite">
         <div className="end-panel-title" id="endPanelTitle">Результат</div>
         <div className="end-panel-stats" id="endPanelStats">0 очок · 0 монет</div>
@@ -24,13 +27,19 @@ export function GameScreen() {
         <div style={{ color: '#aabbcc', fontSize: '12px', fontWeight: 500 }} id="hudLevel">
           Рівень 1
         </div>
-        <div className="hud-coin">
-          {"\u20b4"} <span id="hCoins">4</span> &nbsp; <span id="hDist" style={{ color: '#aabbcc' }}>704 м до фінішу</span>
+        <div className="hud-coin" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>{"\u20b4"} <span id="hCoins">4</span> &nbsp; <span id="hDist" style={{ color: '#aabbcc' }}>704 м до фінішу</span></span>
+          <button className="hud-pause-btn" id="btnPauseHud" type="button" title="Пауза (Esc / P)">
+            ⏸️
+          </button>
         </div>
       </div>
       <div id="ctrlbar">
         <button className="cbtn" id="cMenu" style={{ borderColor: '#554', color: '#aa9' }} type="button">
           {"\u2630"} Меню
+        </button>
+        <button className="cbtn" id="btnPause" style={{ borderColor: '#ffd700', color: '#ffd700' }} type="button" title="Пауза (Esc / P)">
+          ⏸️ Пауза
         </button>
         <button className="cbtn" id="cLeft" type="button">
           {"\u25c0"} Ліво
@@ -54,3 +63,4 @@ export function GameScreen() {
     </div>
   );
 }
+
