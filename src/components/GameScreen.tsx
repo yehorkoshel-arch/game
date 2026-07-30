@@ -7,10 +7,12 @@ export function GameScreen() {
       <div id="multiplayer-container">
         <div className="player-screen player-screen-primary">
           <h3 id="playerOneTitle">{'\u0413\u0440\u0430\u0432\u0435\u0446\u044c 1'}</h3>
+          <div className="player-key-hint" id="playerOneHint">A/D · W/Space · S</div>
           <canvas id="gc" width={680} height={420} />
         </div>
         <div className="player-screen player-screen-secondary">
           <h3 id="playerTwoTitle">{'\u0413\u0440\u0430\u0432\u0435\u0446\u044c 2'}</h3>
+          <div className="player-key-hint" id="playerTwoHint">↑ jump · ↓ slide</div>
           <SecondPlayerCanvas />
         </div>
       </div>

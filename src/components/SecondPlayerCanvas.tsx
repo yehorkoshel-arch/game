@@ -164,7 +164,7 @@ export function SecondPlayerCanvas() {
       ctx.fillText(copy.player2, 22, 34);
       ctx.fillStyle = '#aebfe0';
       ctx.font = '12px Arial';
-      ctx.fillText(`↑ ${copy.jump.replace('▲ ', '')}   ↓ ${copy.slide.replace('▼ ', '')}`, 22, 54);
+      ctx.fillText(copy.player2Hint || 'ArrowUp jump - ArrowDown slide', 22, 54);
       ctx.textAlign = 'right';
       ctx.fillText(`${Math.floor(p.score / 10)} ${copy.pts}`, canvas.width - 22, 34);
       ctx.textAlign = 'left';

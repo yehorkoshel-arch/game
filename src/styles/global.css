@@ -25,12 +25,20 @@ canvas{display:block}
 .player-screen-primary{flex:0 0 680px;width:680px;max-width:100%;height:420px;border-right:none}
 .player-screen-primary canvas{width:680px;height:420px;max-width:100%}
 .player-screen h3{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:3;margin:0;padding:4px 10px;border:1px solid rgba(255,204,0,.42);border-radius:6px;background:rgba(10,14,28,.72);color:#ffcc00;font-size:13px;font-weight:800}
+.player-key-hint{position:absolute;top:38px;left:50%;transform:translateX(-50%);z-index:3;max-width:92%;padding:3px 8px;border:1px solid rgba(126,215,255,.32);border-radius:6px;background:rgba(7,15,28,.58);color:#bfeeff;font-size:10px;font-weight:800;white-space:nowrap;pointer-events:none}
+.player-screen-secondary .player-key-hint{display:none}
+#sGame.multiplayer-active .player-key-hint{display:block}
+#sGame.multiplayer-active .player-screen h3{top:8px}
+#sGame.multiplayer-active .player-key-hint{top:33px}
 .player-screen-secondary{display:none}
 #sGame.multiplayer-active #multiplayer-container{justify-content:stretch}
 #sGame.multiplayer-active .player-screen-primary{flex:1 1 50%;width:auto;height:420px;border-right:2px solid #ffcc00}
 #sGame.multiplayer-active .player-screen-primary canvas{width:100%;height:auto;max-width:100%}
 #sGame.multiplayer-active .player-screen-secondary{position:relative;display:flex;flex:1 1 50%;height:420px;border-radius:0;background:transparent;box-shadow:none;overflow:visible}
 #sGame.multiplayer-active .player-screen-secondary canvas{width:100%;height:auto;max-width:100%;border-radius:10px;background:linear-gradient(180deg,#0a0a1a,#11182a);opacity:.88}
+#sGame.multiplayer-active #hud{padding:6px 10px;font-size:11px}
+#sGame.multiplayer-active #ctrlbar{gap:4px;padding:6px}
+#sGame.multiplayer-active .cbtn{min-width:auto;padding:5px 8px;font-size:11px}
 .mbtn-multiplayer{background:rgba(255,204,0,.1);border:1.5px solid #ffcc00;color:#ffcc00}
 .title{font-size:30px;font-weight:500;color:#ffd700;letter-spacing:2px;margin-bottom:4px}
 .sub{font-size:13px;color:#8899aa;margin-bottom:20px}

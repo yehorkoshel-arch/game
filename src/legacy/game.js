@@ -1912,7 +1912,7 @@ function makeLevelMissions() {
       id: "distance",
       title: gt("runMeters"),
       target: 250,
-      unit: "м",
+      unit: lang === "uk" ? "\u043c" : "m",
     });
   } else if (currentLevel % 3 === 1) {
     missions.push({
@@ -2759,6 +2759,8 @@ function applyLang() {
   document.getElementById("btnPauseHud")?.replaceChildren(document.createTextNode(L.pause));
   document.getElementById("playerOneTitle")?.replaceChildren(document.createTextNode(L.player1));
   document.getElementById("playerTwoTitle")?.replaceChildren(document.createTextNode(L.player2));
+  document.getElementById("playerOneHint")?.replaceChildren(document.createTextNode(L.player1Hint || "A/D · W/Space · S"));
+  document.getElementById("playerTwoHint")?.replaceChildren(document.createTextNode(L.player2Hint || "↑ jump · ↓ slide"));
   document.getElementById("btnRetryRun")?.replaceChildren(document.createTextNode(L.retry));
   document.getElementById("btnNextRun")?.replaceChildren(document.createTextNode(L.next));
   document.getElementById("btnEndMenu")?.replaceChildren(document.createTextNode(L.toMenu));
@@ -4330,7 +4332,7 @@ function getLevelStartSpeed(lv, diffMult = 1, speedUpgradeMult = getSpeedUpgrade
 }
 
 function shouldAutoRunLevelIntro() {
-  return currentLocation === 1 && currentLevel >= LVIV_AUTO_RUN_LEVEL_INDEX;
+  return multiplayerMode || (currentLocation === 1 && currentLevel >= LVIV_AUTO_RUN_LEVEL_INDEX);
 }
 
 function reserveRoadHazardSpawn(minFrames = 58) {
@@ -9476,19 +9478,22 @@ function drawLevelMiniMap() {
 
 function drawLevelMissionHud() {
   if (!levelMissions.length) return;
-  const x = 188;
-  const y = 58;
-  const w = 304;
-  const rowH = 15;
+  const compact = multiplayerMode;
+  const x = compact ? 12 : 188;
+  const y = compact ? 52 : 58;
+  const w = compact ? 214 : 304;
+  const rowH = compact ? 12 : 15;
+  const panelH = (compact ? 15 : 18) + levelMissions.length * rowH;
   ctx.save();
-  ctx.fillStyle = "rgba(7,18,28,0.68)";
+  ctx.globalAlpha = compact ? 0.78 : 1;
+  ctx.fillStyle = compact ? "rgba(7,18,28,0.46)" : "rgba(7,18,28,0.68)";
   ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(x, y, w, 18 + levelMissions.length * rowH, 7);
-  else ctx.fillRect(x, y, w, 18 + levelMissions.length * rowH);
+  if (ctx.roundRect) ctx.roundRect(x, y, w, panelH, 7);
+  else ctx.fillRect(x, y, w, panelH);
   ctx.fillStyle = "#ffd700";
-  ctx.font = "bold 10px sans-serif";
+  ctx.font = compact ? "bold 9px sans-serif" : "bold 10px sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText(gt("levelMissions"), x + 10, y + 13);
+  ctx.fillText(gt("levelMissions"), x + 8, y + (compact ? 11 : 13));
   levelMissions.forEach((mission, index) => {
     const done = getLevelMissionProgress(mission) >= mission.target;
     const progress = Math.floor(getLevelMissionProgress(mission));
@@ -9497,8 +9502,9 @@ function drawLevelMissionHud() {
         ? `${mission.title}: ${progress}/${mission.target}${mission.unit || ""}`
         : mission.title;
     ctx.fillStyle = done ? "#6bcb77" : "#d8e7ff";
-    ctx.font = "10px sans-serif";
-    ctx.fillText((done ? "✓ " : "• ") + label, x + 10, y + 30 + index * rowH);
+    ctx.font = compact ? "9px sans-serif" : "10px sans-serif";
+    const text = compact && label.length > 31 ? label.slice(0, 30) + "..." : label;
+    ctx.fillText((done ? "OK " : "- ") + text, x + 8, y + (compact ? 24 : 30) + index * rowH);
   });
   ctx.restore();
 }
@@ -9572,6 +9578,32 @@ function drawStartPhaseBanner() {
 }
 function drawLevelMissionIntroOverlay() {
   const copy = getCityStartCopy();
+  if (multiplayerMode) {
+    ctx.save();
+    ctx.globalAlpha = 0.82;
+    ctx.fillStyle = "rgba(5,10,20,0.28)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(15,24,42,0.58)";
+    ctx.strokeStyle = "rgba(255,215,0,0.28)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(12, 54, 246, 52, 8);
+    else ctx.rect(12, 54, 246, 52);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#ffd700";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(gt("levelMissions"), 22, 70);
+    ctx.fillStyle = "#d8e7ff";
+    ctx.font = "9px sans-serif";
+    levelMissions.slice(0, 2).forEach((mission, index) => {
+      const text = mission.title.length > 34 ? mission.title.slice(0, 33) + "..." : mission.title;
+      ctx.fillText("- " + text, 22, 86 + index * 12);
+    });
+    ctx.restore();
+    return;
+  }
   ctx.save();
   ctx.fillStyle = "rgba(5,10,20,0.76)";
   ctx.fillRect(0, 0, W, H);
