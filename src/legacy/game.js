@@ -2840,7 +2840,10 @@ function updateEndPanel() {
     next.hidden = !isClear;
     next.textContent = "\u0414\u0430\u043b\u0456";
   }
-  if (menu) menu.textContent = "\u0412 \u043c\u0435\u043d\u044e";
+  if (menu) menu.textContent = L.toMenu;
+  if (title) title.textContent = isOver ? L.restartRun : isWin ? L.win : L.levelClear;
+  if (retry) retry.textContent = isWin ? L.restartRun : L.retry;
+  if (next) next.textContent = L.next;
 }
 
 function syncCoins() {
