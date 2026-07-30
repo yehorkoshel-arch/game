@@ -2696,6 +2696,14 @@ function applyLang() {
   document.getElementById("cSlide").textContent = L.slide;
   document.getElementById("cRight").textContent = L.right;
   document.getElementById("cMenu").textContent = L.menu;
+  document.getElementById("cBonus").textContent = L.bonus;
+  document.getElementById("btnPause")?.replaceChildren(document.createTextNode(L.pause));
+  document.getElementById("btnPauseHud")?.replaceChildren(document.createTextNode(L.pause));
+  document.getElementById("playerOneTitle")?.replaceChildren(document.createTextNode(L.player1));
+  document.getElementById("playerTwoTitle")?.replaceChildren(document.createTextNode(L.player2));
+  document.getElementById("btnRetryRun")?.replaceChildren(document.createTextNode(L.retry));
+  document.getElementById("btnNextRun")?.replaceChildren(document.createTextNode(L.next));
+  document.getElementById("btnEndMenu")?.replaceChildren(document.createTextNode(L.toMenu));
   updateFireControl();
   document
     .querySelectorAll(".lbtn")
