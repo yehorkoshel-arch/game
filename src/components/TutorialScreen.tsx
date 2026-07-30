@@ -1,15 +1,20 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 
 export function TutorialScreen() {
-  const [visible, setVisible] = useState(() => !sessionStorage.getItem('kyiv-runner:tutorial-seen'));
+  const [visible, setVisible] = useState(false);
   const [legacyReady, setLegacyReady] = useState(
     () => Boolean((window as Window & { __kyivRunnerLegacyReady?: boolean }).__kyivRunnerLegacyReady),
   );
 
   useEffect(() => {
     const onLegacyReady = () => setLegacyReady(true);
+    const onOpenTutorial = () => setVisible(true);
     window.addEventListener('kyiv-runner:legacy-ready', onLegacyReady);
-    return () => window.removeEventListener('kyiv-runner:legacy-ready', onLegacyReady);
+    window.addEventListener('kyiv-runner:open-tutorial', onOpenTutorial);
+    return () => {
+      window.removeEventListener('kyiv-runner:legacy-ready', onLegacyReady);
+      window.removeEventListener('kyiv-runner:open-tutorial', onOpenTutorial);
+    };
   }, []);
 
   useEffect(() => {
@@ -27,7 +32,6 @@ export function TutorialScreen() {
 
   const startGame = () => {
     if (!legacyReady) return;
-    sessionStorage.setItem('kyiv-runner:tutorial-seen', '1');
     setVisible(false);
     document.getElementById('btnPlay')?.click();
   };
