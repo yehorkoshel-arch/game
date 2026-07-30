@@ -3749,6 +3749,7 @@ document.getElementById("cBonus").onclick = () => {
 const keys = {};
 document.addEventListener("keydown", (e) => {
   const playerTwoKey =
+    multiplayerMode &&
     Boolean(document.getElementById("gameCanvas2")) &&
     (e.code === "ArrowUp" || e.code === "ArrowDown");
   if (
