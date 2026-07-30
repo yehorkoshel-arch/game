@@ -62,6 +62,9 @@ export function MenuScreen() {
       <button className="mbtn mbtn-backpack" id="btnBackpackOpen" type="button">
         🎒 Рюкзак
       </button>
+      <button className="mbtn mbtn-multiplayer" id="btnMultiplayer" type="button">
+        ГРА НА ДВОХ
+      </button>
       <div className="loc-tabs" id="locTabs">
         <button className="loc-tab active" data-loc="0" type="button">
           🇺🇦 Київ

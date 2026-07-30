@@ -1,19 +1,37 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { UI_TEXT } from '../data/gameData.js';
+
+type LanguageCode = keyof typeof UI_TEXT;
+
+function getActiveLanguage(): LanguageCode {
+  const activeLang = document.querySelector<HTMLButtonElement>('.lbtn.active')?.dataset.lang;
+  return activeLang && activeLang in UI_TEXT ? (activeLang as LanguageCode) : 'uk';
+}
 
 export function TutorialScreen() {
   const [visible, setVisible] = useState(false);
+  const [language, setLanguage] = useState<LanguageCode>(getActiveLanguage);
   const [legacyReady, setLegacyReady] = useState(
     () => Boolean((window as Window & { __kyivRunnerLegacyReady?: boolean }).__kyivRunnerLegacyReady),
   );
 
   useEffect(() => {
     const onLegacyReady = () => setLegacyReady(true);
-    const onOpenTutorial = () => setVisible(true);
+    const onOpenTutorial = () => {
+      setLanguage(getActiveLanguage());
+      setVisible(true);
+    };
+    const onLanguageChanged = (event: Event) => {
+      const nextLang = (event as CustomEvent<{ lang?: string }>).detail?.lang;
+      setLanguage(nextLang && nextLang in UI_TEXT ? (nextLang as LanguageCode) : getActiveLanguage());
+    };
     window.addEventListener('kyiv-runner:legacy-ready', onLegacyReady);
     window.addEventListener('kyiv-runner:open-tutorial', onOpenTutorial);
+    window.addEventListener('kyiv-runner:language-changed', onLanguageChanged);
     return () => {
       window.removeEventListener('kyiv-runner:legacy-ready', onLegacyReady);
       window.removeEventListener('kyiv-runner:open-tutorial', onOpenTutorial);
+      window.removeEventListener('kyiv-runner:language-changed', onLanguageChanged);
     };
   }, []);
 
@@ -38,30 +56,32 @@ export function TutorialScreen() {
 
   if (!visible) return null;
 
+  const copy = UI_TEXT[language] || UI_TEXT.uk;
+
   return (
     <div className="tutorial-screen" id="tutorial-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
       <div className="tutorial-content">
-        <h2 id="tutorial-title">Навчання</h2>
+        <h2 id="tutorial-title">{copy.tutorialTitle}</h2>
         <div className="tutorial-steps">
           <div className="step">
             <span className="key">← / →</span>
-            <p>Міняй смугу, щоб обходити перешкоди.</p>
+            <p>{copy.tutorialMove}</p>
           </div>
           <div className="step">
             <span className="key">Space / ↑</span>
-            <p>Стрибай через ями, конуси та машини.</p>
+            <p>{copy.tutorialJump}</p>
           </div>
           <div className="step">
             <span className="key">↓</span>
-            <p>Роби слайд під небезпечними перешкодами.</p>
+            <p>{copy.tutorialSlide}</p>
           </div>
           <div className="step">
             <span className="key">F</span>
-            <p>Стріляй, коли зброя доступна.</p>
+            <p>{copy.tutorialFire}</p>
           </div>
         </div>
         <button className="btn-primary" id="start-game-btn" type="button" onClick={startGame} disabled={!legacyReady}>
-          {legacyReady ? 'Погнали!' : 'Завантаження...'}
+          {legacyReady ? copy.tutorialStart : copy.tutorialLoading}
         </button>
       </div>
     </div>

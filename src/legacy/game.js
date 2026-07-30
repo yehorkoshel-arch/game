@@ -1,4 +1,4 @@
-import { LANGS, LOCATION_NAMES, SKINS_BASE } from "../data/gameData.js";
+import { LANGS, LOCATION_NAMES, SKINS_BASE, UI_TEXT } from "../data/gameData.js";
 import {
   getLevelNames,
   LEVELS_KYIV,
@@ -1629,7 +1629,7 @@ function completeSecretRoute() {
 }
 
 function t() {
-  return LANGS[lang];
+  return { ...LANGS[lang], ...(UI_TEXT[lang] || UI_TEXT.uk) };
 }
 const GAME_COPY = {
   uk: {
@@ -2674,6 +2674,15 @@ function applyLang() {
   document.getElementById("menuSub").textContent = L.sub;
   document.getElementById("btnPlay").textContent = L.play;
   document.getElementById("btnShopOpen").textContent = L.shop;
+  document.getElementById("btnBackpackOpen").textContent = L.backpack;
+  document.getElementById("btnMultiplayer")?.replaceChildren(document.createTextNode(L.multiplayer));
+  document.getElementById("btnTutorialOpen")?.setAttribute("title", L.tutorial);
+  document.getElementById("btnSettingsOpen")?.setAttribute("title", L.settingsShort);
+  document.getElementById("btnQuestsOpen")?.setAttribute("title", L.quests);
+  document.getElementById("btnAchievementsOpen")?.setAttribute("title", L.achievements);
+  document.getElementById("btnCollectionOpen")?.setAttribute("title", L.collection);
+  const timeBadge = document.getElementById("menuTimeBadge");
+  if (timeBadge) timeBadge.textContent = settingTimeOfDay === "night" ? L.timeNight : L.timeDay;
   document.getElementById("menuCoinsLabel").textContent = L.coins;
   document.getElementById("shopTitle").textContent = L.shopTitle;
   document.getElementById("btnBackShop").textContent = L.back;
@@ -2695,6 +2704,7 @@ function applyLang() {
   }
   buildShop();
   buildSettings();
+  window.dispatchEvent(new CustomEvent("kyiv-runner:language-changed", { detail: { lang } }));
 }
 
 function buildSettings() {

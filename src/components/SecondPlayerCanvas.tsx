@@ -1,4 +1,12 @@
 import { useEffect, useRef } from 'react';
+import { UI_TEXT } from '../data/gameData.js';
+
+type LanguageCode = keyof typeof UI_TEXT;
+
+function getActiveLanguage(): LanguageCode {
+  const activeLang = document.querySelector<HTMLButtonElement>('.lbtn.active')?.dataset.lang;
+  return activeLang && activeLang in UI_TEXT ? (activeLang as LanguageCode) : 'uk';
+}
 
 type PlayerTwoState = {
   y: number;
@@ -29,6 +37,7 @@ export function SecondPlayerCanvas() {
     playerRef.current.y = groundY;
     let frame = 0;
     let raf = 0;
+    let language = getActiveLanguage();
 
     const drawRunner = (x: number, y: number, slide: boolean) => {
       const step = Math.sin(frame * 0.28) * 8;
@@ -151,12 +160,13 @@ export function SecondPlayerCanvas() {
       ctx.fillStyle = '#ffcc00';
       ctx.font = 'bold 16px Arial';
       ctx.textAlign = 'left';
-      ctx.fillText('\u0413\u0440\u0430\u0432\u0435\u0446\u044c 2', 22, 34);
+      const copy = UI_TEXT[language] || UI_TEXT.uk;
+      ctx.fillText(copy.player2, 22, 34);
       ctx.fillStyle = '#aebfe0';
       ctx.font = '12px Arial';
-      ctx.fillText('\u2191 \u0441\u0442\u0440\u0438\u0431\u043e\u043a   \u2193 \u0441\u043b\u0430\u0439\u0434', 22, 54);
+      ctx.fillText(`↑ ${copy.jump.replace('▲ ', '')}   ↓ ${copy.slide.replace('▼ ', '')}`, 22, 54);
       ctx.textAlign = 'right';
-      ctx.fillText(`${Math.floor(p.score / 10)} \u043e\u0447\u043e\u043a`, canvas.width - 22, 34);
+      ctx.fillText(`${Math.floor(p.score / 10)} ${copy.pts}`, canvas.width - 22, 34);
       ctx.textAlign = 'left';
 
       drawRunner(340, p.y, p.isSliding);
@@ -178,10 +188,16 @@ export function SecondPlayerCanvas() {
     };
 
     window.addEventListener('keydown', onKeyDown);
+    const onLanguageChanged = (event: Event) => {
+      const nextLang = (event as CustomEvent<{ lang?: string }>).detail?.lang;
+      language = nextLang && nextLang in UI_TEXT ? (nextLang as LanguageCode) : getActiveLanguage();
+    };
+    window.addEventListener('kyiv-runner:language-changed', onLanguageChanged);
     raf = requestAnimationFrame(draw);
 
     return () => {
       window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('kyiv-runner:language-changed', onLanguageChanged);
       cancelAnimationFrame(raf);
     };
   }, []);
