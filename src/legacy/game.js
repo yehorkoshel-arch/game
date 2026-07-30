@@ -1787,6 +1787,9 @@ function updateFireControl() {
         : weapon
           ? "Вогонь"
           : t().menu;
+  const L = t();
+  fireButton.textContent =
+    weapon === "minigun" ? L.minigun : weapon === "bossblaster" ? L.blaster : weapon ? L.fire : L.menu;
   fireButton.style.display = weapon ? "" : "none";
 }
 const ROBOT_VOICE_UI = {
