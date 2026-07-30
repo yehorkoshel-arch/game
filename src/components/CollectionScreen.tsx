@@ -3,8 +3,8 @@ export function CollectionScreen() {
     <div id="sCollection" className="screen">
       <header className="quest-header">
         <div>
-          <div className="quest-header-title">Колекція</div>
-          <div className="quest-header-subtitle">Листівки Києва та Львова</div>
+          <div className="quest-header-title" id="collectionHeaderTitle">Колекція</div>
+          <div className="quest-header-subtitle" id="collectionHeaderSubtitle">Листівки Києва та Львова</div>
         </div>
         <div id="collectionCount" className="quest-header-reward">0/0</div>
       </header>

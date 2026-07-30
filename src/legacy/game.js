@@ -265,6 +265,53 @@ let collectionRewards = Object.fromEntries(
     Boolean(savedCollectionRewards[reward.id]),
   ]),
 );
+
+const COLLECTION_I18N = {
+  uk: {
+    headerTitle: "Колекція", headerSubtitle: "Листівки Києва та Львова", claim: "Забрати", claimed: "Отримано", inProgress: "В процесі", newBadge: "НОВЕ", skin: "скін", unknownPostcard: "Невідома листівка", lockedPostcard: "Знайди її під час забігу містом.", finish: "Фініш",
+    rewards: { kyiv: { title: "Київський набір", desc: "Збери всі листівки Києва" }, lviv: { title: "Львівський набір", desc: "Збери всі листівки Львова" }, all: { title: "Повний альбом", desc: "Збери всі листівки та відкрий космічного кур’єра" } },
+    postcards: { kyiv_maidan: { title: "Майдан", desc: "Святкова площа з прапорами та вогнями." }, kyiv_metro: { title: "Київське метро", desc: "Секретний маршрут під містом." }, kyiv_rain: { title: "Дощовий Київ", desc: "Фари машин блищать на мокрій дорозі." }, lviv_tram: { title: "Львівський трамвай", desc: "Трамвай дзвенить поруч із бруківкою." }, lviv_cobble: { title: "Львівська бруківка", desc: "Кам’яна дорога старого міста." }, school_finish: { title: "Шкільний фініш", desc: "Андрій добігає до школи." } },
+    achievements: { metro_passenger: { title: "Пасажир метро", desc: "Пройди секретний маршрут метро" }, trick_master: { title: "Майстер трюків", desc: "Зроби TRICK x3" }, boss_defeated: { title: "Бос переможений", desc: "Переможи київського боса" }, coins1000: { title: "Скарб Андрія", desc: "Збери 1000 монет за всю гру" }, chase_survivor: { title: "Втеча вдалася", desc: "Переживи режим погоні" }, clean_chase: { title: "Чиста втеча", desc: "Переживи погоню без удару" }, road_event_master: { title: "Майстер подій", desc: "Переживи 3 дорожні події" }, rain_runner: { title: "Герой дощу", desc: "Переживи зливу в Києві" }, lviv_maneuver: { title: "Львівський маневр", desc: "Переживи трамвай або ремонт у Львові" } },
+  },
+  en: {
+    headerTitle: "Collection", headerSubtitle: "Kyiv and Lviv postcard sets", claim: "Claim", claimed: "Claimed", inProgress: "In progress", newBadge: "NEW", skin: "skin", unknownPostcard: "Unknown postcard", lockedPostcard: "Find it during a city run.", finish: "Finish",
+    rewards: { kyiv: { title: "Kyiv Set", desc: "Collect all Kyiv postcards" }, lviv: { title: "Lviv Set", desc: "Collect all Lviv postcards" }, all: { title: "Complete Album", desc: "Collect every postcard and unlock the space courier" } },
+    postcards: { kyiv_maidan: { title: "Maidan", desc: "A festive square with flags and lights." }, kyiv_metro: { title: "Kyiv Metro", desc: "A secret route under the city." }, kyiv_rain: { title: "Rainy Kyiv", desc: "Car headlights shine on the wet road." }, lviv_tram: { title: "Lviv Tram", desc: "A tram rings beside the cobblestones." }, lviv_cobble: { title: "Lviv Cobblestones", desc: "The stone road of the old city." }, school_finish: { title: "School Finish", desc: "Andriy reaches the school." } },
+    achievements: { metro_passenger: { title: "Metro Passenger", desc: "Complete the secret metro route" }, trick_master: { title: "Trick Master", desc: "Perform TRICK x3" }, boss_defeated: { title: "Boss Defeated", desc: "Defeat the Kyiv boss" }, coins1000: { title: "Andriy’s Treasure", desc: "Collect 1000 coins across the game" }, chase_survivor: { title: "Escape Complete", desc: "Survive chase mode" }, clean_chase: { title: "Clean Escape", desc: "Survive a chase without a hit" }, road_event_master: { title: "Event Master", desc: "Survive 3 road events" }, rain_runner: { title: "Rain Hero", desc: "Survive heavy rain in Kyiv" }, lviv_maneuver: { title: "Lviv Maneuver", desc: "Survive a tram or roadworks in Lviv" } },
+  },
+  de: {
+    headerTitle: "Sammlung", headerSubtitle: "Postkarten aus Kiew und Lemberg", claim: "Abholen", claimed: "Erhalten", inProgress: "In Arbeit", newBadge: "NEU", skin: "Skin", unknownPostcard: "Unbekannte Postkarte", lockedPostcard: "Finde sie während eines Stadtlaufs.", finish: "Ziel",
+    rewards: { kyiv: { title: "Kiew-Set", desc: "Sammle alle Kiew-Postkarten" }, lviv: { title: "Lemberg-Set", desc: "Sammle alle Lemberg-Postkarten" }, all: { title: "Vollständiges Album", desc: "Sammle alle Postkarten und schalte den Weltraumkurier frei" } },
+    postcards: { kyiv_maidan: { title: "Maidan", desc: "Ein festlicher Platz mit Fahnen und Lichtern." }, kyiv_metro: { title: "Kiewer Metro", desc: "Eine geheime Route unter der Stadt." }, kyiv_rain: { title: "Regnerisches Kiew", desc: "Scheinwerfer glänzen auf nasser Straße." }, lviv_tram: { title: "Lemberger Tram", desc: "Eine Straßenbahn klingelt neben dem Kopfsteinpflaster." }, lviv_cobble: { title: "Lemberger Pflaster", desc: "Die Steinstraße der Altstadt." }, school_finish: { title: "Schulziel", desc: "Andriy erreicht die Schule." } },
+    achievements: { metro_passenger: { title: "Metro-Fahrgast", desc: "Schließe die geheime Metro-Route ab" }, trick_master: { title: "Trickmeister", desc: "Schaffe TRICK x3" }, boss_defeated: { title: "Boss besiegt", desc: "Besiege den Kiewer Boss" }, coins1000: { title: "Andriys Schatz", desc: "Sammle 1000 Münzen im ganzen Spiel" }, chase_survivor: { title: "Flucht gelungen", desc: "Überlebe den Verfolgungsmodus" }, clean_chase: { title: "Saubere Flucht", desc: "Überlebe eine Verfolgung ohne Treffer" }, road_event_master: { title: "Ereignismeister", desc: "Überlebe 3 Straßenereignisse" }, rain_runner: { title: "Regenheld", desc: "Überlebe Starkregen in Kiew" }, lviv_maneuver: { title: "Lemberg-Manöver", desc: "Überlebe eine Tram oder Baustelle in Lemberg" } },
+  },
+  fr: {
+    headerTitle: "Collection", headerSubtitle: "Cartes postales de Kiev et Lviv", claim: "Récupérer", claimed: "Obtenu", inProgress: "En cours", newBadge: "NOUVEAU", skin: "skin", unknownPostcard: "Carte inconnue", lockedPostcard: "Trouve-la pendant une course en ville.", finish: "Arrivée",
+    rewards: { kyiv: { title: "Set de Kiev", desc: "Collectionne toutes les cartes de Kiev" }, lviv: { title: "Set de Lviv", desc: "Collectionne toutes les cartes de Lviv" }, all: { title: "Album complet", desc: "Collectionne toutes les cartes et débloque le coursier spatial" } },
+    postcards: { kyiv_maidan: { title: "Maïdan", desc: "Une place festive avec des drapeaux et des lumières." }, kyiv_metro: { title: "Métro de Kiev", desc: "Un itinéraire secret sous la ville." }, kyiv_rain: { title: "Kiev pluvieux", desc: "Les phares brillent sur la route mouillée." }, lviv_tram: { title: "Tramway de Lviv", desc: "Un tram sonne près des pavés." }, lviv_cobble: { title: "Pavés de Lviv", desc: "La route de pierre de la vieille ville." }, school_finish: { title: "Arrivée à l’école", desc: "Andriy arrive à l’école." } },
+    achievements: { metro_passenger: { title: "Passager du métro", desc: "Termine l’itinéraire secret du métro" }, trick_master: { title: "Maître des figures", desc: "Fais TRICK x3" }, boss_defeated: { title: "Boss vaincu", desc: "Bats le boss de Kiev" }, coins1000: { title: "Trésor d’Andriy", desc: "Collecte 1000 pièces dans toute la partie" }, chase_survivor: { title: "Fuite réussie", desc: "Survis au mode poursuite" }, clean_chase: { title: "Fuite parfaite", desc: "Survis à une poursuite sans impact" }, road_event_master: { title: "Maître des événements", desc: "Survis à 3 événements routiers" }, rain_runner: { title: "Héros de la pluie", desc: "Survis à une averse à Kiev" }, lviv_maneuver: { title: "Manœuvre de Lviv", desc: "Survis à un tram ou des travaux à Lviv" } },
+  },
+  es: {
+    headerTitle: "Colección", headerSubtitle: "Postales de Kiev y Leópolis", claim: "Reclamar", claimed: "Obtenido", inProgress: "En progreso", newBadge: "NUEVO", skin: "skin", unknownPostcard: "Postal desconocida", lockedPostcard: "Encuéntrala durante una carrera por la ciudad.", finish: "Meta",
+    rewards: { kyiv: { title: "Set de Kiev", desc: "Colecciona todas las postales de Kiev" }, lviv: { title: "Set de Leópolis", desc: "Colecciona todas las postales de Leópolis" }, all: { title: "Álbum completo", desc: "Colecciona todas las postales y desbloquea al mensajero espacial" } },
+    postcards: { kyiv_maidan: { title: "Maidán", desc: "Una plaza festiva con banderas y luces." }, kyiv_metro: { title: "Metro de Kiev", desc: "Una ruta secreta bajo la ciudad." }, kyiv_rain: { title: "Kiev lluvioso", desc: "Los faros brillan sobre la carretera mojada." }, lviv_tram: { title: "Tranvía de Leópolis", desc: "Un tranvía suena junto a los adoquines." }, lviv_cobble: { title: "Adoquines de Leópolis", desc: "La calle de piedra de la ciudad vieja." }, school_finish: { title: "Meta escolar", desc: "Andriy llega a la escuela." } },
+    achievements: { metro_passenger: { title: "Pasajero del metro", desc: "Completa la ruta secreta del metro" }, trick_master: { title: "Maestro de trucos", desc: "Haz TRICK x3" }, boss_defeated: { title: "Boss derrotado", desc: "Derrota al boss de Kiev" }, coins1000: { title: "Tesoro de Andriy", desc: "Reúne 1000 monedas en toda la partida" }, chase_survivor: { title: "Escape logrado", desc: "Sobrevive al modo persecución" }, clean_chase: { title: "Escape limpio", desc: "Sobrevive a una persecución sin golpes" }, road_event_master: { title: "Maestro de eventos", desc: "Sobrevive a 3 eventos de carretera" }, rain_runner: { title: "Héroe de la lluvia", desc: "Sobrevive a una tormenta en Kiev" }, lviv_maneuver: { title: "Maniobra de Leópolis", desc: "Sobrevive a un tranvía u obras en Leópolis" } },
+  },
+};
+function collectionText() { return COLLECTION_I18N[lang] || COLLECTION_I18N.uk; }
+function getCollectionRewardCopy(reward) { return collectionText().rewards[reward.id] || { title: reward.title, desc: reward.desc }; }
+function getPostcardCopy(card) { return collectionText().postcards[card.id] || { title: card.title, desc: card.desc }; }
+function getAchievementCopy(item) { return collectionText().achievements[item.id] || { title: item.title, desc: item.desc }; }
+function refreshCollectionHeader() {
+  const C = collectionText();
+  const title = document.getElementById("collectionHeaderTitle");
+  const subtitle = document.getElementById("collectionHeaderSubtitle");
+  const back = document.getElementById("btnBackCollection");
+  if (title) title.textContent = C.headerTitle;
+  if (subtitle) subtitle.textContent = C.headerSubtitle;
+  if (back) back.textContent = t().back;
+}
+
 let settingDiff = ["easy", "normal", "hard"].includes(save.settingDiff)
     ? save.settingDiff
     : "normal",
@@ -2332,6 +2379,7 @@ function updateAchievementReadyBadge() {
 function buildAchievements() {
   const list = document.getElementById("achievementList");
   if (!list) return;
+  const C = collectionText();
   list.innerHTML = "";
   let seenChanged = false;
   ACHIEVEMENTS.forEach((item) => {
@@ -2340,26 +2388,26 @@ function buildAchievements() {
     const claimed = Boolean(achievementRewards[item.id]);
     const reward = getAchievementReward(item);
     const isNew = done && !achievementSeen[item.id];
-    const newBadge = isNew ? `<span class="achievement-new">\u041d\u041e\u0412\u0415</span>` : "";
+    const copy = getAchievementCopy(item);
+    const newBadge = isNew ? '<span class="achievement-new">' + C.newBadge + '</span>' : "";
     const status = done
       ? claimed
-        ? `<div class="achievement-status">\u041e\u0442\u0440\u0438\u043c\u0430\u043d\u043e</div>`
-        : `<button class="achievement-claim" data-achievement-id="${item.id}" type="button">\u0417\u0430\u0431\u0440\u0430\u0442\u0438 +${reward}\u20b4</button>`
-      : `<div class="achievement-status">\u0412 \u043f\u0440\u043e\u0446\u0435\u0441\u0456</div>`;
+        ? '<div class="achievement-status">' + C.claimed + '</div>'
+        : '<button class="achievement-claim" data-achievement-id="' + item.id + '" type="button">' + C.claim + ' +' + reward + '\u20b4</button>'
+      : '<div class="achievement-status">' + C.inProgress + '</div>';
     const card = document.createElement("article");
     card.className = "achievement-item" + (done ? " complete" : "") + (claimed ? " claimed" : "") + (isNew ? " new" : "");
-    card.innerHTML = `
-      <div class="achievement-icon">${item.icon}</div>
-      <div class="achievement-copy">
-        <div class="achievement-title">${item.title}${newBadge}</div>
-        <div class="achievement-desc">${item.desc}</div>
-        <div class="achievement-progress">
-          <div class="achievement-progress-fill" style="width:${(progress / item.target) * 100}%"></div>
-        </div>
-        <div class="achievement-count">${progress} / ${item.target}</div>
-      </div>
-      ${status}
-    `;
+    card.innerHTML =
+      '<div class="achievement-icon">' + item.icon + '</div>' +
+      '<div class="achievement-copy">' +
+        '<div class="achievement-title">' + copy.title + newBadge + '</div>' +
+        '<div class="achievement-desc">' + copy.desc + '</div>' +
+        '<div class="achievement-progress">' +
+          '<div class="achievement-progress-fill" style="width:' + ((progress / item.target) * 100) + '%"></div>' +
+        '</div>' +
+        '<div class="achievement-count">' + progress + ' / ' + item.target + '</div>' +
+      '</div>' +
+      status;
     list.appendChild(card);
     if (isNew) {
       achievementSeen[item.id] = true;
@@ -2369,39 +2417,43 @@ function buildAchievements() {
   if (seenChanged) saveGame();
   updateAchievementReadyBadge();
 }
+
 function buildCollection() {
   const list = document.getElementById("collectionList");
   const count = document.getElementById("collectionCount");
   if (!list) return;
+  refreshCollectionHeader();
+  const C = collectionText();
   list.innerHTML = "";
   const opened = CITY_POSTCARDS.filter((card) => postcards[card.id]).length;
-  if (count) count.textContent = `${opened}/${CITY_POSTCARDS.length}`;
+  if (count) count.textContent = opened + "/" + CITY_POSTCARDS.length;
   const rewards = document.createElement("section");
   rewards.className = "collection-rewards";
   COLLECTION_REWARDS.forEach((reward) => {
     const progress = reward.ids.filter((id) => postcards[id]).length;
     const ready = progress >= reward.ids.length;
     const claimed = Boolean(collectionRewards[reward.id]);
+    const copy = getCollectionRewardCopy(reward);
     const rewardItem = document.createElement("article");
     rewardItem.className =
       "collection-reward" +
       (ready ? " ready" : "") +
       (claimed ? " claimed" : "");
-    rewardItem.innerHTML = `
-      <div>
-        <div class="collection-reward-title">${reward.title}</div>
-        <div class="collection-reward-desc">${reward.desc}</div>
-        <div class="collection-reward-progress">${progress}/${reward.ids.length} · +${reward.coins}₴${reward.skinId ? " · скін" : ""}</div>
-      </div>
-      <button class="collection-claim" data-reward-id="${reward.id}" type="button" ${!ready || claimed ? "disabled" : ""}>
-        ${claimed ? "Отримано" : "Забрати"}
-      </button>
-    `;
+    rewardItem.innerHTML =
+      '<div>' +
+        '<div class="collection-reward-title">' + copy.title + '</div>' +
+        '<div class="collection-reward-desc">' + copy.desc + '</div>' +
+        '<div class="collection-reward-progress">' + progress + '/' + reward.ids.length + ' · +' + reward.coins + '₴' + (reward.skinId ? ' · ' + C.skin : '') + '</div>' +
+      '</div>' +
+      '<button class="collection-claim" data-reward-id="' + reward.id + '" type="button" ' + (!ready || claimed ? "disabled" : "") + '>' +
+        (claimed ? C.claimed : C.claim) +
+      '</button>';
     rewards.appendChild(rewardItem);
   });
   list.appendChild(rewards);
   CITY_POSTCARDS.forEach((card) => {
     const unlocked = Boolean(postcards[card.id]);
+    const copy = getPostcardCopy(card);
     const item = document.createElement("article");
     item.className = "collection-card " + (unlocked ? "unlocked" : "locked");
     if (unlocked) {
@@ -2409,16 +2461,16 @@ function buildCollection() {
       item.type = "button";
       item.tabIndex = 0;
     }
-    item.innerHTML = `
-      <div class="collection-art" style="color:${card.color}">${unlocked ? card.icon : "?"}</div>
-      <div class="collection-info">
-        <div class="collection-title">${unlocked ? card.title : "Невідома листівка"}</div>
-        <div class="collection-desc">${unlocked ? card.desc : "Знайди її під час забігу містом."}</div>
-      </div>
-    `;
+    item.innerHTML =
+      '<div class="collection-art" style="color:' + card.color + '">' + (unlocked ? card.icon : "?") + '</div>' +
+      '<div class="collection-info">' +
+        '<div class="collection-title">' + (unlocked ? copy.title : C.unknownPostcard) + '</div>' +
+        '<div class="collection-desc">' + (unlocked ? copy.desc : C.lockedPostcard) + '</div>' +
+      '</div>';
     list.appendChild(item);
   });
 }
+
 function openPostcardViewer(cardId) {
   const card = CITY_POSTCARDS.find((entry) => entry.id === cardId);
   if (!card || !postcards[card.id]) return;
@@ -2429,15 +2481,21 @@ function openPostcardViewer(cardId) {
   const desc = document.getElementById("postcardViewerDesc");
   if (!viewer || !art || !city || !title || !desc) return;
   const cityLabel =
-    card.loc === 0 ? "Київ" : card.loc === 1 ? "Львів" : "Фініш";
+    card.loc === 0
+      ? (LOCATION_NAMES[lang]?.[0] || "Kyiv").replace(/^\S+\s*/, "")
+      : card.loc === 1
+        ? (LOCATION_NAMES[lang]?.[1] || "Lviv").replace(/^\S+\s*/, "")
+        : collectionText().finish;
+  const copy = getPostcardCopy(card);
   art.textContent = card.icon;
   art.style.setProperty("--postcard-color", card.color);
   city.textContent = cityLabel;
-  title.textContent = card.title;
-  desc.textContent = card.desc;
+  title.textContent = copy.title;
+  desc.textContent = copy.desc;
   viewer.classList.add("active");
   viewer.setAttribute("aria-hidden", "false");
 }
+
 function closePostcardViewer() {
   const viewer = document.getElementById("postcardViewer");
   if (!viewer) return;
@@ -2715,6 +2773,9 @@ function applyLang() {
   }
   buildShop();
   buildSettings();
+  refreshCollectionHeader();
+  if (document.getElementById("sCollection")?.classList.contains("active")) buildCollection();
+  if (document.getElementById("sAchievements")?.classList.contains("active")) buildAchievements();
   window.dispatchEvent(new CustomEvent("kyiv-runner:language-changed", { detail: { lang } }));
 }
 
