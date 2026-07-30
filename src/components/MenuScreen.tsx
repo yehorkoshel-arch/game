@@ -12,6 +12,15 @@ export function MenuScreen() {
       <button className="gear-btn" id="btnSettingsOpen" title="Налаштування" type="button">
         ⚙
       </button>
+      <button
+        className="tutorial-icon-btn"
+        id="btnTutorialOpen"
+        title="Навчання"
+        type="button"
+        onClick={() => window.dispatchEvent(new Event('kyiv-runner:open-tutorial'))}
+      >
+        ?
+      </button>
       <button className="quest-icon-btn" id="btnQuestsOpen" title="Квести" type="button">
         ✓
         <span id="questReadyBadge" className="quest-ready-badge">0</span>
