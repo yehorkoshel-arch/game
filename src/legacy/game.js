@@ -1371,6 +1371,7 @@ function sfxGameOver() {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+let multiplayerMode = false;
 let gameState = "idle",
   score = 0,
   runCoins = 0,
@@ -2606,6 +2607,11 @@ function buildDebugLevelBar() {
   });
 }
 
+function setMultiplayerMode(enabled) {
+  multiplayerMode = Boolean(enabled);
+  document.getElementById("sGame")?.classList.toggle("multiplayer-active", multiplayerMode);
+}
+
 function startDebugScenario(loc, level, mode = "start") {
   focusApp();
   currentLocation = loc;
@@ -3409,6 +3415,7 @@ function buildShop() {
 
 document.getElementById("btnPlay").onclick = () => {
   focusApp();
+  setMultiplayerMode(false);
   // Продовжити з останнього збереженого рівня
   currentLevel = getPlayableLevel(
     currentLocation === 0 ? progressKyiv : progressLviv,
@@ -3416,6 +3423,15 @@ document.getElementById("btnPlay").onclick = () => {
   showScreen("sGame");
   startLevel();
 };
+document.getElementById("btnMultiplayer")?.addEventListener("click", () => {
+  focusApp();
+  setMultiplayerMode(true);
+  currentLevel = getPlayableLevel(
+    currentLocation === 0 ? progressKyiv : progressLviv,
+  );
+  showScreen("sGame");
+  startLevel();
+});
 document.querySelectorAll(".loc-tab").forEach((b) => {
   b.onclick = () => {
     currentLocation = Number(b.dataset.loc);
@@ -3732,6 +3748,9 @@ document.getElementById("cBonus").onclick = () => {
 
 const keys = {};
 document.addEventListener("keydown", (e) => {
+  const playerTwoKey =
+    Boolean(document.getElementById("gameCanvas2")) &&
+    (e.code === "ArrowUp" || e.code === "ArrowDown");
   if (
     [
       "ArrowUp",
@@ -3739,6 +3758,8 @@ document.addEventListener("keydown", (e) => {
       "ArrowLeft",
       "ArrowRight",
       "Space",
+      "KeyW",
+      "KeyS",
       "KeyF",
       "KeyE",
       "Escape",
@@ -3746,6 +3767,7 @@ document.addEventListener("keydown", (e) => {
     ].includes(e.code)
   )
     e.preventDefault();
+  if (playerTwoKey) return;
   const oneShotAction = e.code === "KeyF" || e.code === "KeyE" || e.code === "Escape" || e.code === "KeyP";
   if (!keys[e.code] || (oneShotAction && !e.repeat)) {
     keys[e.code] = true;
@@ -3793,13 +3815,13 @@ function act(c) {
   }
   if (gameState !== "run") return;
   if (secretRoute && secretRoute.entering) return;
-  if ((c === "ArrowUp" || c === "Space") && pY >= GND - 2) {
+  if ((c === "ArrowUp" || c === "Space" || c === "KeyW") && pY >= GND - 2) {
     pVY = getJumpPower();
     noteTrick("jump");
     addQuestProgress("jumps");
     sfxJump();
   }
-  if (c === "ArrowDown") {
+  if (c === "ArrowDown" || c === "KeyS") {
     if (tryEnterSecretRoute()) return;
     pSlide = true;
     slideT = PLAYER_SLIDE_FRAMES;

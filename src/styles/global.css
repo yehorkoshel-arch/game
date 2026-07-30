@@ -1,4 +1,4 @@
-*{box-sizing:border-box;margin:0;padding:0}
+﻿*{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%;background:#080812}
 body{display:flex;align-items:flex-start;justify-content:center;padding:0}
 #root{width:680px;height:520px}
@@ -20,6 +20,18 @@ canvas{display:block}
 .menu-dancing-andrii{position:absolute;left:0;bottom:38px;width:680px;height:150px;pointer-events:none;filter:drop-shadow(0 8px 8px rgba(0,0,0,.28))}
 #sShop{background:#1a1a2e}
 #sGame{align-items:center;justify-content:center}
+#multiplayer-container{position:relative;width:100%;height:100%;min-height:420px;display:flex;align-items:center;justify-content:center}
+.player-screen{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
+.player-screen-primary{flex:0 0 680px;width:680px;max-width:100%;height:420px;border-right:none}
+.player-screen-primary canvas{width:680px;height:420px;max-width:100%}
+.player-screen h3{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:3;margin:0;padding:4px 10px;border:1px solid rgba(255,204,0,.42);border-radius:6px;background:rgba(10,14,28,.72);color:#ffcc00;font-size:13px;font-weight:800}
+.player-screen-secondary{display:none}
+#sGame.multiplayer-active #multiplayer-container{justify-content:stretch}
+#sGame.multiplayer-active .player-screen-primary{flex:1 1 50%;width:auto;height:420px;border-right:2px solid #ffcc00}
+#sGame.multiplayer-active .player-screen-primary canvas{width:100%;height:auto;max-width:100%}
+#sGame.multiplayer-active .player-screen-secondary{position:relative;display:flex;flex:1 1 50%;height:420px;border-radius:0;background:transparent;box-shadow:none;overflow:visible}
+#sGame.multiplayer-active .player-screen-secondary canvas{width:100%;height:auto;max-width:100%;border-radius:10px;background:linear-gradient(180deg,#0a0a1a,#11182a);opacity:.88}
+.mbtn-multiplayer{background:rgba(255,204,0,.1);border:1.5px solid #ffcc00;color:#ffcc00}
 .title{font-size:30px;font-weight:500;color:#ffd700;letter-spacing:2px;margin-bottom:4px}
 .sub{font-size:13px;color:#8899aa;margin-bottom:20px}
 .mbtn{padding:10px 36px;font-size:15px;font-weight:500;border-radius:8px;border:none;cursor:pointer;margin:4px}
@@ -259,4 +271,21 @@ canvas{display:block}
 .pause-panel-btn.primary:hover{background:#ffe347;color:#0d0f19}
 .hud-pause-btn{pointer-events:auto;background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.5);color:#ffd700;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;transition:all .2s ease}
 .hud-pause-btn:hover{background:rgba(255,215,0,.3);border-color:#ffd700;transform:scale(1.05)}
+
+/* Tutorial screen */
+.tutorial-screen,.tutorial-screen *{box-sizing:border-box}
+.tutorial-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:flex;justify-content:center;align-items:center;z-index:1000;font-family:Arial,sans-serif;padding:20px}
+.tutorial-content{background:#1e1e2f;color:#fff;padding:30px 40px;border-radius:16px;text-align:center;max-width:450px;width:100%;box-shadow:0 10px 25px rgba(0,0,0,.5);border:2px solid #ffcc00;box-sizing:border-box}
+.tutorial-content h2{margin-bottom:20px;color:#ffcc00}
+.tutorial-steps{display:flex;flex-direction:column;gap:15px;margin-bottom:25px;text-align:left}
+.step{display:flex;flex-direction:column;gap:5px}
+.step .key{background:#33334d;color:#00ffcc;padding:6px 10px;border-radius:6px;font-weight:bold;font-size:14px;width:fit-content;border:1px solid #00ffcc}
+.step p{margin:0;font-size:14px;color:#ccc}
+.btn-primary{background:#ffcc00;color:#1e1e2f;border:none;padding:12px 30px;font-size:16px;font-weight:bold;border-radius:8px;cursor:pointer;transition:transform .1s,background .2s}
+.btn-primary:hover{background:#ffdd33;transform:scale(1.05)}
+@media (max-width:480px){
+  .tutorial-content{padding:20px;border-radius:12px}
+  .tutorial-content h2{font-size:20px}
+  .btn-primary{width:100%;padding:12px 18px}
+}
 

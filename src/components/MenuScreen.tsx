@@ -1,4 +1,4 @@
-import { DancingAndrii } from './DancingAndrii';
+﻿import { DancingAndrii } from './DancingAndrii';
 
 export function MenuScreen() {
   const showDebugPanel = false;
