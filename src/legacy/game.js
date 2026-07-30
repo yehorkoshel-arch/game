@@ -2814,6 +2814,7 @@ function updateEndPanel() {
   const isOver = gameState === "over";
   const isClear = gameState === "levelClear";
   const isWin = gameState === "win";
+  const L = t();
   const active = isOver || isClear || isWin;
   panel.classList.toggle("active", active);
   if (!active) return;
