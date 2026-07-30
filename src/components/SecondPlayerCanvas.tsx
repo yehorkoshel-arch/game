@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { UI_TEXT } from '../data/gameData.js';
+import { LANGS, UI_TEXT } from '../data/gameData.js';
 
 type LanguageCode = keyof typeof UI_TEXT;
 
@@ -160,7 +160,7 @@ export function SecondPlayerCanvas() {
       ctx.fillStyle = '#ffcc00';
       ctx.font = 'bold 16px Arial';
       ctx.textAlign = 'left';
-      const copy = UI_TEXT[language] || UI_TEXT.uk;
+      const copy = { ...LANGS[language], ...(UI_TEXT[language] || UI_TEXT.uk) };
       ctx.fillText(copy.player2, 22, 34);
       ctx.fillStyle = '#aebfe0';
       ctx.font = '12px Arial';

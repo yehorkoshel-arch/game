@@ -51,7 +51,16 @@ export const UI_TEXT={
     tutorialSlide:'Роби слайд під небезпечними перешкодами.',
     tutorialFire:'Стріляй, коли зброя доступна.',
     player1:'Гравець 1',
-    player2:'Гравець 2'
+    player2:'Гравець 2',
+    pause:'Пауза',
+    fire:'Вогонь',
+    bonus:'Бонус',
+    minigun:'Мініган',
+    blaster:'Бластер',
+    retry:'Ще раз',
+    restartRun:'Почати знову',
+    next:'Далі',
+    toMenu:'В меню'
   },
   en:{
     backpack:'🎒 Backpack',
@@ -73,7 +82,16 @@ export const UI_TEXT={
     tutorialSlide:'Slide under dangerous obstacles.',
     tutorialFire:'Shoot when a weapon is available.',
     player1:'Player 1',
-    player2:'Player 2'
+    player2:'Player 2',
+    pause:'Pause',
+    fire:'Fire',
+    bonus:'Bonus',
+    minigun:'Minigun',
+    blaster:'Blaster',
+    retry:'Retry',
+    restartRun:'Start again',
+    next:'Next',
+    toMenu:'Menu'
   },
   de:{
     backpack:'🎒 Rucksack',
@@ -95,7 +113,16 @@ export const UI_TEXT={
     tutorialSlide:'Rutsche unter gefährlichen Hindernissen durch.',
     tutorialFire:'Schieße, wenn eine Waffe verfügbar ist.',
     player1:'Spieler 1',
-    player2:'Spieler 2'
+    player2:'Spieler 2',
+    pause:'Pause',
+    fire:'Feuer',
+    bonus:'Bonus',
+    minigun:'Minigun',
+    blaster:'Blaster',
+    retry:'Nochmal',
+    restartRun:'Neu starten',
+    next:'Weiter',
+    toMenu:'Menü'
   },
   fr:{
     backpack:'🎒 Sac',
@@ -117,7 +144,16 @@ export const UI_TEXT={
     tutorialSlide:'Glisse sous les obstacles dangereux.',
     tutorialFire:'Tire quand une arme est disponible.',
     player1:'Joueur 1',
-    player2:'Joueur 2'
+    player2:'Joueur 2',
+    pause:'Pause',
+    fire:'Tir',
+    bonus:'Bonus',
+    minigun:'Minigun',
+    blaster:'Blaster',
+    retry:'Réessayer',
+    restartRun:'Recommencer',
+    next:'Suivant',
+    toMenu:'Menu'
   },
   es:{
     backpack:'🎒 Mochila',
@@ -139,7 +175,16 @@ export const UI_TEXT={
     tutorialSlide:'Deslízate bajo obstáculos peligrosos.',
     tutorialFire:'Dispara cuando haya un arma disponible.',
     player1:'Jugador 1',
-    player2:'Jugador 2'
+    player2:'Jugador 2',
+    pause:'Pausa',
+    fire:'Fuego',
+    bonus:'Bono',
+    minigun:'Minigun',
+    blaster:'Bláster',
+    retry:'Otra vez',
+    restartRun:'Empezar de nuevo',
+    next:'Siguiente',
+    toMenu:'Menú'
   }
 };
 export const SKINS_BASE=[
