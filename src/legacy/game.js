@@ -5449,9 +5449,9 @@ function drawRealRoad(timePeriod) {
     road.addColorStop(0.55, isNight ? "#32363e" : "#84878e");
     road.addColorStop(1, isNight ? "#242830" : "#6c7078");
   } else {
-    road.addColorStop(0, isNight ? "#252b34" : "#4c535c");
-    road.addColorStop(0.55, isNight ? "#1d232c" : "#3d444d");
-    road.addColorStop(1, isNight ? "#161c24" : "#2d343c");
+    road.addColorStop(0, "#2d2d44");
+    road.addColorStop(0.55, "#232338");
+    road.addColorStop(1, "#1a1a2e");
   }
   ctx.fillStyle = road;
   ctx.beginPath();
@@ -5462,28 +5462,59 @@ function drawRealRoad(timePeriod) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = isNight ? "rgba(14, 20, 30, 0.66)" : "rgba(35, 42, 52, 0.58)";
-  ctx.lineWidth = 6;
+  if (!isLvivRoad) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx - topHalf, horizonY);
+    ctx.lineTo(cx + topHalf, horizonY);
+    ctx.lineTo(cx + bottomHalf, bottomY);
+    ctx.lineTo(cx - bottomHalf, bottomY);
+    ctx.closePath();
+    ctx.clip();
+    const sheenOffset = (bgOff * 1.35) % 96;
+    for (let y = horizonY - sheenOffset; y < bottomY + 96; y += 48) {
+      const t = roadT(y);
+      const half = roadHalfAt(t);
+      ctx.strokeStyle = "rgba(118, 185, 255, 0.09)";
+      ctx.lineWidth = 1 + 2.5 * t;
+      ctx.beginPath();
+      ctx.moveTo(cx - half * 0.78, y);
+      ctx.lineTo(cx + half * 0.74, y + 18 * t);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 12; i++) {
+      const t = ((i * 0.137 + (bgOff * 0.002)) % 1) ** 1.55;
+      const half = roadHalfAt(t);
+      const y = horizonY + (bottomY - horizonY) * t;
+      const side = i % 2 === 0 ? -1 : 1;
+      const x = cx + half * side * (0.38 + (i % 3) * 0.16);
+      const refl = ctx.createLinearGradient(x, y - 24, x, y + 42);
+      refl.addColorStop(0, "rgba(255, 168, 74, 0)");
+      refl.addColorStop(0.45, "rgba(255, 168, 74, 0.14)");
+      refl.addColorStop(1, "rgba(79, 165, 255, 0)");
+      ctx.fillStyle = refl;
+      ctx.beginPath();
+      ctx.ellipse(x, y + 10, 14 + 26 * t, 6 + 18 * t, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  ctx.strokeStyle = isLvivRoad ? (isNight ? "rgba(14, 20, 30, 0.66)" : "rgba(35, 42, 52, 0.58)") : "#ffd700";
+  ctx.lineWidth = isLvivRoad ? 6 : 4.5;
   ctx.beginPath();
-  ctx.moveTo(cx - topHalf * 0.99, horizonY);
-  ctx.lineTo(cx - bottomHalf * 0.99, bottomY);
-  ctx.moveTo(cx + topHalf * 0.99, horizonY);
-  ctx.lineTo(cx + bottomHalf * 0.99, bottomY);
+  ctx.moveTo(cx - topHalf * 0.96, horizonY);
+  ctx.lineTo(cx - bottomHalf * 0.96, bottomY);
+  ctx.moveTo(cx + topHalf * 0.96, horizonY);
+  ctx.lineTo(cx + bottomHalf * 0.96, bottomY);
   ctx.stroke();
 
-  ctx.strokeStyle = isNight ? "rgba(210, 224, 245, 0.42)" : "rgba(255, 255, 255, 0.68)";
-  ctx.lineWidth = 2.4;
-  ctx.beginPath();
-  ctx.moveTo(cx - topHalf * 0.95, horizonY);
-  ctx.lineTo(cx - bottomHalf * 0.95, bottomY);
-  ctx.moveTo(cx + topHalf * 0.95, horizonY);
-  ctx.lineTo(cx + bottomHalf * 0.95, bottomY);
-  ctx.stroke();
 
-
-  ctx.strokeStyle = isNight ? "rgba(235, 243, 255, 0.58)" : "rgba(255, 255, 255, 0.76)";
+  ctx.strokeStyle = isLvivRoad
+    ? (isNight ? "rgba(235, 243, 255, 0.58)" : "rgba(255, 255, 255, 0.76)")
+    : "#ffffff";
   ctx.lineCap = "round";
-  const dashCount = 13;
+  const dashCount = isLvivRoad ? 13 : 11;
   const animProgress = (bgOff * 0.007) % 1;
   for (const laneEdgeRatio of laneEdgeRatios) {
     for (let i = 0; i < dashCount; i++) {
@@ -5491,11 +5522,11 @@ function drawRealRoad(timePeriod) {
       if (u < 0.035) continue;
       const t1 = u * u;
       const y1 = horizonY + (bottomY - horizonY) * t1;
-      const y2 = Math.min(bottomY, y1 + (5 + 30 * u) * u);
+      const y2 = Math.min(bottomY, y1 + (isLvivRoad ? (5 + 30 * u) * u : 14 + 44 * u));
       const t2 = roadT(y2);
       const half1 = roadHalfAt(t1);
       const half2 = roadHalfAt(t2);
-      ctx.lineWidth = 1.1 + 3.6 * u;
+      ctx.lineWidth = isLvivRoad ? 1.1 + 3.6 * u : 1.4 + 4.2 * u;
       ctx.beginPath();
       ctx.moveTo(cx + half1 * laneEdgeRatio, y1);
       ctx.lineTo(cx + half2 * laneEdgeRatio, y2);
