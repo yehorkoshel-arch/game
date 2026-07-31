@@ -2056,13 +2056,14 @@ function drawTimeOfDaySky(lv) {
 function drawGeneratedKyivSkyline() {
   if (!kyivSkylineReady || !kyivSkylineImage?.naturalWidth) return false;
   const img = kyivSkylineImage;
-  const destY = 56;
-  const destH = GND - 72;
-  const scale = destH / img.naturalHeight;
+  const skylineBottomY = GND - 18;
+  const destH = GND - 30;
+  const scale = (destH / img.naturalHeight) * 1.52;
   const tileW = img.naturalWidth * scale;
   const srcCropY = 0;
-  const srcCropH = Math.floor(img.naturalHeight * 0.86);
-  const drawH = destH + 18;
+  const srcCropH = Math.floor(img.naturalHeight * 0.78);
+  const drawH = Math.round(destH * 1.08);
+  const destY = skylineBottomY - drawH;
   const offset = (bgOff * 0.12) % tileW;
   ctx.save();
   ctx.globalAlpha = 0.96;
