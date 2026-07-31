@@ -5393,8 +5393,8 @@ function drawRealRoad(timePeriod) {
   const isNight = timePeriod === "time-night";
   const isLvivRoad = currentLocation === 1;
 
-  if (!isLvivRoad && drawScrollingRoadImage()) return;
-
+  // Keep the generated full-scene bitmap disabled for gameplay: it contains buildings
+  // and sidewalks, so scrolling it inside the road polygon puts city objects on the asphalt.
   const roadT = (y) => Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
   const roadHalfAt = (t) => topHalf + (bottomHalf - topHalf) * t;
 
