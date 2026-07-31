@@ -5364,6 +5364,11 @@ function drawScrollingRoadImage() {
   ctx.save();
   ctx.drawImage(roadImage, 0, roadOffsetY, W, segmentHeight);
   ctx.drawImage(roadImage, 0, roadOffsetY - segmentHeight, W, segmentHeight);
+  const skyBlend = ctx.createLinearGradient(0, 0, 0, H * 0.4);
+  skyBlend.addColorStop(0, "#0a0a2a");
+  skyBlend.addColorStop(1, "rgba(10, 10, 42, 0)");
+  ctx.fillStyle = skyBlend;
+  ctx.fillRect(0, 0, W, H * 0.4);
   ctx.restore();
   return true;
 }
