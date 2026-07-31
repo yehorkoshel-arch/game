@@ -1544,8 +1544,12 @@ const ROAD_LANE_RATIOS = [-0.62, 0, 0.62];
 const ROAD_LANE_EDGE_RATIOS = [-0.31, 0.31];
 const PUBLIC_BASE_URL = import.meta.env?.BASE_URL || "/";
 const KYIV_SKYLINE_SRC = `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/kyiv-skyline-generated.png`;
+const ROAD_IMAGE_SRC = `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/road-kyiv-night.png`;
 const kyivSkylineImage = typeof Image !== "undefined" ? new Image() : null;
+const roadImage = typeof Image !== "undefined" ? new Image() : null;
 let kyivSkylineReady = false;
+let roadImageReady = false;
+let roadOffsetY = 0;
 if (kyivSkylineImage) {
   kyivSkylineImage.onload = () => {
     kyivSkylineReady = true;
@@ -1554,6 +1558,15 @@ if (kyivSkylineImage) {
     kyivSkylineReady = false;
   };
   kyivSkylineImage.src = KYIV_SKYLINE_SRC;
+}
+if (roadImage) {
+  roadImage.onload = () => {
+    roadImageReady = true;
+  };
+  roadImage.onerror = () => {
+    roadImageReady = false;
+  };
+  roadImage.src = ROAD_IMAGE_SRC;
 }
 
 function isMarichkaPlayerSelected() {
@@ -5341,6 +5354,20 @@ function drawGreetingBuildings(x, location) {
   ctx.restore();
 }
 
+function drawScrollingRoadImage() {
+  if (!roadImageReady || !roadImage?.naturalWidth) return false;
+  const segmentHeight = H;
+  const gameSpeed = Math.max(1, spd * 6);
+  roadOffsetY += gameSpeed;
+  if (roadOffsetY >= segmentHeight) roadOffsetY = 0;
+
+  ctx.save();
+  ctx.drawImage(roadImage, 0, roadOffsetY, W, segmentHeight);
+  ctx.drawImage(roadImage, 0, roadOffsetY - segmentHeight, W, segmentHeight);
+  ctx.restore();
+  return true;
+}
+
 function drawRealRoad(timePeriod) {
   const horizonY = GND - 128;
   const bottomY = H + 24;
@@ -5350,6 +5377,8 @@ function drawRealRoad(timePeriod) {
   const laneEdgeRatios = ROAD_LANE_EDGE_RATIOS;
   const isNight = timePeriod === "time-night";
   const isLvivRoad = currentLocation === 1;
+
+  if (!isLvivRoad && drawScrollingRoadImage()) return;
 
   const roadT = (y) => Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
   const roadHalfAt = (t) => topHalf + (bottomHalf - topHalf) * t;
