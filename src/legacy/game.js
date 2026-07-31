@@ -5356,12 +5356,22 @@ function drawGreetingBuildings(x, location) {
 
 function drawScrollingRoadImage() {
   if (!roadImageReady || !roadImage?.naturalWidth) return false;
+  const horizonY = GND - 128;
+  const bottomY = H + 24;
+  const cx = W / 2;
   const segmentHeight = H;
   const gameSpeed = Math.max(1, spd * 6);
   roadOffsetY += gameSpeed;
   if (roadOffsetY >= segmentHeight) roadOffsetY = 0;
 
   ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx - ROAD_TOP_HALF, horizonY);
+  ctx.lineTo(cx + ROAD_TOP_HALF, horizonY);
+  ctx.lineTo(cx + ROAD_BOTTOM_HALF, bottomY);
+  ctx.lineTo(cx - ROAD_BOTTOM_HALF, bottomY);
+  ctx.closePath();
+  ctx.clip();
   ctx.drawImage(roadImage, 0, roadOffsetY, W, segmentHeight);
   ctx.drawImage(roadImage, 0, roadOffsetY - segmentHeight, W, segmentHeight);
   const skyBlend = ctx.createLinearGradient(0, 0, 0, H * 0.4);
