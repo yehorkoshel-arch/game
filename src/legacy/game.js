@@ -1542,6 +1542,19 @@ const ROAD_TOP_HALF = 80;
 const ROAD_BOTTOM_HALF = 300;
 const ROAD_LANE_RATIOS = [-0.62, 0, 0.62];
 const ROAD_LANE_EDGE_RATIOS = [-0.31, 0.31];
+const PUBLIC_BASE_URL = import.meta.env?.BASE_URL || "/";
+const KYIV_SKYLINE_SRC = `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/kyiv-skyline-generated.png`;
+const kyivSkylineImage = typeof Image !== "undefined" ? new Image() : null;
+let kyivSkylineReady = false;
+if (kyivSkylineImage) {
+  kyivSkylineImage.onload = () => {
+    kyivSkylineReady = true;
+  };
+  kyivSkylineImage.onerror = () => {
+    kyivSkylineReady = false;
+  };
+  kyivSkylineImage.src = KYIV_SKYLINE_SRC;
+}
 
 function isMarichkaPlayerSelected() {
   return selectedSkin === "marichka";
@@ -2039,6 +2052,33 @@ function drawTimeOfDaySky(lv) {
     ctx.fill();
   }
   return period;
+}
+function drawGeneratedKyivSkyline() {
+  if (!kyivSkylineReady || !kyivSkylineImage?.naturalWidth) return false;
+  const img = kyivSkylineImage;
+  const destY = 56;
+  const destH = GND - 72;
+  const scale = destH / img.naturalHeight;
+  const tileW = img.naturalWidth * scale;
+  const srcCropY = 0;
+  const srcCropH = Math.floor(img.naturalHeight * 0.86);
+  const drawH = destH + 18;
+  const offset = (bgOff * 0.12) % tileW;
+  ctx.save();
+  ctx.globalAlpha = 0.96;
+  for (let x = -offset - tileW; x < W + tileW; x += tileW) {
+    ctx.drawImage(img, 0, srcCropY, img.naturalWidth, srcCropH, x, destY, tileW, drawH);
+  }
+  const period = getMenuTimeOfDay().className;
+  if (period === "time-night" || isStormWeather()) {
+    ctx.fillStyle = period === "time-night" ? "rgba(3,8,22,0.42)" : "rgba(7,16,30,0.34)";
+    ctx.fillRect(0, destY, W, drawH);
+  } else if (period === "time-morning") {
+    ctx.fillStyle = "rgba(255,173,95,0.12)";
+    ctx.fillRect(0, destY, W, drawH);
+  }
+  ctx.restore();
+  return true;
 }
 function isRoadEvent(type) {
   return roadEvent?.type === type && roadEvent.timer > 0;
@@ -5607,21 +5647,24 @@ function drawBG() {
   }
   const lv = getLvl();
   const timePeriod = drawTimeOfDaySky(lv);
+  const generatedKyivSkyline = lv.loc === 0 && drawGeneratedKyivSkyline();
   drawStormSkyOverlay();
 
-  const off = (bgOff * 0.25) % 400;
-  for (let bx = -400; bx < W + 400; bx += 400) {
-    const x = bx - off;
-    const warm = lv.loc === 1 ? "#ffe0a3" : "#ffd66b";
-    const cool = lv.loc === 1 ? "#f4c27a" : "#9ed8ff";
-    drawStreetBuilding(x - 8, lv.loc === 1 ? 104 : 92, 112, H - 142, lv.bldA, warm, 0, lv.loc);
-    drawStreetBuilding(x + 112, lv.loc === 1 ? 116 : 118, 82, H - 168, lv.bldB, cool, 1, lv.loc);
-    drawStreetBuilding(x + 210, lv.loc === 1 ? 94 : 74, 72, H - 124, lv.bldC, warm, 2, lv.loc);
-    drawStreetBuilding(x + 300, lv.loc === 1 ? 108 : 104, 92, H - 154, lv.bldB, cool, 3, lv.loc);
-    drawGreetingBuildings(x, lv.loc);
+  if (!generatedKyivSkyline) {
+    const off = (bgOff * 0.25) % 400;
+    for (let bx = -400; bx < W + 400; bx += 400) {
+      const x = bx - off;
+      const warm = lv.loc === 1 ? "#ffe0a3" : "#ffd66b";
+      const cool = lv.loc === 1 ? "#f4c27a" : "#9ed8ff";
+      drawStreetBuilding(x - 8, lv.loc === 1 ? 104 : 92, 112, H - 142, lv.bldA, warm, 0, lv.loc);
+      drawStreetBuilding(x + 112, lv.loc === 1 ? 116 : 118, 82, H - 168, lv.bldB, cool, 1, lv.loc);
+      drawStreetBuilding(x + 210, lv.loc === 1 ? 94 : 74, 72, H - 124, lv.bldC, warm, 2, lv.loc);
+      drawStreetBuilding(x + 300, lv.loc === 1 ? 108 : 104, 92, H - 154, lv.bldB, cool, 3, lv.loc);
+      drawGreetingBuildings(x, lv.loc);
+    }
   }
 
-  drawKyivMaidanScene();
+  if (!generatedKyivSkyline) drawKyivMaidanScene();
   drawLvivTram();
   drawRoadsideLvivCoffeeScene();
   drawRealRoad(timePeriod);
