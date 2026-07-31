@@ -2053,32 +2053,377 @@ function drawTimeOfDaySky(lv) {
   }
   return period;
 }
-function drawGeneratedKyivSkyline() {
-  if (!kyivSkylineReady || !kyivSkylineImage?.naturalWidth) return false;
-  const img = kyivSkylineImage;
-  const skylineBottomY = GND - 18;
-  const destH = GND - 30;
-  const scale = (destH / img.naturalHeight) * 1.52;
-  const tileW = img.naturalWidth * scale;
-  const srcCropY = 0;
-  const srcCropH = Math.floor(img.naturalHeight * 0.78);
-  const drawH = Math.round(destH * 1.08);
-  const destY = skylineBottomY - drawH;
-  const offset = (bgOff * 0.12) % tileW;
+function kyivParallaxOffset(speed, span) {
+  return (bgOff * speed) % span;
+}
+function drawKyivRainClouds() {
+  const off = kyivParallaxOffset(0.05, 360);
   ctx.save();
-  ctx.globalAlpha = 0.96;
-  for (let x = -offset - tileW; x < W + tileW; x += tileW) {
-    ctx.drawImage(img, 0, srcCropY, img.naturalWidth, srcCropH, x, destY, tileW, drawH);
+  ctx.fillStyle = "rgba(18, 35, 54, 0.52)";
+  for (let x = -360 - off; x < W + 360; x += 360) {
+    ctx.beginPath();
+    ctx.ellipse(x + 52, 52, 84, 22, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 132, 43, 106, 27, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 226, 58, 92, 24, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
-  const period = getMenuTimeOfDay().className;
-  if (period === "time-night" || isStormWeather()) {
-    ctx.fillStyle = period === "time-night" ? "rgba(3,8,22,0.42)" : "rgba(7,16,30,0.34)";
-    ctx.fillRect(0, destY, W, drawH);
-  } else if (period === "time-morning") {
-    ctx.fillStyle = "rgba(255,173,95,0.12)";
-    ctx.fillRect(0, destY, W, drawH);
+  ctx.fillStyle = "rgba(198, 226, 238, 0.12)";
+  for (let x = -280 - off * 0.7; x < W + 280; x += 280) {
+    ctx.beginPath();
+    ctx.ellipse(x + 86, 82, 58, 13, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 146, 78, 44, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
   ctx.restore();
+}
+function drawKyivWindowGrid(x, y, w, h, cols, rows, lit = "#ffe28a") {
+  const gapX = w / (cols + 1);
+  const gapY = h / (rows + 1);
+  ctx.fillStyle = "rgba(28, 54, 76, 0.82)";
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const wx = x + gapX * (col + 0.5);
+      const wy = y + gapY * (row + 0.72);
+      ctx.fillRect(wx, wy, Math.max(6, gapX * 0.42), Math.max(8, gapY * 0.42));
+      if ((row + col) % 3 === 0) {
+        ctx.fillStyle = lit;
+        ctx.fillRect(wx + 1, wy + 1, Math.max(4, gapX * 0.28), Math.max(5, gapY * 0.28));
+        ctx.fillStyle = "rgba(28, 54, 76, 0.82)";
+      }
+    }
+  }
+}
+function drawKyivOfficeTower(x, y, w, h, body = "#496b88", glass = "#7fc4e8") {
+  ctx.save();
+  ctx.fillStyle = "rgba(14, 22, 34, 0.22)";
+  ctx.fillRect(x + 7, y + 8, w, h);
+  const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+  grad.addColorStop(0, body);
+  grad.addColorStop(0.48, "#6d91aa");
+  grad.addColorStop(1, "#31485e");
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "rgba(220, 245, 255, 0.18)";
+  ctx.fillRect(x + w * 0.1, y, w * 0.18, h);
+  drawKyivWindowGrid(x + 6, y + 8, w - 12, h - 20, Math.max(2, Math.floor(w / 20)), Math.max(3, Math.floor(h / 22)), glass);
+  ctx.strokeStyle = "rgba(225, 242, 255, 0.28)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  ctx.restore();
+}
+function drawKyivHistoricBlock(x, y, w, h, body = "#d9a15f", roof = "#7f3f2e") {
+  ctx.save();
+  ctx.fillStyle = "rgba(15, 23, 36, 0.24)";
+  ctx.fillRect(x + 6, y + 8, w, h);
+  ctx.fillStyle = body;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = roof;
+  ctx.beginPath();
+  ctx.moveTo(x - 6, y);
+  ctx.lineTo(x + w * 0.5, y - 34);
+  ctx.lineTo(x + w + 6, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(255, 236, 176, 0.72)";
+  for (let col = 0; col < Math.floor(w / 30); col++) {
+    const wx = x + 12 + col * 30;
+    for (let row = 0; row < Math.floor(h / 34); row++) {
+      ctx.fillRect(wx, y + 14 + row * 32, 15, 20);
+      ctx.fillStyle = "#754a39";
+      ctx.fillRect(wx - 2, y + 12 + row * 32, 19, 3);
+      ctx.fillStyle = "rgba(255, 236, 176, 0.72)";
+    }
+  }
+  ctx.strokeStyle = "rgba(92, 54, 38, 0.7)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  ctx.restore();
+}
+function drawKyivSophia(x, baseY, scale = 1) {
+  ctx.save();
+  ctx.translate(x, baseY);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "rgba(14, 22, 34, 0.24)";
+  ctx.fillRect(-72, -122, 150, 122);
+  ctx.fillStyle = "#f4ead6";
+  ctx.fillRect(-68, -104, 136, 104);
+  ctx.fillStyle = "#d8c8a4";
+  ctx.fillRect(-80, -112, 160, 16);
+  ctx.fillStyle = "#e7dcc2";
+  ctx.fillRect(-38, -136, 76, 136);
+  ctx.fillStyle = "#47745e";
+  ctx.fillRect(-76, -70, 152, 10);
+  ctx.fillStyle = "#6e9a7c";
+  ctx.beginPath();
+  ctx.moveTo(-48, -136);
+  ctx.lineTo(0, -174);
+  ctx.lineTo(48, -136);
+  ctx.closePath();
+  ctx.fill();
+  const domes = [
+    [-54, -128, 18],
+    [0, -166, 26],
+    [54, -128, 18],
+    [-24, -146, 17],
+    [24, -146, 17],
+  ];
+  for (const [dx, dy, r] of domes) {
+    const g = ctx.createRadialGradient(dx - r * 0.35, dy - r * 0.45, 3, dx, dy, r);
+    g.addColorStop(0, "#fff4a3");
+    g.addColorStop(0.55, "#ffd84e");
+    g.addColorStop(1, "#b68618");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(dx, dy, r, Math.PI, 0);
+    ctx.lineTo(dx + r * 0.7, dy + r * 0.55);
+    ctx.lineTo(dx - r * 0.7, dy + r * 0.55);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#ffe27c";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(dx, dy - r - 10);
+    ctx.lineTo(dx, dy - r + 6);
+    ctx.moveTo(dx - 5, dy - r - 5);
+    ctx.lineTo(dx + 5, dy - r - 5);
+    ctx.stroke();
+  }
+  drawKyivWindowGrid(-58, -94, 116, 76, 4, 3, "#ffe8a8");
+  ctx.restore();
+}
+function drawKyivAndrewChurch(x, baseY, scale = 1) {
+  ctx.save();
+  ctx.translate(x, baseY);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "rgba(14, 22, 34, 0.24)";
+  ctx.fillRect(-58, -142, 122, 142);
+  ctx.fillStyle = "#f6e8d2";
+  ctx.fillRect(-52, -106, 104, 106);
+  ctx.fillStyle = "#2c8ea4";
+  ctx.beginPath();
+  ctx.moveTo(-62, -106);
+  ctx.lineTo(0, -150);
+  ctx.lineTo(62, -106);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#e8c54a";
+  ctx.beginPath();
+  ctx.arc(0, -156, 25, Math.PI, 0);
+  ctx.lineTo(15, -138);
+  ctx.lineTo(-15, -138);
+  ctx.closePath();
+  ctx.fill();
+  for (const dx of [-42, 42]) {
+    ctx.fillStyle = "#e8c54a";
+    ctx.beginPath();
+    ctx.arc(dx, -128, 14, Math.PI, 0);
+    ctx.lineTo(dx + 9, -118);
+    ctx.lineTo(dx - 9, -118);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#ffe37d";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(dx, -150);
+    ctx.lineTo(dx, -132);
+    ctx.moveTo(dx - 5, -145);
+    ctx.lineTo(dx + 5, -145);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "#186f86";
+  ctx.lineWidth = 5;
+  ctx.strokeRect(-52, -106, 104, 106);
+  drawKyivWindowGrid(-38, -86, 76, 66, 3, 3, "#fff0b8");
+  ctx.restore();
+}
+function drawKyivBridge(x, y, w, h) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(126, 162, 190, 0.52)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x, y + h);
+  ctx.quadraticCurveTo(x + w * 0.5, y - h * 0.75, x + w, y + h);
+  ctx.stroke();
+  ctx.lineWidth = 2;
+  for (let i = 0; i <= 8; i++) {
+    const px = x + (w / 8) * i;
+    ctx.beginPath();
+    ctx.moveTo(px, y + h);
+    ctx.lineTo(px, y + 4);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "rgba(79, 111, 138, 0.54)";
+  ctx.fillRect(x - 8, y + h, w + 16, 6);
+  ctx.restore();
+}
+function drawKyivDistantLayer() {
+  const off = kyivParallaxOffset(0.08, 520);
+  ctx.save();
+  ctx.globalAlpha = 0.72;
+  ctx.fillStyle = "rgba(78, 106, 132, 0.72)";
+  for (let x = -520 - off; x < W + 520; x += 520) {
+    drawKyivBridge(x + 28, GND - 146, 176, 30);
+    drawKyivOfficeTower(x + 222, GND - 220, 46, 96, "#405a72", "#9ad9f2");
+    drawKyivOfficeTower(x + 282, GND - 246, 58, 122, "#486982", "#9ad9f2");
+    drawKyivOfficeTower(x + 356, GND - 196, 68, 72, "#3c5267", "#93d2ed");
+    ctx.fillStyle = "rgba(62, 89, 112, 0.8)";
+    ctx.fillRect(x + 26, GND - 124, 430, 18);
+  }
+  const fog = ctx.createLinearGradient(0, GND - 204, 0, GND - 92);
+  fog.addColorStop(0, "rgba(170, 205, 220, 0)");
+  fog.addColorStop(1, "rgba(185, 215, 224, 0.26)");
+  ctx.fillStyle = fog;
+  ctx.fillRect(0, GND - 210, W, 124);
+  ctx.restore();
+}
+function drawKyivLargeCityLayer() {
+  const off = kyivParallaxOffset(0.18, 720);
+  ctx.save();
+  for (let x = -720 - off; x < W + 720; x += 720) {
+    drawKyivHistoricBlock(x + 10, GND - 158, 112, 112, "#c9824d", "#793a31");
+    drawKyivSophia(x + 185, GND - 72, 0.94);
+    drawKyivOfficeTower(x + 312, GND - 228, 72, 156, "#536f86", "#a5e3ff");
+    drawKyivHistoricBlock(x + 402, GND - 176, 124, 130, "#d8a069", "#884735");
+    drawKyivAndrewChurch(x + 590, GND - 66, 0.98);
+    drawKyivOfficeTower(x + 664, GND - 204, 58, 132, "#4b6278", "#9ed8ff");
+  }
+  ctx.restore();
+}
+function drawKyivTree(x, y, scale = 1) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "#4c3325";
+  ctx.fillRect(-4, -42, 8, 42);
+  ctx.fillStyle = "#2f7f55";
+  ctx.beginPath();
+  ctx.arc(-12, -45, 18, 0, Math.PI * 2);
+  ctx.arc(10, -49, 20, 0, Math.PI * 2);
+  ctx.arc(0, -66, 17, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(170, 220, 170, 0.16)";
+  ctx.beginPath();
+  ctx.arc(-8, -56, 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+function drawKyivStreetLamp(x, y, scale = 1) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.strokeStyle = "#263340";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, -82);
+  ctx.quadraticCurveTo(0, -100, 24, -100);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255, 228, 118, 0.95)";
+  ctx.beginPath();
+  ctx.ellipse(30, -98, 10, 13, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255, 225, 80, 0.16)";
+  ctx.beginPath();
+  ctx.ellipse(30, -72, 35, 42, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+function drawKyivBusStop(x, y, scale = 1) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "rgba(16, 28, 44, 0.28)";
+  ctx.fillRect(-4, -66, 100, 66);
+  ctx.strokeStyle = "#31516b";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(0, -62, 92, 62);
+  ctx.fillStyle = "rgba(130, 210, 240, 0.36)";
+  ctx.fillRect(6, -56, 80, 42);
+  ctx.fillStyle = "#ffcf3d";
+  ctx.fillRect(-4, -72, 100, 10);
+  ctx.fillStyle = "#234053";
+  ctx.fillRect(16, -14, 58, 8);
+  ctx.restore();
+}
+function drawKyivTrafficLight(x, y, scale = 1) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "#26313d";
+  ctx.fillRect(-3, -72, 6, 72);
+  ctx.fillStyle = "#1b2632";
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(-13, -105, 26, 48, 6) : ctx.rect(-13, -105, 26, 48);
+  ctx.fill();
+  const lights = ["#d94a43", "#f4c541", "#45d278"];
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = lights[i];
+    ctx.beginPath();
+    ctx.arc(0, -96 + i * 15, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawKyivRoadsideDetails() {
+  const horizonY = GND - 128;
+  const off = kyivParallaxOffset(0.52, 460);
+  ctx.save();
+  for (let x = -460 - off; x < W + 460; x += 460) {
+    drawKyivStreetLamp(x + 34, horizonY + 86, 0.9);
+    drawKyivTree(x + 96, horizonY + 118, 0.9);
+    drawKyivBusStop(x + 150, horizonY + 96, 0.78);
+    drawKyivTrafficLight(x + 286, horizonY + 104, 0.75);
+    drawKyivTree(x + 356, horizonY + 126, 1.0);
+    drawKyivStreetLamp(x + 420, horizonY + 88, 0.85);
+
+    drawKyivTree(x + W - 96, horizonY + 118, 0.9);
+    drawKyivTrafficLight(x + W - 154, horizonY + 100, 0.72);
+    drawKyivBusStop(x + W - 270, horizonY + 96, 0.72);
+    drawKyivStreetLamp(x + W - 42, horizonY + 86, 0.84);
+  }
+
+  ctx.strokeStyle = "rgba(45, 64, 76, 0.72)";
+  ctx.lineWidth = 3;
+  for (let x = -80 - off; x < W + 80; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x, horizonY + 26);
+    ctx.lineTo(x + 22, horizonY + 18);
+    ctx.stroke();
+    ctx.fillStyle = "#e3c93e";
+    ctx.fillRect(x + 7, horizonY + 13, 10, 18);
+  }
+  ctx.restore();
+}
+function drawGeneratedKyivSkyline() {
+  drawKyivRainClouds();
+  drawKyivDistantLayer();
+  if (kyivSkylineReady && kyivSkylineImage?.naturalWidth) {
+    const img = kyivSkylineImage;
+    const skylineBottomY = GND - 62;
+    const destH = GND - 68;
+    const scale = (destH / img.naturalHeight) * 1.36;
+    const tileW = img.naturalWidth * scale;
+    const srcCropY = 0;
+    const srcCropH = Math.floor(img.naturalHeight * 0.7);
+    const drawH = Math.round(destH * 0.96);
+    const destY = skylineBottomY - drawH;
+    const offset = (bgOff * 0.12) % tileW;
+    ctx.save();
+    ctx.globalAlpha = 0.34;
+    for (let x = -offset - tileW; x < W + tileW; x += tileW) {
+      ctx.drawImage(img, 0, srcCropY, img.naturalWidth, srcCropH, x, destY, tileW, drawH);
+    }
+    const period = getMenuTimeOfDay().className;
+    if (period === "time-night" || isStormWeather()) {
+      ctx.fillStyle = period === "time-night" ? "rgba(3,8,22,0.42)" : "rgba(7,16,30,0.34)";
+      ctx.fillRect(0, destY, W, drawH);
+    } else if (period === "time-morning") {
+      ctx.fillStyle = "rgba(255,173,95,0.12)";
+      ctx.fillRect(0, destY, W, drawH);
+    }
+    ctx.restore();
+  }
+  drawKyivLargeCityLayer();
   return true;
 }
 function isRoadEvent(type) {
@@ -5009,8 +5354,50 @@ function drawRealRoad(timePeriod) {
   const roadT = (y) => Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
   const roadHalfAt = (t) => topHalf + (bottomHalf - topHalf) * t;
 
-  ctx.fillStyle = isNight ? "#1a271c" : "#6a8d57";
-  ctx.fillRect(0, horizonY, W, bottomY - horizonY);
+  if (currentLocation === 0) {
+    const sidewalk = ctx.createLinearGradient(0, horizonY, 0, bottomY);
+    sidewalk.addColorStop(0, isNight ? "#2a3641" : "#627280");
+    sidewalk.addColorStop(0.62, isNight ? "#222d36" : "#556470");
+    sidewalk.addColorStop(1, isNight ? "#18212a" : "#46545f");
+    ctx.fillStyle = sidewalk;
+    ctx.fillRect(0, horizonY, W, bottomY - horizonY);
+
+    ctx.strokeStyle = isNight ? "rgba(192, 210, 226, 0.2)" : "rgba(238, 246, 248, 0.34)";
+    ctx.lineWidth = 1;
+    const paverOffset = (bgOff * 0.35) % 34;
+    for (let y = horizonY - paverOffset; y < bottomY; y += 34) {
+      const t = roadT(y);
+      const half = roadHalfAt(t);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(cx - half * 1.03, y);
+      ctx.moveTo(cx + half * 1.03, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    const verge = ctx.createLinearGradient(0, horizonY, 0, bottomY);
+    verge.addColorStop(0, "rgba(64, 128, 82, 0.26)");
+    verge.addColorStop(1, "rgba(38, 88, 58, 0.16)");
+    ctx.fillStyle = verge;
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY);
+    ctx.lineTo(cx - topHalf * 1.34, horizonY);
+    ctx.lineTo(cx - bottomHalf * 1.06, bottomY);
+    ctx.lineTo(0, bottomY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(W, horizonY);
+    ctx.lineTo(cx + topHalf * 1.34, horizonY);
+    ctx.lineTo(cx + bottomHalf * 1.06, bottomY);
+    ctx.lineTo(W, bottomY);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    ctx.fillStyle = isNight ? "#1a271c" : "#6a8d57";
+    ctx.fillRect(0, horizonY, W, bottomY - horizonY);
+  }
 
   const road = ctx.createLinearGradient(0, horizonY, 0, bottomY);
   if (isLvivRoad) {
@@ -5669,6 +6056,7 @@ function drawBG() {
   drawLvivTram();
   drawRoadsideLvivCoffeeScene();
   drawRealRoad(timePeriod);
+  if (generatedKyivSkyline) drawKyivRoadsideDetails();
   drawRoadRunTrack();
   drawRoadsideSigns();
 }
