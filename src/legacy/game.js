@@ -5471,32 +5471,25 @@ function drawRealRoad(timePeriod) {
     ctx.lineTo(cx - bottomHalf, bottomY);
     ctx.closePath();
     ctx.clip();
-    const sheenOffset = (bgOff * 1.35) % 96;
-    for (let y = horizonY - sheenOffset; y < bottomY + 96; y += 48) {
+
+    const textureOffset = (bgOff * 0.45) % 42;
+    for (let y = horizonY - textureOffset; y < bottomY + 42; y += 42) {
       const t = roadT(y);
       const half = roadHalfAt(t);
-      ctx.strokeStyle = "rgba(118, 185, 255, 0.09)";
-      ctx.lineWidth = 1 + 2.5 * t;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.035)";
+      ctx.lineWidth = 0.7 + 0.9 * t;
       ctx.beginPath();
-      ctx.moveTo(cx - half * 0.78, y);
-      ctx.lineTo(cx + half * 0.74, y + 18 * t);
+      ctx.moveTo(cx - half * 0.82, y);
+      ctx.lineTo(cx + half * 0.82, y);
       ctx.stroke();
     }
-    for (let i = 0; i < 12; i++) {
-      const t = ((i * 0.137 + (bgOff * 0.002)) % 1) ** 1.55;
-      const half = roadHalfAt(t);
-      const y = horizonY + (bottomY - horizonY) * t;
-      const side = i % 2 === 0 ? -1 : 1;
-      const x = cx + half * side * (0.38 + (i % 3) * 0.16);
-      const refl = ctx.createLinearGradient(x, y - 24, x, y + 42);
-      refl.addColorStop(0, "rgba(255, 168, 74, 0)");
-      refl.addColorStop(0.45, "rgba(255, 168, 74, 0.14)");
-      refl.addColorStop(1, "rgba(79, 165, 255, 0)");
-      ctx.fillStyle = refl;
-      ctx.beginPath();
-      ctx.ellipse(x, y + 10, 14 + 26 * t, 6 + 18 * t, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
+
+    const wetGlow = ctx.createLinearGradient(0, horizonY, 0, bottomY);
+    wetGlow.addColorStop(0, "rgba(76, 139, 255, 0.06)");
+    wetGlow.addColorStop(0.56, "rgba(76, 139, 255, 0.025)");
+    wetGlow.addColorStop(1, "rgba(255, 193, 84, 0.045)");
+    ctx.fillStyle = wetGlow;
+    ctx.fillRect(cx - bottomHalf, horizonY, bottomHalf * 2, bottomY - horizonY);
     ctx.restore();
   }
 
