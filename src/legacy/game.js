@@ -6348,6 +6348,8 @@ function drawBG() {
   const generatedKyivSkyline = lv.loc === 0 && drawGeneratedKyivSkyline();
   drawStormSkyOverlay();
 
+  if (lv.loc === 1) drawLvivLandmarkSkyline(timePeriod);
+
   if (!generatedKyivSkyline) {
     const off = (bgOff * 0.25) % 400;
     for (let bx = -400; bx < W + 400; bx += 400) {
@@ -6365,6 +6367,7 @@ function drawBG() {
   if (!generatedKyivSkyline) drawKyivMaidanScene();
   drawLvivTram();
   drawRoadsideLvivCoffeeScene();
+  drawLvivStreetFurniture();
   drawRealRoad(timePeriod);
   if (generatedKyivSkyline) drawKyivRoadsideDetails();
   drawRoadRunTrack();
