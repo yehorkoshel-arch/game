@@ -5387,6 +5387,7 @@ function drawStreetBuilding(x, y, w, h, body, accent, variant = 0, location = 0)
     ctx.fillRect(x + 5, y + 6, w - 10, 3);
     ctx.fillRect(x + 5, y + 36, w - 10, 2);
     ctx.fillRect(x + 5, baseY - 62, w - 10, 3);
+    drawLvivModularFacadeDetails(x, y, w, height, baseY, variant, isNight, accent);
   }
   ctx.restore();
 }
@@ -6380,6 +6381,82 @@ function drawLvivStreetFurniture() {
   ctx.restore();
 }
 
+function drawLvivLivingCityLayer() {
+  if (currentLocation !== 1) return;
+  const off = (bgOff * 0.26) % 520;
+  ctx.save();
+  clipOutsideRoad();
+
+  ctx.strokeStyle = "rgba(46, 42, 38, 0.56)";
+  ctx.lineWidth = 1.4;
+  for (let wireY = GND - 238; wireY <= GND - 202; wireY += 18) {
+    ctx.beginPath();
+    ctx.moveTo(-30, wireY + Math.sin(fr * 0.018 + wireY) * 2);
+    ctx.quadraticCurveTo(W / 2, wireY + 12, W + 30, wireY + Math.cos(fr * 0.015 + wireY) * 2);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(35, 33, 31, 0.62)";
+  ctx.lineWidth = 3;
+  for (let poleX = -80 - ((bgOff * 0.18) % 210); poleX < W + 120; poleX += 210) {
+    ctx.beginPath();
+    ctx.moveTo(poleX, GND - 12);
+    ctx.lineTo(poleX + 10, GND - 222);
+    ctx.stroke();
+  }
+
+  for (let base = -520; base < W + 520; base += 520) {
+    const x = base - off;
+    for (const side of [-1, 1]) {
+      const sidewalkX = side < 0 ? x + 82 : W - x - 82;
+      const y = GND - 11;
+      for (let i = 0; i < 3; i++) {
+        const walk = Math.sin(fr * 0.07 + i * 1.7 + base * 0.01);
+        const px = sidewalkX + side * (i * 34 + Math.sin(fr * 0.018 + i) * 18);
+        if (px < -20 || px > W + 20) continue;
+        const py = y - i * 7;
+        ctx.fillStyle = ["#4b5876", "#7a3d3a", "#365f4b"][i % 3];
+        ctx.beginPath();
+        ctx.arc(px, py - 44, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(px - 4, py - 39, 8, 22);
+        ctx.strokeStyle = "rgba(32, 30, 32, 0.58)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(px - 2, py - 18);
+        ctx.lineTo(px - 7 + walk * 2, py - 2);
+        ctx.moveTo(px + 2, py - 18);
+        ctx.lineTo(px + 7 - walk * 2, py - 2);
+        ctx.moveTo(px - 3, py - 34);
+        ctx.lineTo(px - 10 - walk, py - 25);
+        ctx.moveTo(px + 3, py - 34);
+        ctx.lineTo(px + 10 + walk, py - 25);
+        ctx.stroke();
+      }
+
+      for (let p = 0; p < 4; p++) {
+        const birdX = sidewalkX + side * (p * 21 + 18);
+        const birdY = GND - 4 - ((p + Math.floor(fr / 45)) % 2) * 7;
+        ctx.fillStyle = "rgba(68, 70, 76, 0.72)";
+        ctx.beginPath();
+        ctx.ellipse(birdX, birdY - 5, 5, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(birdX + side * 5, birdY - 7, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(54, 54, 60, 0.62)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(birdX - 3, birdY - 3);
+        ctx.lineTo(birdX - 7, birdY);
+        ctx.moveTo(birdX + 2, birdY - 3);
+        ctx.lineTo(birdX + 6, birdY);
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+
 function clipOutsideRoad() {
   const horizonY = GND - 132;
   const bottomY = H + 18;
@@ -6523,6 +6600,7 @@ function drawBG() {
   drawLvivTram();
   drawRoadsideLvivCoffeeScene();
   drawLvivStreetFurniture();
+  drawLvivLivingCityLayer();
   drawRealRoad(timePeriod);
   if (generatedKyivSkyline) drawKyivRoadsideDetails();
   drawRoadRunTrack();
