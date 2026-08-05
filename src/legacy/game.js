@@ -6457,6 +6457,289 @@ function drawLvivLivingCityLayer() {
   ctx.restore();
 }
 
+function drawLvivIndieShopSign(x, y, w, variant, isNight) {
+  const labels = [
+    "\u041a\u0410\u0412\u0410",
+    "\u041f\u0415\u041a\u0410\u0420\u041d\u042f",
+    "\u041a\u0412\u0406\u0422\u0418",
+    "\u0410\u041f\u0422\u0415\u041a\u0410",
+    "\u041a\u041d\u0418\u0413\u0418",
+    "\u0420\u0415\u0421\u0422\u041e",
+  ];
+  ctx.save();
+  ctx.fillStyle = ["#9f3f34", "#2f6f77", "#7d4f8a", "#3e7f55", "#8f6a32", "#5c4e8e"][variant % 6];
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(x, y, w, 13, 4) : ctx.rect(x, y, w, 13);
+  ctx.fill();
+  ctx.strokeStyle = isNight ? "rgba(255,232,170,0.45)" : "rgba(90,54,32,0.36)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = isNight ? "#ffe8a8" : "#f9e4b0";
+  ctx.font = "bold 7px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(labels[variant % labels.length], x + w / 2, y + 9);
+  ctx.restore();
+}
+
+function drawLvivIndieBuilding(x, y, w, h, variant, depth = 1, timePeriod = "time-day") {
+  const isNight = timePeriod === "time-night";
+  const baseY = Math.min(GND - 140, y + h);
+  const height = baseY - y;
+  if (height < 42) return;
+  const bodies = ["#c9785a", "#e0b06d", "#b86955", "#d69576", "#9bb0a1", "#d7c18b", "#bf7d95", "#78a0a8"];
+  const trims = ["#f5d9a6", "#f7e2b8", "#ead1a2", "#e9c390"];
+  const roof = ["#783629", "#5d3030", "#6d4730", "#394653"][variant % 4];
+  const body = isNight ? ["#5f3d3c", "#625044", "#4f5360", "#6a463d"][variant % 4] : bodies[variant % bodies.length];
+  const trim = trims[variant % trims.length];
+  const shadow = isNight ? "rgba(2,6,14,0.28)" : "rgba(84,44,30,0.16)";
+  const glass = isNight ? "rgba(118,190,230,0.44)" : "rgba(158,214,228,0.66)";
+
+  ctx.save();
+  ctx.globalAlpha = depth;
+  ctx.fillStyle = "rgba(0,0,0,0.15)";
+  ctx.fillRect(x + 8, y + 8, w, height);
+  ctx.fillStyle = body;
+  ctx.fillRect(x, y, w, height);
+  ctx.fillStyle = shadow;
+  ctx.fillRect(x + w - 11, y + 6, 11, height - 6);
+
+  ctx.fillStyle = trim;
+  ctx.fillRect(x + 5, y + 8, 3, height - 16);
+  ctx.fillRect(x + w - 11, y + 8, 3, height - 16);
+  for (let fy = y + 36; fy < baseY - 58; fy += 34) ctx.fillRect(x + 8, fy, w - 16, 2);
+
+  ctx.fillStyle = roof;
+  if (variant % 3 === 0) {
+    ctx.beginPath();
+    ctx.moveTo(x - 7, y);
+    ctx.lineTo(x + w / 2, y - 27 - (variant % 2) * 7);
+    ctx.lineTo(x + w + 7, y);
+    ctx.closePath();
+    ctx.fill();
+  } else if (variant % 3 === 1) {
+    ctx.fillRect(x - 5, y - 15, w + 10, 15);
+    for (let c = x + 8; c < x + w - 4; c += 20) ctx.fillRect(c, y - 26, 8, 11);
+  } else {
+    ctx.fillRect(x - 6, y - 10, w + 12, 10);
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y - 10, Math.min(26, w * 0.32), Math.PI, 0);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = roof;
+  for (let c = x + 16 + (variant % 2) * 10; c < x + w - 10; c += 38) {
+    ctx.fillRect(c, y - 33, 7, 20);
+    ctx.fillStyle = isNight ? "rgba(255,218,130,0.24)" : "rgba(255,245,220,0.56)";
+    ctx.fillRect(c + 1, y - 37, 5, 4);
+    ctx.fillStyle = roof;
+  }
+
+  for (let wy = y + 24; wy < baseY - 78; wy += 34) {
+    for (let wx = x + 17; wx < x + w - 16; wx += 28) {
+      const arched = (variant + Math.floor(wx) + Math.floor(wy)) % 2 === 0;
+      ctx.strokeStyle = isNight ? "rgba(255,231,170,0.26)" : "rgba(92,56,38,0.30)";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      if (arched) {
+        ctx.moveTo(wx - 7, wy + 15);
+        ctx.quadraticCurveTo(wx, wy + 3, wx + 7, wy + 15);
+        ctx.lineTo(wx + 7, wy + 25);
+        ctx.lineTo(wx - 7, wy + 25);
+        ctx.closePath();
+      } else {
+        ctx.rect(wx - 7, wy + 5, 14, 20);
+      }
+      ctx.stroke();
+      ctx.fillStyle = glass;
+      ctx.fillRect(wx - 5, wy + 12, 10, 10);
+    }
+  }
+
+  for (let bx = x + 22; bx < x + w - 18; bx += 42) {
+    const by = y + 70 + ((variant + Math.floor(bx)) % 3) * 18;
+    if (by > baseY - 92) continue;
+    ctx.strokeStyle = isNight ? "rgba(18,18,22,0.86)" : "rgba(46,33,28,0.78)";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(bx - 14, by, 28, 5);
+    for (let r = -10; r <= 10; r += 5) {
+      ctx.beginPath();
+      ctx.moveTo(bx + r, by);
+      ctx.lineTo(bx + r, by + 12);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#3f7c4c";
+    ctx.fillRect(bx - 14, by + 2, 28, 5);
+    ctx.fillStyle = ["#e64e5b", "#eabf45", "#f2f0d8"][variant % 3];
+    ctx.beginPath();
+    ctx.arc(bx - 6, by + 1, 3, 0, Math.PI * 2);
+    ctx.arc(bx + 7, by + 2, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const shopY = baseY - 48;
+  ctx.fillStyle = isNight ? "rgba(19,20,25,0.70)" : "rgba(52,42,34,0.48)";
+  ctx.fillRect(x + 9, shopY - 1, w - 18, 34);
+  ctx.fillStyle = glass;
+  ctx.fillRect(x + 16, shopY + 6, Math.max(20, w * 0.24), 20);
+  ctx.fillRect(x + w - 16 - Math.max(20, w * 0.24), shopY + 6, Math.max(20, w * 0.24), 20);
+  drawLvivIndieShopSign(x + 14, shopY - 19, w - 28, variant, isNight);
+
+  ctx.restore();
+}
+
+function drawLvivIndieCafeModule(x, y, variant, timePeriod) {
+  const isNight = timePeriod === "time-night";
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.beginPath();
+  ctx.ellipse(x + 84, y + 90, 100, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  const umbrella = ["#b94236", "#2f7a83", "#81518d"][variant % 3];
+  for (const tx of [x + 42, x + 126]) {
+    ctx.strokeStyle = "#3a2c24";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(tx, y + 44);
+    ctx.lineTo(tx, y + 86);
+    ctx.stroke();
+    ctx.fillStyle = umbrella;
+    ctx.beginPath();
+    ctx.moveTo(tx - 34, y + 47);
+    ctx.quadraticCurveTo(tx, y + 16, tx + 34, y + 47);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,240,210,0.45)";
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.fillStyle = "#815339";
+    ctx.fillRect(tx - 18, y + 68, 36, 6);
+    ctx.strokeStyle = "#3a2c24";
+    ctx.beginPath();
+    ctx.moveTo(tx - 13, y + 74);
+    ctx.lineTo(tx - 18, y + 90);
+    ctx.moveTo(tx + 13, y + 74);
+    ctx.lineTo(tx + 18, y + 90);
+    ctx.stroke();
+  }
+  const glow = ctx.createRadialGradient(x + 84, y + 40, 0, x + 84, y + 40, 78);
+  glow.addColorStop(0, isNight ? "rgba(255,210,120,0.28)" : "rgba(255,213,139,0.18)");
+  glow.addColorStop(1, "rgba(255,210,120,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(x, y, 168, 100);
+  ctx.restore();
+}
+
+function drawLvivIndieSkyline(timePeriod) {
+  if (currentLocation !== 1) return;
+  const isNight = timePeriod === "time-night";
+  const y = GND - 224;
+  ctx.save();
+
+  const skyGlow = ctx.createRadialGradient(W * 0.52, y + 90, 0, W * 0.52, y + 90, W * 0.68);
+  skyGlow.addColorStop(0, isNight ? "rgba(90,108,155,0.14)" : "rgba(255,203,118,0.42)");
+  skyGlow.addColorStop(0.52, isNight ? "rgba(56,69,105,0.08)" : "rgba(255,181,110,0.18)");
+  skyGlow.addColorStop(1, "rgba(255,181,110,0)");
+  ctx.fillStyle = skyGlow;
+  ctx.fillRect(0, 0, W, GND - 106);
+
+  ctx.fillStyle = "rgba(255,255,255,0.42)";
+  for (let i = 0; i < 5; i++) {
+    const cx = ((i * 170 - bgOff * 0.035) % (W + 180)) - 90;
+    const cy = 72 + (i % 3) * 22;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 34, 9, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx + 28, cy + 3, 26, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.globalAlpha = isNight ? 0.40 : 0.62;
+  ctx.fillStyle = isNight ? "#182636" : "#ad7b5a";
+  for (let x = -100 - ((bgOff * 0.06) % 180); x < W + 140; x += 92) {
+    const h = 48 + ((Math.floor(x) % 4) * 12);
+    ctx.fillRect(x, y + 120 - h, 78, h);
+    ctx.beginPath();
+    ctx.moveTo(x - 5, y + 120 - h);
+    ctx.lineTo(x + 39, y + 98 - h);
+    ctx.lineTo(x + 83, y + 120 - h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  const operaX = W / 2 - 92;
+  ctx.fillRect(operaX, y + 68, 184, 58);
+  ctx.fillRect(operaX + 18, y + 42, 148, 26);
+  ctx.beginPath();
+  ctx.moveTo(operaX + 4, y + 42);
+  ctx.lineTo(operaX + 92, y + 4);
+  ctx.lineTo(operaX + 180, y + 42);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillRect(operaX + 42, y + 12, 100, 8);
+  for (let i = 0; i < 7; i++) ctx.fillRect(operaX + 20 + i * 24, y + 72, 9, 54);
+
+  for (const tower of [
+    [W * 0.14, y + 36, 40, 122],
+    [W * 0.79, y + 22, 50, 142],
+    [W * 0.62, y + 52, 34, 102],
+    [W * 0.35, y + 64, 28, 86],
+  ]) {
+    const [tx, ty, tw, th] = tower;
+    ctx.fillRect(tx, ty + 34, tw, th - 34);
+    ctx.beginPath();
+    ctx.moveTo(tx - 5, ty + 34);
+    ctx.lineTo(tx + tw / 2, ty);
+    ctx.lineTo(tx + tw + 5, ty + 34);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(tx + tw / 2 - 2, ty - 14, 4, 16);
+  }
+
+  ctx.globalAlpha = 1;
+  const haze = ctx.createLinearGradient(0, y + 38, 0, GND - 118);
+  haze.addColorStop(0, "rgba(255,225,175,0)");
+  haze.addColorStop(1, isNight ? "rgba(28,40,58,0.42)" : "rgba(255,229,184,0.46)");
+  ctx.fillStyle = haze;
+  ctx.fillRect(0, y, W, GND - y - 112);
+  ctx.restore();
+}
+
+function drawLvivIndieArchitecture(timePeriod) {
+  if (currentLocation !== 1) return;
+  const offFar = (bgOff * 0.14) % 360;
+  const offMid = (bgOff * 0.24) % 520;
+  ctx.save();
+  clipOutsideRoad();
+  for (let base = -360; base < W + 360; base += 360) {
+    const x = base - offFar;
+    drawLvivIndieBuilding(x + 8, 104, 92, H - 150, 10 + base, 0.78, timePeriod);
+    drawLvivIndieBuilding(x + 108, 92, 86, H - 144, 11 + base, 0.78, timePeriod);
+    drawLvivIndieBuilding(x + 204, 112, 104, H - 164, 12 + base, 0.78, timePeriod);
+  }
+  for (let base = -520; base < W + 520; base += 520) {
+    const x = base - offMid;
+    drawLvivIndieBuilding(x - 8, 80, 118, H - 118, 1 + base, 1, timePeriod);
+    drawLvivIndieBuilding(x + 118, 98, 90, H - 152, 2 + base, 1, timePeriod);
+    drawLvivIndieBuilding(x + 218, 72, 108, H - 126, 3 + base, 1, timePeriod);
+    drawLvivIndieBuilding(x + 338, 104, 122, H - 166, 4 + base, 1, timePeriod);
+  }
+  ctx.restore();
+}
+
+function drawLvivIndieRoadside(timePeriod) {
+  if (currentLocation !== 1) return;
+  const off = (bgOff * 0.34) % 560;
+  ctx.save();
+  clipOutsideRoad();
+  for (let base = -560; base < W + 560; base += 560) {
+    const x = base - off;
+    drawLvivIndieCafeModule(x + 20, GND - 108, base, timePeriod);
+    drawLvivIndieCafeModule(W - x - 188, GND - 108, base + 1, timePeriod);
+  }
+  ctx.restore();
+  drawLvivStreetFurniture();
+  drawLvivLivingCityLayer();
+}
+
 function clipOutsideRoad() {
   const horizonY = GND - 132;
   const bottomY = H + 18;
@@ -6580,27 +6863,29 @@ function drawBG() {
   const generatedKyivSkyline = lv.loc === 0 && drawGeneratedKyivSkyline();
   drawStormSkyOverlay();
 
-  if (lv.loc === 1) drawLvivLandmarkSkyline(timePeriod);
+  if (lv.loc === 1) drawLvivIndieSkyline(timePeriod);
 
   if (!generatedKyivSkyline) {
-    const off = (bgOff * 0.25) % 400;
-    for (let bx = -400; bx < W + 400; bx += 400) {
-      const x = bx - off;
-      const warm = lv.loc === 1 ? "#ffe0a3" : "#ffd66b";
-      const cool = lv.loc === 1 ? "#f4c27a" : "#9ed8ff";
-      drawStreetBuilding(x - 8, lv.loc === 1 ? 104 : 92, 112, H - 142, lv.bldA, warm, 0, lv.loc);
-      drawStreetBuilding(x + 112, lv.loc === 1 ? 116 : 118, 82, H - 168, lv.bldB, cool, 1, lv.loc);
-      drawStreetBuilding(x + 210, lv.loc === 1 ? 94 : 74, 72, H - 124, lv.bldC, warm, 2, lv.loc);
-      drawStreetBuilding(x + 300, lv.loc === 1 ? 108 : 104, 92, H - 154, lv.bldB, cool, 3, lv.loc);
-      drawGreetingBuildings(x, lv.loc);
+    if (lv.loc === 1) {
+      drawLvivIndieArchitecture(timePeriod);
+    } else {
+      const off = (bgOff * 0.25) % 400;
+      for (let bx = -400; bx < W + 400; bx += 400) {
+        const x = bx - off;
+        const warm = "#ffd66b";
+        const cool = "#9ed8ff";
+        drawStreetBuilding(x - 8, 92, 112, H - 142, lv.bldA, warm, 0, lv.loc);
+        drawStreetBuilding(x + 112, 118, 82, H - 168, lv.bldB, cool, 1, lv.loc);
+        drawStreetBuilding(x + 210, 74, 72, H - 124, lv.bldC, warm, 2, lv.loc);
+        drawStreetBuilding(x + 300, 104, 92, H - 154, lv.bldB, cool, 3, lv.loc);
+        drawGreetingBuildings(x, lv.loc);
+      }
     }
   }
 
   if (!generatedKyivSkyline) drawKyivMaidanScene();
   drawLvivTram();
-  drawRoadsideLvivCoffeeScene();
-  drawLvivStreetFurniture();
-  drawLvivLivingCityLayer();
+  drawLvivIndieRoadside(timePeriod);
   drawRealRoad(timePeriod);
   if (generatedKyivSkyline) drawKyivRoadsideDetails();
   drawRoadRunTrack();
