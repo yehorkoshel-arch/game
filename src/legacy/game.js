@@ -1419,6 +1419,7 @@ function sfxGameOver() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 let multiplayerMode = false;
+const LVIV_ROADSIDE_VERSION = "ua-signs-v1";
 let gameState = "idle",
   score = 0,
   runCoins = 0,
@@ -5847,7 +5848,52 @@ function drawRoadSign(x, y, label, kind = "direction") {
   ctx.fillStyle = "#56616e";
   ctx.fillRect(x - 4, y + 38, 8, 8);
 
-  if (kind === "repair") {
+  if (kind === "uaWarning") {
+    ctx.fillStyle = "#fff8ef";
+    ctx.beginPath();
+    ctx.moveTo(x, y - 50);
+    ctx.lineTo(x + 31, y + 5);
+    ctx.lineTo(x - 31, y + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#d6342f";
+    ctx.lineWidth = 5;
+    ctx.stroke();
+    ctx.fillStyle = "#1f2933";
+    ctx.font = "bold 18px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("!", x, y - 11);
+    ctx.font = "bold 6px sans-serif";
+    ctx.fillText(label, x, y + 1);
+  } else if (kind === "uaSchool") {
+    ctx.fillStyle = "#e8f4ff";
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x - 32, y - 44, 64, 33, 5) : ctx.rect(x - 32, y - 44, 64, 33);
+    ctx.fill();
+    ctx.strokeStyle = "#1f5fbf";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = "#0057b7";
+    ctx.fillRect(x - 25, y - 38, 16, 8);
+    ctx.fillStyle = "#ffd700";
+    ctx.fillRect(x - 25, y - 30, 16, 8);
+    ctx.fillStyle = "#1f2933";
+    ctx.font = "bold 8px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x + 9, y - 24);
+  } else if (kind === "lvivEntry") {
+    ctx.fillStyle = "#1559b7";
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x - 38, y - 43, 76, 30, 4) : ctx.rect(x - 38, y - 43, 76, 30);
+    ctx.fill();
+    ctx.strokeStyle = "#f8fafc";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#f8fafc";
+    ctx.font = "bold 13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x, y - 23);
+  } else if (kind === "repair") {
     ctx.fillStyle = "#f2c94c";
     ctx.beginPath();
     ctx.moveTo(x, y - 44);
@@ -5939,12 +5985,18 @@ function drawTrafficLight(x, y) {
 function drawRoadsideSigns() {
   const locLabel = currentLocation === 1 ? "\u041b\u044c\u0432\u0456\u0432" : "\u041a\u0438\u0457\u0432";
   const signText = gt("signs");
-  const signs = [
-    { label: locLabel, kind: "direction", y: GND - 2, side: -1, gap: 0 },
-    { label: signText.school, kind: "school", y: GND - 4, side: 1, gap: 210 },
-    { label: signText.repair, kind: "repair", y: GND - 1, side: -1, gap: 420 },
-    { label: signText.metro, kind: "metro", y: GND - 5, side: 1, gap: 620 },
-  ];
+  const signs = currentLocation === 1
+    ? [
+      { label: locLabel, kind: "lvivEntry", y: GND - 2, side: 1, gap: 0, version: LVIV_ROADSIDE_VERSION },
+      { label: signText.school, kind: "uaSchool", y: GND - 4, side: 1, gap: 230, version: LVIV_ROADSIDE_VERSION },
+      { label: signText.repair, kind: "uaWarning", y: GND - 1, side: -1, gap: 450, version: LVIV_ROADSIDE_VERSION },
+    ]
+    : [
+      { label: locLabel, kind: "direction", y: GND - 2, side: -1, gap: 0 },
+      { label: signText.school, kind: "school", y: GND - 4, side: 1, gap: 210 },
+      { label: signText.repair, kind: "repair", y: GND - 1, side: -1, gap: 420 },
+      { label: signText.metro, kind: "metro", y: GND - 5, side: 1, gap: 620 },
+    ];
   const off = (bgOff * 0.62) % 820;
   for (const sign of signs) {
     const x = W + 120 + sign.gap - off;
