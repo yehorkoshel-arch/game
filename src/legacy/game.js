@@ -5279,6 +5279,15 @@ function drawStreetBuilding(x, y, w, h, body, accent, variant = 0, location = 0)
 
   drawCityBuildingWindows(x, y, w, height, accent);
   if (isLviv) {
+    ctx.strokeStyle = isNight ? "rgba(255,220,145,0.18)" : "rgba(94,50,34,0.28)";
+    ctx.lineWidth = 1.2;
+    for (let c = x + 22; c < x + w - 18; c += 34) {
+      ctx.beginPath();
+      ctx.moveTo(c, y + 16);
+      ctx.lineTo(c, baseY - 62);
+      ctx.stroke();
+    }
+
     ctx.strokeStyle = isNight ? "rgba(255,220,145,0.28)" : "rgba(95,54,35,0.30)";
     ctx.lineWidth = 1;
     for (let c = x + 16; c < x + w - 12; c += 30) {
@@ -5287,9 +5296,14 @@ function drawStreetBuilding(x, y, w, h, body, accent, variant = 0, location = 0)
       ctx.arc(c, ay, 7, Math.PI, 0);
       ctx.stroke();
       ctx.strokeRect(c - 7, ay, 14, 17);
+      ctx.fillStyle = variant % 2 ? "#d94d55" : "#e8b43f";
+      ctx.fillRect(c - 8, ay + 17, 16, 3);
+      ctx.fillStyle = "#3f7a49";
+      ctx.fillRect(c - 6, ay + 14, 12, 4);
     }
     ctx.fillStyle = isNight ? "rgba(11,18,32,0.42)" : "rgba(112,57,37,0.20)";
     ctx.fillRect(x + 5, y + 6, w - 10, 3);
+    ctx.fillRect(x + 5, y + 36, w - 10, 2);
     ctx.fillRect(x + 5, baseY - 62, w - 10, 3);
   }
   ctx.restore();
@@ -5439,8 +5453,30 @@ function drawRealRoad(timePeriod) {
     ctx.closePath();
     ctx.fill();
   } else {
-    ctx.fillStyle = isNight ? "#1a271c" : "#6a8d57";
+    const sidewalk = ctx.createLinearGradient(0, horizonY, 0, bottomY);
+    sidewalk.addColorStop(0, isNight ? "#30323a" : "#9b8f7e");
+    sidewalk.addColorStop(0.54, isNight ? "#252832" : "#817667");
+    sidewalk.addColorStop(1, isNight ? "#1c2029" : "#675f55");
+    ctx.fillStyle = sidewalk;
     ctx.fillRect(0, horizonY, W, bottomY - horizonY);
+
+    const cobbleOffset = (bgOff * 0.42) % 24;
+    ctx.strokeStyle = isNight ? "rgba(210,220,230,0.12)" : "rgba(77,61,46,0.23)";
+    ctx.lineWidth = 1;
+    for (let y = horizonY - cobbleOffset; y < bottomY; y += 24) {
+      const t = roadT(y);
+      const half = roadHalfAt(t);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(cx - half * 1.08, y);
+      ctx.moveTo(cx + half * 1.08, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+      for (let x = -24 + ((Math.floor(y) % 48) ? 12 : 0); x < W + 24; x += 24) {
+        if (x > cx - half * 1.12 && x < cx + half * 1.12) continue;
+        ctx.strokeRect(x, y, 22, 12);
+      }
+    }
   }
 
   const road = ctx.createLinearGradient(0, horizonY, 0, bottomY);
@@ -5462,7 +5498,73 @@ function drawRealRoad(timePeriod) {
   ctx.closePath();
   ctx.fill();
 
-  if (!isLvivRoad) {
+  if (isLvivRoad) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx - topHalf, horizonY);
+    ctx.lineTo(cx + topHalf, horizonY);
+    ctx.lineTo(cx + bottomHalf, bottomY);
+    ctx.lineTo(cx - bottomHalf, bottomY);
+    ctx.closePath();
+    ctx.clip();
+
+    const stoneOffset = (bgOff * 0.48) % 36;
+    ctx.strokeStyle = isNight ? "rgba(255,255,255,0.055)" : "rgba(54,48,42,0.14)";
+    ctx.lineWidth = 0.8;
+    for (let y = horizonY - stoneOffset; y < bottomY + 36; y += 18) {
+      const t = roadT(y);
+      const half = roadHalfAt(t);
+      ctx.beginPath();
+      ctx.moveTo(cx - half * 0.92, y);
+      ctx.lineTo(cx + half * 0.92, y);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = isNight ? "rgba(36,31,28,0.72)" : "rgba(58,50,43,0.62)";
+    ctx.lineWidth = 2.1;
+    for (const railRatio of [-0.42, 0.42]) {
+      ctx.beginPath();
+      ctx.moveTo(cx + topHalf * railRatio, horizonY);
+      ctx.lineTo(cx + bottomHalf * railRatio, bottomY);
+      ctx.stroke();
+      ctx.strokeStyle = isNight ? "rgba(235,221,190,0.38)" : "rgba(255,242,207,0.46)";
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.moveTo(cx + topHalf * (railRatio + 0.018), horizonY);
+      ctx.lineTo(cx + bottomHalf * (railRatio + 0.018), bottomY);
+      ctx.stroke();
+      ctx.strokeStyle = isNight ? "rgba(36,31,28,0.72)" : "rgba(58,50,43,0.62)";
+      ctx.lineWidth = 2.1;
+    }
+
+    const crossingBase = ((bgOff * 0.82) % 260) / 260;
+    for (let n = 0; n < 2; n++) {
+      const t = (crossingBase + n * 0.5) % 1;
+      if (t < 0.12 || t > 0.9) continue;
+      const y = horizonY + (bottomY - horizonY) * (t * t);
+      const half = roadHalfAt(roadT(y));
+      ctx.fillStyle = isNight ? "rgba(245,238,220,0.34)" : "rgba(255,250,236,0.58)";
+      for (let s = -3; s <= 3; s++) {
+        ctx.fillRect(cx + s * half * 0.24 - half * 0.07, y, half * 0.14, 4 + 9 * t);
+      }
+    }
+
+    for (let i = 0; i < 3; i++) {
+      const t = ((i * 0.31 + bgOff * 0.0018) % 1) ** 1.45;
+      if (t < 0.28) continue;
+      const half = roadHalfAt(t);
+      const y = horizonY + (bottomY - horizonY) * t;
+      const x = cx + half * (i % 2 ? -0.24 : 0.24);
+      ctx.fillStyle = "rgba(24,25,28,0.42)";
+      ctx.beginPath();
+      ctx.ellipse(x, y, 8 + 13 * t, 3 + 5 * t, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(230,218,190,0.34)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else {
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(cx - topHalf, horizonY);
@@ -5493,8 +5595,8 @@ function drawRealRoad(timePeriod) {
     ctx.restore();
   }
 
-  ctx.strokeStyle = isLvivRoad ? (isNight ? "rgba(14, 20, 30, 0.66)" : "rgba(35, 42, 52, 0.58)") : "#ffd700";
-  ctx.lineWidth = isLvivRoad ? 6 : 4.5;
+  ctx.strokeStyle = isLvivRoad ? (isNight ? "rgba(248, 228, 188, 0.58)" : "rgba(255, 244, 220, 0.82)") : "#ffd700";
+  ctx.lineWidth = isLvivRoad ? 4.6 : 4.5;
   ctx.beginPath();
   ctx.moveTo(cx - topHalf * 0.96, horizonY);
   ctx.lineTo(cx - bottomHalf * 0.96, bottomY);
@@ -5980,6 +6082,146 @@ function drawRoadsideLvivCoffeeScene() {
   ctx.rect(W - 116, GND - 118, 116, 140);
   ctx.clip();
   drawLvivCoffeeScene();
+  ctx.restore();
+}
+
+function drawLvivLandmarkSkyline(timePeriod) {
+  if (currentLocation !== 1) return;
+  const isNight = timePeriod === "time-night";
+  const y = GND - 196;
+  ctx.save();
+  ctx.globalAlpha = isNight ? 0.42 : 0.58;
+  ctx.fillStyle = isNight ? "#1c2634" : "#b98562";
+  ctx.strokeStyle = isNight ? "rgba(230,220,190,0.18)" : "rgba(95,65,45,0.26)";
+  ctx.lineWidth = 1;
+
+  const operaX = W / 2 - 74;
+  ctx.fillRect(operaX, y + 54, 148, 54);
+  ctx.fillRect(operaX + 16, y + 32, 116, 24);
+  ctx.beginPath();
+  ctx.moveTo(operaX + 6, y + 32);
+  ctx.lineTo(operaX + 74, y + 4);
+  ctx.lineTo(operaX + 142, y + 32);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillRect(operaX + 30, y + 8, 88, 8);
+  for (let i = 0; i < 5; i++) {
+    const px = operaX + 24 + i * 25;
+    ctx.fillRect(px, y + 58, 9, 50);
+    ctx.strokeRect(px + 0.5, y + 58.5, 8, 49);
+  }
+  ctx.beginPath();
+  ctx.arc(operaX + 74, y + 4, 8, Math.PI, 0);
+  ctx.fill();
+
+  for (const tower of [
+    [W * 0.2, y + 38, 40, 104],
+    [W * 0.78, y + 22, 46, 122],
+    [W * 0.62, y + 48, 34, 92],
+  ]) {
+    const [tx, ty, tw, th] = tower;
+    ctx.fillRect(tx, ty + 36, tw, th - 36);
+    ctx.beginPath();
+    ctx.moveTo(tx - 4, ty + 36);
+    ctx.lineTo(tx + tw / 2, ty);
+    ctx.lineTo(tx + tw + 4, ty + 36);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(tx + tw / 2 - 2, ty - 14, 4, 16);
+    ctx.beginPath();
+    ctx.moveTo(tx + tw / 2 - 9, ty - 8);
+    ctx.lineTo(tx + tw / 2 + 9, ty - 8);
+    ctx.stroke();
+  }
+
+  const haze = ctx.createLinearGradient(0, y + 30, 0, GND - 126);
+  haze.addColorStop(0, isNight ? "rgba(30,40,58,0)" : "rgba(255,212,150,0)");
+  haze.addColorStop(1, isNight ? "rgba(35,45,62,0.34)" : "rgba(255,218,150,0.36)");
+  ctx.fillStyle = haze;
+  ctx.fillRect(0, y, W, GND - y - 118);
+  ctx.restore();
+}
+
+function drawLvivStreetFurniture() {
+  if (currentLocation !== 1) return;
+  const off = (bgOff * 0.34) % 360;
+  ctx.save();
+  clipOutsideRoad();
+  for (let base = -360; base < W + 360; base += 360) {
+    const x = base - off;
+    for (const side of [-1, 1]) {
+      const anchor = side < 0 ? x + 58 : W - x - 58;
+      const curbX = side < 0 ? Math.min(anchor, W / 2 - ROAD_BOTTOM_HALF - 26) : Math.max(anchor, W / 2 + ROAD_BOTTOM_HALF + 26);
+      const groundY = GND - 8;
+
+      ctx.fillStyle = "#2e7042";
+      ctx.beginPath();
+      ctx.ellipse(curbX, groundY - 72, 28, 22, 0, 0, Math.PI * 2);
+      ctx.ellipse(curbX - 18, groundY - 62, 20, 17, 0, 0, Math.PI * 2);
+      ctx.ellipse(curbX + 18, groundY - 60, 20, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#6a3c25";
+      ctx.fillRect(curbX - 4, groundY - 58, 8, 58);
+
+      ctx.strokeStyle = "#171a20";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(curbX + side * 44, groundY);
+      ctx.lineTo(curbX + side * 44, groundY - 86);
+      ctx.stroke();
+      const glow = ctx.createRadialGradient(curbX + side * 44, groundY - 88, 0, curbX + side * 44, groundY - 88, 25);
+      glow.addColorStop(0, "rgba(255,218,128,0.46)");
+      glow.addColorStop(1, "rgba(255,218,128,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(curbX + side * 44, groundY - 88, 25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffd77d";
+      ctx.beginPath();
+      ctx.arc(curbX + side * 44, groundY - 88, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#6d4934";
+      ctx.fillRect(curbX + side * 76 - 34, groundY - 26, 68, 8);
+      ctx.fillRect(curbX + side * 76 - 29, groundY - 12, 58, 7);
+      ctx.strokeStyle = "#33251d";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(curbX + side * 76 - 24, groundY - 18);
+      ctx.lineTo(curbX + side * 76 - 24, groundY);
+      ctx.moveTo(curbX + side * 76 + 24, groundY - 18);
+      ctx.lineTo(curbX + side * 76 + 24, groundY);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#314050";
+      ctx.lineWidth = 2;
+      const bikeX = curbX - side * 92;
+      ctx.beginPath();
+      ctx.arc(bikeX - 12, groundY - 7, 8, 0, Math.PI * 2);
+      ctx.arc(bikeX + 12, groundY - 7, 8, 0, Math.PI * 2);
+      ctx.moveTo(bikeX - 12, groundY - 7);
+      ctx.lineTo(bikeX, groundY - 22);
+      ctx.lineTo(bikeX + 12, groundY - 7);
+      ctx.moveTo(bikeX, groundY - 22);
+      ctx.lineTo(bikeX + 16, groundY - 26);
+      ctx.stroke();
+
+      const personX = curbX + side * 118;
+      ctx.fillStyle = "rgba(34,36,44,0.52)";
+      ctx.beginPath();
+      ctx.arc(personX, groundY - 40, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(personX - 4, groundY - 35, 8, 20);
+      ctx.strokeStyle = "rgba(34,36,44,0.44)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(personX - 2, groundY - 16);
+      ctx.lineTo(personX - 8, groundY);
+      ctx.moveTo(personX + 2, groundY - 16);
+      ctx.lineTo(personX + 8, groundY);
+      ctx.stroke();
+    }
+  }
   ctx.restore();
 }
 
