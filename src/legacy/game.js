@@ -1420,6 +1420,7 @@ function sfxGameOver() {
 
 let multiplayerMode = false;
 const LVIV_ROADSIDE_VERSION = "ua-signs-v1";
+const LVIV_BG_VERSION = "stable-bg-v2";
 let gameState = "idle",
   score = 0,
   runCoins = 0,
@@ -1866,36 +1867,6 @@ function updateFireControl() {
     weapon === "minigun" ? L.minigun : weapon === "bossblaster" ? L.blaster : weapon ? L.fire : L.menu;
   fireButton.style.display = weapon ? "" : "none";
 }
-const ROBOT_VOICE_UI = {
-  uk: ["Голос Роботрона", "Оберіть мову озвучення"],
-  en: ["Robotron voice", "Choose the spoken language"],
-  de: ["Robotron-Stimme", "Sprache der Sprachausgabe wählen"],
-  fr: ["Voix de Robotron", "Choisissez la langue parlée"],
-  es: ["Voz de Robotron", "Elige el idioma de la voz"],
-};
-function addQuestProgress(id, amount = 1) {
-  const quest = QUESTS.find((item) => item.id === id);
-  if (!quest || questClaimed[id]) return;
-  questStats[id] = Math.min(quest.target, (Number(questStats[id]) || 0) + amount);
-  refreshQuestUI();
-}
-function getActiveMarichkaChainStep() {
-  return MARICHKA_CHAIN[marichkaChainStep] || null;
-}
-function addMarichkaChainProgress(id, amount = 1) {
-  const step = getActiveMarichkaChainStep();
-  if (!step || step.id !== id) return;
-  marichkaChainStats[id] = Math.min(
-    step.target,
-    (Number(marichkaChainStats[id]) || 0) + amount,
-  );
-  refreshQuestUI();
-}
-function syncMarichkaChainProgress() {
-  const step = getActiveMarichkaChainStep();
-  if (!step) return;
-  if (step.id === "project" && marichkaProjectSceneSeen)
-    marichkaChainStats.project = 1;
 const ROBOT_VOICE_UI = {
   uk: ["Голос Роботрона", "Оберіть мову озвучення"],
   en: ["Robotron voice", "Choose the spoken language"],
@@ -5567,31 +5538,59 @@ function drawRealRoad(timePeriod) {
     ctx.closePath();
     ctx.fill();
   } else {
-    // Lviv historic cobblestone sidewalk
-    const sidewalk = ctx.createLinearGradient(0, horizonY, 0, bottomY);
-    sidewalk.addColorStop(0, isNight ? "#2e323c" : "#b2a290");
-    sidewalk.addColorStop(0.54, isNight ? "#242732" : "#9c8c7c");
-    sidewalk.addColorStop(1, isNight ? "#1a1d26" : "#847466");
-    ctx.fillStyle = sidewalk;
+    const plaza = ctx.createLinearGradient(0, horizonY, 0, bottomY);
+    plaza.addColorStop(0, isNight ? "#25313a" : "#68795f");
+    plaza.addColorStop(0.52, isNight ? "#23313b" : "#597655");
+    plaza.addColorStop(1, isNight ? "#17242c" : "#3f6746");
+    ctx.fillStyle = plaza;
     ctx.fillRect(0, horizonY, W, bottomY - horizonY);
 
-    const cobbleOffset = (bgOff * 0.42) % 24;
-    ctx.strokeStyle = isNight ? "rgba(210,220,230,0.12)" : "rgba(70,54,40,0.25)";
-    ctx.lineWidth = 1;
-    for (let y = horizonY - cobbleOffset; y < bottomY; y += 24) {
-      const t = roadT(y);
-      const half = roadHalfAt(t);
+    const sidewalkFill = ctx.createLinearGradient(0, horizonY, 0, bottomY);
+    sidewalkFill.addColorStop(0, isNight ? "#444852" : "#b7ab98");
+    sidewalkFill.addColorStop(1, isNight ? "#2b313b" : "#82786b");
+    const seamOffset = Math.round(bgOff * 0.22) % 54;
+    const drawLvivSidewalkBand = (side) => {
+      ctx.fillStyle = sidewalkFill;
       ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(cx - half * 1.08, y);
-      ctx.moveTo(cx + half * 1.08, y);
-      ctx.lineTo(W, y);
-      ctx.stroke();
-      for (let x = -24 + ((Math.floor(y) % 48) ? 12 : 0); x < W + 24; x += 24) {
-        if (x > cx - half * 1.12 && x < cx + half * 1.12) continue;
-        ctx.strokeRect(x, y, 22, 12);
+      for (let step = 0; step <= 12; step++) {
+        const t = step / 12;
+        const y = horizonY + (bottomY - horizonY) * t;
+        const half = roadHalfAt(t);
+        const inner = cx + side * half * 1.06;
+        const outer = cx + side * half * 1.38;
+        if (step === 0) ctx.moveTo(inner, y);
+        else ctx.lineTo(inner, y);
+        if (step === 12) ctx.lineTo(outer, y);
       }
-    }
+      for (let step = 12; step >= 0; step--) {
+        const t = step / 12;
+        const y = horizonY + (bottomY - horizonY) * t;
+        const half = roadHalfAt(t);
+        ctx.lineTo(cx + side * half * 1.38, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = isNight ? "rgba(232,238,244,0.13)" : "rgba(255,255,255,0.25)";
+      ctx.lineWidth = 1;
+      for (let y = horizonY + 20 - seamOffset; y < bottomY; y += 54) {
+        const t = roadT(y);
+        const half = roadHalfAt(t);
+        ctx.beginPath();
+        ctx.moveTo(cx + side * half * 1.08, y);
+        ctx.lineTo(cx + side * half * 1.34, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = isNight ? "rgba(245,250,255,0.30)" : "rgba(240,238,228,0.62)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx + side * topHalf * 1.055, horizonY);
+      ctx.lineTo(cx + side * bottomHalf * 1.055, bottomY);
+      ctx.stroke();
+    };
+    drawLvivSidewalkBand(-1);
+    drawLvivSidewalkBand(1);
   }
 
   const road = ctx.createLinearGradient(0, horizonY, 0, bottomY);
@@ -6634,7 +6633,7 @@ function drawLvivLandmarkSkyline(timePeriod) {
 
 function drawLvivStreetFurniture() {
   if (currentLocation !== 1) return;
-  const off = (bgOff * 0.34) % 360;
+  const off = Math.round(bgOff * 0.34) % 360;
   ctx.save();
   clipOutsideRoad();
   for (let base = -360; base < W + 360; base += 360) {
@@ -6864,14 +6863,14 @@ function drawLvivStreetFurniture() {
 
 function drawLvivLivingCityLayer() {
   if (currentLocation !== 1) return;
-  const off = (bgOff * 0.26) % 520;
+  const off = Math.round(bgOff * 0.26) % 520;
   ctx.save();
   clipOutsideRoad();
 
   // ─── Tram catenary poles (overhead wire supports) ───
   ctx.strokeStyle = "rgba(32,30,26,0.66)";
   ctx.lineWidth = 3.2;
-  for (let poleX = -80 - ((bgOff * 0.18) % 210); poleX < W + 120; poleX += 210) {
+  for (let poleX = -80 - (Math.round(bgOff * 0.18) % 210); poleX < W + 120; poleX += 210) {
     ctx.beginPath();
     ctx.moveTo(poleX, GND - 14);
     ctx.lineTo(poleX + 8, GND - 226);
@@ -6890,16 +6889,16 @@ function drawLvivLivingCityLayer() {
   ctx.lineWidth = 1.4;
   for (let wireY = GND - 242; wireY <= GND - 208; wireY += 18) {
     ctx.beginPath();
-    ctx.moveTo(-30, wireY + Math.sin(fr * 0.016 + wireY * 0.008) * 3);
-    ctx.quadraticCurveTo(W / 2, wireY + 14, W + 30, wireY + Math.cos(fr * 0.014 + wireY * 0.008) * 3);
+    ctx.moveTo(-30, wireY);
+    ctx.quadraticCurveTo(W / 2, wireY + 12, W + 30, wireY);
     ctx.stroke();
   }
   // Tram power wire (thicker, slightly lower)
   ctx.strokeStyle = "rgba(30,28,24,0.72)";
   ctx.lineWidth = 2.0;
   ctx.beginPath();
-  ctx.moveTo(-30, GND - 248 + Math.sin(fr * 0.012) * 2);
-  ctx.quadraticCurveTo(W / 2, GND - 240, W + 30, GND - 248 + Math.cos(fr * 0.011) * 2);
+  ctx.moveTo(-30, GND - 248);
+  ctx.quadraticCurveTo(W / 2, GND - 240, W + 30, GND - 248);
   ctx.stroke();
 
   for (let base = -520; base < W + 520; base += 520) {
@@ -7391,15 +7390,30 @@ function drawLvivIndieSkyline(timePeriod) {
   ctx.fillStyle = skyGlow;
   ctx.fillRect(0, 0, W, GND - 106);
 
-  // Moving soft parallax clouds
-  ctx.fillStyle = isNight ? "rgba(180,200,240,0.14)" : "rgba(255,255,255,0.48)";
+  // Small soft parallax clouds; avoid stretched ellipses that read as a sky seam.
+  ctx.fillStyle = isNight ? "rgba(180,200,240,0.13)" : "rgba(255,255,255,0.34)";
   for (let i = 0; i < 5; i++) {
-    const cx = ((i * 170 - bgOff * 0.035) % (W + 180)) - 90;
+    const cx = Math.round(((i * 170 - bgOff * 0.02) % (W + 180)) - 90);
     const cy = 72 + (i % 3) * 22;
     ctx.beginPath();
-    ctx.ellipse(cx, cy, 34, 9, 0, 0, Math.PI * 2);
-    ctx.ellipse(cx + 28, cy + 3, 26, 7, 0, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+    ctx.arc(cx + 16, cy - 3, 15, 0, Math.PI * 2);
+    ctx.arc(cx + 32, cy + 2, 11, 0, Math.PI * 2);
+    ctx.arc(cx + 8, cy + 5, 10, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  ctx.fillStyle = isNight ? "rgba(210,220,238,0.32)" : "rgba(68,74,86,0.38)";
+  for (let i = 0; i < 7; i++) {
+    const bx = Math.round(((i * 96 - bgOff * 0.045) % (W + 120)) - 60);
+    const by = y + 24 + (i % 3) * 14;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.quadraticCurveTo(bx + 5, by - 5, bx + 10, by);
+    ctx.quadraticCurveTo(bx + 15, by - 5, bx + 20, by);
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
   }
 
   // Gentle green Lviv hills
@@ -7418,7 +7432,7 @@ function drawLvivIndieSkyline(timePeriod) {
   // Distant city silhouette
   ctx.globalAlpha = isNight ? 0.40 : 0.62;
   ctx.fillStyle = isNight ? "#182636" : "#ad7b5a";
-  for (let x = -100 - ((bgOff * 0.06) % 180); x < W + 140; x += 92) {
+  for (let x = -100 - (Math.round(bgOff * 0.06) % 180); x < W + 140; x += 92) {
     const h = 48 + ((Math.floor(x) % 4) * 12);
     ctx.fillRect(x, y + 120 - h, 78, h);
     ctx.beginPath();
@@ -7463,7 +7477,7 @@ function drawLvivIndieSkyline(timePeriod) {
   ctx.globalAlpha = 1;
   const haze = ctx.createLinearGradient(0, y + 38, 0, GND - 118);
   haze.addColorStop(0, "rgba(255,225,175,0)");
-  haze.addColorStop(1, isNight ? "rgba(28,40,58,0.42)" : "rgba(255,229,184,0.46)");
+  haze.addColorStop(1, isNight ? "rgba(28,40,58,0.24)" : "rgba(255,229,184,0.28)");
   ctx.fillStyle = haze;
   ctx.fillRect(0, y, W, GND - y - 112);
   ctx.restore();
@@ -7471,9 +7485,9 @@ function drawLvivIndieSkyline(timePeriod) {
 
 function drawLvivIndieArchitecture(timePeriod) {
   if (currentLocation !== 1) return;
-  const offVeryFar = (bgOff * 0.08) % 280;
-  const offFar = (bgOff * 0.14) % 360;
-  const offMid = (bgOff * 0.24) % 520;
+  const offVeryFar = Math.round(bgOff * 0.08) % 280;
+  const offFar = Math.round(bgOff * 0.14) % 360;
+  const offMid = Math.round(bgOff * 0.24) % 520;
   ctx.save();
   clipOutsideRoad();
 
@@ -7506,7 +7520,7 @@ function drawLvivIndieArchitecture(timePeriod) {
 
 function drawLvivIndieRoadside(timePeriod) {
   if (currentLocation !== 1) return;
-  const off = (bgOff * 0.34) % 560;
+  const off = Math.round(bgOff * 0.34) % 560;
   ctx.save();
   clipOutsideRoad();
   for (let base = -560; base < W + 560; base += 560) {
