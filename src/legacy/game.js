@@ -1896,6 +1896,36 @@ function syncMarichkaChainProgress() {
   if (!step) return;
   if (step.id === "project" && marichkaProjectSceneSeen)
     marichkaChainStats.project = 1;
+const ROBOT_VOICE_UI = {
+  uk: ["Голос Роботрона", "Оберіть мову озвучення"],
+  en: ["Robotron voice", "Choose the spoken language"],
+  de: ["Robotron-Stimme", "Sprache der Sprachausgabe wählen"],
+  fr: ["Voix de Robotron", "Choisissez la langue parlée"],
+  es: ["Voz de Robotron", "Elige el idioma de la voz"],
+};
+function addQuestProgress(id, amount = 1) {
+  const quest = QUESTS.find((item) => item.id === id);
+  if (!quest || questClaimed[id]) return;
+  questStats[id] = Math.min(quest.target, (Number(questStats[id]) || 0) + amount);
+  refreshQuestUI();
+}
+function getActiveMarichkaChainStep() {
+  return MARICHKA_CHAIN[marichkaChainStep] || null;
+}
+function addMarichkaChainProgress(id, amount = 1) {
+  const step = getActiveMarichkaChainStep();
+  if (!step || step.id !== id) return;
+  marichkaChainStats[id] = Math.min(
+    step.target,
+    (Number(marichkaChainStats[id]) || 0) + amount,
+  );
+  refreshQuestUI();
+}
+function syncMarichkaChainProgress() {
+  const step = getActiveMarichkaChainStep();
+  if (!step) return;
+  if (step.id === "project" && marichkaProjectSceneSeen)
+    marichkaChainStats.project = 1;
 }
 function isMarichkaChainReady() {
   const step = getActiveMarichkaChainStep();
@@ -5537,15 +5567,16 @@ function drawRealRoad(timePeriod) {
     ctx.closePath();
     ctx.fill();
   } else {
+    // Lviv historic cobblestone sidewalk
     const sidewalk = ctx.createLinearGradient(0, horizonY, 0, bottomY);
-    sidewalk.addColorStop(0, isNight ? "#30323a" : "#9b8f7e");
-    sidewalk.addColorStop(0.54, isNight ? "#252832" : "#817667");
-    sidewalk.addColorStop(1, isNight ? "#1c2029" : "#675f55");
+    sidewalk.addColorStop(0, isNight ? "#2e323c" : "#b2a290");
+    sidewalk.addColorStop(0.54, isNight ? "#242732" : "#9c8c7c");
+    sidewalk.addColorStop(1, isNight ? "#1a1d26" : "#847466");
     ctx.fillStyle = sidewalk;
     ctx.fillRect(0, horizonY, W, bottomY - horizonY);
 
     const cobbleOffset = (bgOff * 0.42) % 24;
-    ctx.strokeStyle = isNight ? "rgba(210,220,230,0.12)" : "rgba(77,61,46,0.23)";
+    ctx.strokeStyle = isNight ? "rgba(210,220,230,0.12)" : "rgba(70,54,40,0.25)";
     ctx.lineWidth = 1;
     for (let y = horizonY - cobbleOffset; y < bottomY; y += 24) {
       const t = roadT(y);
@@ -7017,17 +7048,34 @@ function drawLvivIndieShopSign(x, y, w, variant, isNight) {
     "\u0420\u0415\u0421\u0422\u041e",
   ];
   ctx.save();
-  ctx.fillStyle = ["#9f3f34", "#2f6f77", "#7d4f8a", "#3e7f55", "#8f6a32", "#5c4e8e"][variant % 6];
+
+  // Sign glow at night
+  if (isNight) {
+    const glow = ctx.createRadialGradient(x + w / 2, y + 6, 0, x + w / 2, y + 6, w * 0.6);
+    glow.addColorStop(0, "rgba(255,210,120,0.32)");
+    glow.addColorStop(1, "rgba(255,210,120,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(x - 5, y - 5, w + 10, 24);
+  }
+
+  // Signboard body
+  ctx.fillStyle = ["#8b2e24", "#245f67", "#6b3f7a", "#2e6f45", "#7f5a24", "#4c3e7e"][variant % 6];
   ctx.beginPath();
-  ctx.roundRect ? ctx.roundRect(x, y, w, 13, 4) : ctx.rect(x, y, w, 13);
+  if (ctx.roundRect) ctx.roundRect(x, y, w, 15, 4);
+  else ctx.rect(x, y, w, 15);
   ctx.fill();
-  ctx.strokeStyle = isNight ? "rgba(255,232,170,0.45)" : "rgba(90,54,32,0.36)";
-  ctx.lineWidth = 1;
+
+  // Brass border
+  ctx.strokeStyle = isNight ? "#ffd880" : "#d4a450";
+  ctx.lineWidth = 1.2;
   ctx.stroke();
-  ctx.fillStyle = isNight ? "#ffe8a8" : "#f9e4b0";
-  ctx.font = "bold 7px sans-serif";
+
+  // Label text
+  ctx.fillStyle = isNight ? "#ffe8a8" : "#fbf0d0";
+  ctx.font = "bold 8px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(labels[variant % labels.length], x + w / 2, y + 9);
+  ctx.fillText(labels[variant % labels.length], x + w / 2, y + 11);
+  ctx.textAlign = "left";
   ctx.restore();
 }
 
@@ -7036,63 +7084,91 @@ function drawLvivIndieBuilding(x, y, w, h, variant, depth = 1, timePeriod = "tim
   const baseY = Math.min(GND - 140, y + h);
   const height = baseY - y;
   if (height < 42) return;
-  const bodies = ["#c9785a", "#e0b06d", "#b86955", "#d69576", "#9bb0a1", "#d7c18b", "#bf7d95", "#78a0a8"];
-  const trims = ["#f5d9a6", "#f7e2b8", "#ead1a2", "#e9c390"];
-  const roof = ["#783629", "#5d3030", "#6d4730", "#394653"][variant % 4];
+
+  // Lviv historic palette: ochre, terracotta, sage green, dusty rose, warm yellow, slate blue, cream
+  const bodies = ["#d88a68", "#e2b474", "#c26e5a", "#9cb6a4", "#e4c070", "#84a2b6", "#dfc9a0", "#c67890"];
+  const trims = ["#f8e4bc", "#faebd0", "#eed8b0", "#f2caa0"];
+  const roofs = ["#843a2c", "#683636", "#784e36", "#42505e"];
+
   const body = isNight ? ["#5f3d3c", "#625044", "#4f5360", "#6a463d"][variant % 4] : bodies[variant % bodies.length];
   const trim = trims[variant % trims.length];
+  const roof = roofs[variant % roofs.length];
   const shadow = isNight ? "rgba(2,6,14,0.28)" : "rgba(84,44,30,0.16)";
-  const glass = isNight ? "rgba(118,190,230,0.44)" : "rgba(158,214,228,0.66)";
+  const glass = isNight ? "rgba(118,190,230,0.52)" : "rgba(158,214,228,0.72)";
 
   ctx.save();
   ctx.globalAlpha = depth;
+
+  // Building shadow & base block
   ctx.fillStyle = "rgba(0,0,0,0.15)";
   ctx.fillRect(x + 8, y + 8, w, height);
   ctx.fillStyle = body;
   ctx.fillRect(x, y, w, height);
+
+  // Side shade for 3D depth
   ctx.fillStyle = shadow;
   ctx.fillRect(x + w - 11, y + 6, 11, height - 6);
 
+  // Pilasters (corner columns)
   ctx.fillStyle = trim;
-  ctx.fillRect(x + 5, y + 8, 3, height - 16);
-  ctx.fillRect(x + w - 11, y + 8, 3, height - 16);
-  for (let fy = y + 36; fy < baseY - 58; fy += 34) ctx.fillRect(x + 8, fy, w - 16, 2);
+  ctx.fillRect(x + 4, y + 6, 5, height - 12);
+  ctx.fillRect(x + w - 9, y + 6, 5, height - 12);
 
+  // Cornices between floors
+  for (let fy = y + 36; fy < baseY - 54; fy += 34) {
+    ctx.fillStyle = trim;
+    ctx.fillRect(x + 3, fy, w - 6, 3);
+    ctx.fillStyle = "rgba(0,0,0,0.12)";
+    ctx.fillRect(x + 3, fy + 3, w - 6, 1.5);
+  }
+
+  // Roof shape variants
   ctx.fillStyle = roof;
   if (variant % 3 === 0) {
+    // Triangular gabled roof
     ctx.beginPath();
     ctx.moveTo(x - 7, y);
-    ctx.lineTo(x + w / 2, y - 27 - (variant % 2) * 7);
+    ctx.lineTo(x + w / 2, y - 28 - (variant % 2) * 7);
     ctx.lineTo(x + w + 7, y);
     ctx.closePath();
     ctx.fill();
+    // Parapet trim
+    ctx.fillStyle = trim;
+    ctx.fillRect(x - 5, y - 3, w + 10, 3);
   } else if (variant % 3 === 1) {
-    ctx.fillRect(x - 5, y - 15, w + 10, 15);
-    for (let c = x + 8; c < x + w - 4; c += 20) ctx.fillRect(c, y - 26, 8, 11);
+    // Mansard roof with crenelations
+    ctx.fillRect(x - 5, y - 16, w + 10, 16);
+    ctx.fillStyle = trim;
+    for (let c = x + 6; c < x + w - 4; c += 18) {
+      ctx.fillRect(c, y - 24, 7, 10);
+    }
   } else {
+    // Domed / arched roof
     ctx.fillRect(x - 6, y - 10, w + 12, 10);
     ctx.beginPath();
-    ctx.arc(x + w / 2, y - 10, Math.min(26, w * 0.32), Math.PI, 0);
+    ctx.arc(x + w / 2, y - 10, Math.min(26, w * 0.34), Math.PI, 0);
     ctx.fill();
   }
 
+  // Chimneys
   ctx.fillStyle = roof;
   for (let c = x + 16 + (variant % 2) * 10; c < x + w - 10; c += 38) {
-    ctx.fillRect(c, y - 33, 7, 20);
+    ctx.fillRect(c, y - 32, 7, 18);
     ctx.fillStyle = isNight ? "rgba(255,218,130,0.24)" : "rgba(255,245,220,0.56)";
-    ctx.fillRect(c + 1, y - 37, 5, 4);
+    ctx.fillRect(c + 1, y - 36, 5, 4);
     ctx.fillStyle = roof;
   }
 
-  for (let wy = y + 24; wy < baseY - 78; wy += 34) {
-    for (let wx = x + 17; wx < x + w - 16; wx += 28) {
+  // Arched & rectangular windows
+  for (let wy = y + 22; wy < baseY - 74; wy += 34) {
+    for (let wx = x + 16; wx < x + w - 16; wx += 28) {
       const arched = (variant + Math.floor(wx) + Math.floor(wy)) % 2 === 0;
-      ctx.strokeStyle = isNight ? "rgba(255,231,170,0.26)" : "rgba(92,56,38,0.30)";
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = isNight ? "rgba(255,231,170,0.28)" : "rgba(82,48,30,0.34)";
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
       if (arched) {
         ctx.moveTo(wx - 7, wy + 15);
-        ctx.quadraticCurveTo(wx, wy + 3, wx + 7, wy + 15);
+        ctx.quadraticCurveTo(wx, wy + 2, wx + 7, wy + 15);
         ctx.lineTo(wx + 7, wy + 25);
         ctx.lineTo(wx - 7, wy + 25);
         ctx.closePath();
@@ -7101,39 +7177,68 @@ function drawLvivIndieBuilding(x, y, w, h, variant, depth = 1, timePeriod = "tim
       }
       ctx.stroke();
       ctx.fillStyle = glass;
-      ctx.fillRect(wx - 5, wy + 12, 10, 10);
+      ctx.fillRect(wx - 5, wy + 12, 10, 11);
+
+      // Window keystone / cap
+      ctx.fillStyle = trim;
+      ctx.fillRect(wx - 4, wy + 1, 8, 3);
     }
   }
 
+  // Balconies with wrought iron railings & blooming flowers
   for (let bx = x + 22; bx < x + w - 18; bx += 42) {
-    const by = y + 70 + ((variant + Math.floor(bx)) % 3) * 18;
-    if (by > baseY - 92) continue;
-    ctx.strokeStyle = isNight ? "rgba(18,18,22,0.86)" : "rgba(46,33,28,0.78)";
+    const by = y + 68 + ((variant + Math.floor(bx)) % 3) * 18;
+    if (by > baseY - 90) continue;
+
+    // Balcony slab
+    ctx.fillStyle = trim;
+    ctx.fillRect(bx - 15, by - 2, 30, 4);
+
+    // Wrought iron railing
+    ctx.strokeStyle = isNight ? "rgba(18,18,22,0.88)" : "rgba(40,28,24,0.82)";
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(bx - 14, by, 28, 5);
+    ctx.strokeRect(bx - 14, by - 12, 28, 12);
     for (let r = -10; r <= 10; r += 5) {
       ctx.beginPath();
-      ctx.moveTo(bx + r, by);
-      ctx.lineTo(bx + r, by + 12);
+      ctx.moveTo(bx + r, by - 12);
+      ctx.lineTo(bx + r, by);
       ctx.stroke();
     }
-    ctx.fillStyle = "#3f7c4c";
-    ctx.fillRect(bx - 14, by + 2, 28, 5);
-    ctx.fillStyle = ["#e64e5b", "#eabf45", "#f2f0d8"][variant % 3];
+
+    // Flower box with blooms
+    ctx.fillStyle = "#3a7044";
+    ctx.fillRect(bx - 13, by - 4, 26, 5);
+    ctx.fillStyle = ["#e64858", "#f0c040", "#e870a0"][variant % 3];
     ctx.beginPath();
-    ctx.arc(bx - 6, by + 1, 3, 0, Math.PI * 2);
-    ctx.arc(bx + 7, by + 2, 3, 0, Math.PI * 2);
+    ctx.arc(bx - 7, by - 5, 2.5, 0, Math.PI * 2);
+    ctx.arc(bx, by - 6, 2.5, 0, Math.PI * 2);
+    ctx.arc(bx + 7, by - 5, 2.5, 0, Math.PI * 2);
     ctx.fill();
   }
 
+  // Ground floor shop facade
   const shopY = baseY - 48;
   ctx.fillStyle = isNight ? "rgba(19,20,25,0.70)" : "rgba(52,42,34,0.48)";
   ctx.fillRect(x + 9, shopY - 1, w - 18, 34);
   ctx.fillStyle = glass;
   ctx.fillRect(x + 16, shopY + 6, Math.max(20, w * 0.24), 20);
   ctx.fillRect(x + w - 16 - Math.max(20, w * 0.24), shopY + 6, Math.max(20, w * 0.24), 20);
-  drawLvivIndieShopSign(x + 14, shopY - 19, w - 28, variant, isNight);
 
+  // Ukrainian flag or city banner on select buildings
+  if (variant % 3 === 0) {
+    ctx.strokeStyle = "rgba(100,70,40,0.6)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x + 12, shopY - 26);
+    ctx.lineTo(x + 12, shopY - 6);
+    ctx.stroke();
+    ctx.fillStyle = "#0057b7";
+    ctx.fillRect(x + 12, shopY - 26, 16, 6);
+    ctx.fillStyle = "#ffd700";
+    ctx.fillRect(x + 12, shopY - 20, 16, 6);
+  }
+
+  drawLvivIndieShopSign(x + 14, shopY - 19, w - 28, variant, isNight);
   ctx.restore();
 }
 
@@ -7144,14 +7249,35 @@ function drawLvivIndieCafeModule(x, y, variant, timePeriod) {
   ctx.beginPath();
   ctx.ellipse(x + 84, y + 90, 100, 10, 0, 0, Math.PI * 2);
   ctx.fill();
-  const umbrella = ["#b94236", "#2f7a83", "#81518d"][variant % 3];
+
+  const umbrellaColors = ["#b94236", "#2f7a83", "#81518d", "#d48030"];
+  const umbrella = umbrellaColors[variant % umbrellaColors.length];
+
+  // String lights between umbrella posts
+  ctx.strokeStyle = "rgba(255,220,130,0.65)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + 42, y + 26);
+  ctx.quadraticCurveTo(x + 84, y + 36, x + 126, y + 26);
+  ctx.stroke();
+  for (let l = x + 50; l <= x + 118; l += 14) {
+    ctx.fillStyle = isNight ? "#ffe890" : "#ffd460";
+    ctx.beginPath();
+    ctx.arc(l, y + 30 + Math.sin((l - x) * 0.05) * 3, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Outdoor umbrellas & tables
   for (const tx of [x + 42, x + 126]) {
+    // Pole
     ctx.strokeStyle = "#3a2c24";
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(tx, y + 44);
     ctx.lineTo(tx, y + 86);
     ctx.stroke();
+
+    // Umbrella dome
     ctx.fillStyle = umbrella;
     ctx.beginPath();
     ctx.moveTo(tx - 34, y + 47);
@@ -7161,6 +7287,8 @@ function drawLvivIndieCafeModule(x, y, variant, timePeriod) {
     ctx.strokeStyle = "rgba(255,240,210,0.45)";
     ctx.lineWidth = 1.4;
     ctx.stroke();
+
+    // Table
     ctx.fillStyle = "#815339";
     ctx.fillRect(tx - 18, y + 68, 36, 6);
     ctx.strokeStyle = "#3a2c24";
@@ -7170,7 +7298,34 @@ function drawLvivIndieCafeModule(x, y, variant, timePeriod) {
     ctx.moveTo(tx + 13, y + 74);
     ctx.lineTo(tx + 18, y + 90);
     ctx.stroke();
+
+    // Steam on coffee cup
+    ctx.strokeStyle = "rgba(255,255,255,0.65)";
+    ctx.lineWidth = 1.2;
+    const st = Math.sin(fr * 0.09 + tx) * 2;
+    ctx.beginPath();
+    ctx.moveTo(tx - 2, y + 66);
+    ctx.quadraticCurveTo(tx - 5 + st, y + 58, tx, y + 50);
+    ctx.stroke();
   }
+
+  // Chalkboard menu stand
+  ctx.fillStyle = "#2c2824";
+  ctx.beginPath();
+  ctx.moveTo(x + 84, y + 64);
+  ctx.lineTo(x + 76, y + 86);
+  ctx.lineTo(x + 92, y + 86);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#8c6038";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = "#f0e6c8";
+  ctx.font = "bold 6px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("MENU", x + 84, y + 76);
+  ctx.textAlign = "left";
+
   const glow = ctx.createRadialGradient(x + 84, y + 40, 0, x + 84, y + 40, 78);
   glow.addColorStop(0, isNight ? "rgba(255,210,120,0.28)" : "rgba(255,213,139,0.18)");
   glow.addColorStop(1, "rgba(255,210,120,0)");
@@ -7192,7 +7347,8 @@ function drawLvivIndieSkyline(timePeriod) {
   ctx.fillStyle = skyGlow;
   ctx.fillRect(0, 0, W, GND - 106);
 
-  ctx.fillStyle = "rgba(255,255,255,0.42)";
+  // Moving soft parallax clouds
+  ctx.fillStyle = isNight ? "rgba(180,200,240,0.14)" : "rgba(255,255,255,0.48)";
   for (let i = 0; i < 5; i++) {
     const cx = ((i * 170 - bgOff * 0.035) % (W + 180)) - 90;
     const cy = 72 + (i % 3) * 22;
@@ -7202,6 +7358,20 @@ function drawLvivIndieSkyline(timePeriod) {
     ctx.fill();
   }
 
+  // Gentle green Lviv hills
+  ctx.globalAlpha = isNight ? 0.22 : 0.32;
+  ctx.fillStyle = isNight ? "#1c2e22" : "#8caa78";
+  ctx.beginPath();
+  ctx.moveTo(0, y + 104);
+  for (let hx = 0; hx <= W; hx += 32) {
+    const hh = 20 + Math.sin(hx * 0.018 + 0.8) * 14;
+    ctx.lineTo(hx, y + 104 - hh);
+  }
+  ctx.lineTo(W, y + 104);
+  ctx.closePath();
+  ctx.fill();
+
+  // Distant city silhouette
   ctx.globalAlpha = isNight ? 0.40 : 0.62;
   ctx.fillStyle = isNight ? "#182636" : "#ad7b5a";
   for (let x = -100 - ((bgOff * 0.06) % 180); x < W + 140; x += 92) {
@@ -7215,6 +7385,7 @@ function drawLvivIndieSkyline(timePeriod) {
     ctx.fill();
   }
 
+  // Lviv Opera House dome & facade silhouette
   const operaX = W / 2 - 92;
   ctx.fillRect(operaX, y + 68, 184, 58);
   ctx.fillRect(operaX + 18, y + 42, 148, 26);
@@ -7227,6 +7398,7 @@ function drawLvivIndieSkyline(timePeriod) {
   ctx.fillRect(operaX + 42, y + 12, 100, 8);
   for (let i = 0; i < 7; i++) ctx.fillRect(operaX + 20 + i * 24, y + 72, 9, 54);
 
+  // Dominican Church & Cathedral spires
   for (const tower of [
     [W * 0.14, y + 36, 40, 122],
     [W * 0.79, y + 22, 50, 142],
@@ -7255,16 +7427,29 @@ function drawLvivIndieSkyline(timePeriod) {
 
 function drawLvivIndieArchitecture(timePeriod) {
   if (currentLocation !== 1) return;
+  const offVeryFar = (bgOff * 0.08) % 280;
   const offFar = (bgOff * 0.14) % 360;
   const offMid = (bgOff * 0.24) % 520;
   ctx.save();
   clipOutsideRoad();
+
+  // 3rd Far-Distant Parallax Layer (subtle muted buildings)
+  for (let base = -280; base < W + 280; base += 280) {
+    const x = base - offVeryFar;
+    drawLvivIndieBuilding(x + 12, 118, 76, H - 168, 20 + base, 0.52, timePeriod);
+    drawLvivIndieBuilding(x + 104, 110, 82, H - 160, 21 + base, 0.52, timePeriod);
+    drawLvivIndieBuilding(x + 198, 124, 70, H - 174, 22 + base, 0.52, timePeriod);
+  }
+
+  // 2nd Far Parallax Layer
   for (let base = -360; base < W + 360; base += 360) {
     const x = base - offFar;
     drawLvivIndieBuilding(x + 8, 104, 92, H - 150, 10 + base, 0.78, timePeriod);
     drawLvivIndieBuilding(x + 108, 92, 86, H - 144, 11 + base, 0.78, timePeriod);
     drawLvivIndieBuilding(x + 204, 112, 104, H - 164, 12 + base, 0.78, timePeriod);
   }
+
+  // 1st Foreground Parallax Layer
   for (let base = -520; base < W + 520; base += 520) {
     const x = base - offMid;
     drawLvivIndieBuilding(x - 8, 80, 118, H - 118, 1 + base, 1, timePeriod);
