@@ -7775,8 +7775,10 @@ function drawBG() {
   }
 
   if (lv.loc === 0 && !generatedKyivSkyline) drawKyivMaidanScene();
-  drawLvivTram();
-  drawLvivIndieRoadside(timePeriod);
+  if (lv.loc !== 1 || !generatedLvivParallax) {
+    drawLvivTram();
+    drawLvivIndieRoadside(timePeriod);
+  }
   drawRealRoad(timePeriod);
   if (generatedKyivSkyline) drawKyivRoadsideDetails();
   drawRoadRunTrack();
