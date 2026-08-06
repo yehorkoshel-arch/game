@@ -1547,18 +1547,17 @@ const ROAD_LANE_EDGE_RATIOS = [-0.31, 0.31];
 const PUBLIC_BASE_URL = import.meta.env?.BASE_URL || "/";
 const KYIV_SKYLINE_SRC = `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/kyiv-skyline-generated.png`;
 const ROAD_IMAGE_SRC = `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/road-kyiv-night.png`;
-const LVIV_PARALLAX_VERSION = "image-layers-v1";
+const LVIV_PARALLAX_VERSION = "image-layers-v2";
 const LVIV_PARALLAX_SRCS = [
-  `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/lviv-parallax-skyline.png`,
-  `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/lviv-parallax-buildings.png`,
-  `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/lviv-parallax-foreground.png`,
+  `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/lviv-parallax-skyline.png?v=${LVIV_PARALLAX_VERSION}`,
+  `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/lviv-parallax-buildings.png?v=${LVIV_PARALLAX_VERSION}`,
+  `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/lviv-parallax-foreground.png?v=${LVIV_PARALLAX_VERSION}`,
 ];
 const kyivSkylineImage = typeof Image !== "undefined" ? new Image() : null;
 const roadImage = typeof Image !== "undefined" ? new Image() : null;
 const lvivParallaxImages = typeof Image !== "undefined" ? LVIV_PARALLAX_SRCS.map(() => new Image()) : [];
 let kyivSkylineReady = false;
 let roadImageReady = false;
-let lvivParallaxReadyCount = 0;
 let roadOffsetY = 0;
 if (kyivSkylineImage) {
   kyivSkylineImage.onload = () => {
@@ -1579,12 +1578,6 @@ if (roadImage) {
   roadImage.src = ROAD_IMAGE_SRC;
 }
 lvivParallaxImages.forEach((image, index) => {
-  image.onload = () => {
-    lvivParallaxReadyCount = Math.min(LVIV_PARALLAX_SRCS.length, lvivParallaxReadyCount + 1);
-  };
-  image.onerror = () => {
-    lvivParallaxReadyCount = 0;
-  };
   image.src = LVIV_PARALLAX_SRCS[index];
 });
 
@@ -2470,8 +2463,15 @@ function drawLoopedParallaxImage(img, speed, destY, destH, alpha = 1) {
   }
   ctx.restore();
 }
+function isLvivParallaxReady() {
+  return (
+    currentLocation === 1 &&
+    lvivParallaxImages.length === LVIV_PARALLAX_SRCS.length &&
+    lvivParallaxImages.every((img) => img?.complete && img.naturalWidth > 0 && img.naturalHeight > 0)
+  );
+}
 function drawLvivImageParallaxBackground(timePeriod) {
-  if (currentLocation !== 1 || lvivParallaxReadyCount < LVIV_PARALLAX_SRCS.length) return false;
+  if (!isLvivParallaxReady()) return false;
   const isNight = timePeriod === "time-night";
   ctx.save();
   drawLoopedParallaxImage(lvivParallaxImages[0], 0.055, 0, GND - 104, 0.98);
@@ -7723,7 +7723,7 @@ function drawBG() {
     }
   }
 
-  if (!generatedKyivSkyline) drawKyivMaidanScene();
+  if (lv.loc === 0 && !generatedKyivSkyline) drawKyivMaidanScene();
   if (lv.loc !== 1 || !generatedLvivParallax) {
     drawLvivTram();
     drawLvivIndieRoadside(timePeriod);
