@@ -2479,6 +2479,7 @@ function drawLvivImageParallaxBackground(timePeriod) {
   drawLoopedParallaxImage(lvivParallaxImages[0], 0.045, -6, GND - 112, 0.98);
   drawLoopedParallaxImage(lvivParallaxImages[1], 0.11, 42, GND - 46, 0.98);
   drawLoopedParallaxImage(lvivParallaxImages[2], 0.22, GND - 238, 188, 0.9, 0, Math.round(lvivParallaxImages[2].naturalHeight * 0.72));
+  drawLvivParallaxCityFrame(timePeriod);
   drawLvivGeneratedSceneGroundBlend(timePeriod);
 
   const grade = ctx.createLinearGradient(0, 0, 0, H);
@@ -2489,6 +2490,129 @@ function drawLvivImageParallaxBackground(timePeriod) {
   ctx.fillRect(0, 0, W, H);
   ctx.restore();
   return true;
+}
+function drawLvivParallaxCityFrame(timePeriod) {
+  const isNight = timePeriod === "time-night";
+  const baseY = GND - 132;
+  const off = Math.round(bgOff * 0.12) % 420;
+  const palettes = [
+    ["#b9856d", "#6f3d35"],
+    ["#d3a66d", "#82523a"],
+    ["#927d9f", "#514261"],
+    ["#b6a072", "#705b36"],
+    ["#8aa18a", "#415e4a"],
+  ];
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 42, W, baseY - 32);
+  ctx.clip();
+
+  for (let tile = -420 - off; tile < W + 420; tile += 420) {
+    for (let i = 0; i < 5; i++) {
+      const w = 76 + ((i * 17) % 34);
+      const h = 96 + ((i * 31 + tile) % 42);
+      const x = tile + 18 + i * 82;
+      const y = baseY - h;
+      const [body, roof] = palettes[Math.abs(i + tile) % palettes.length];
+      drawLvivParallaxFacade(x, y, w, h, body, roof, isNight, i);
+    }
+  }
+
+  const treeOff = Math.round(bgOff * 0.18) % 240;
+  for (let x = -160 - treeOff; x < W + 220; x += 120) {
+    drawLvivParallaxTree(x + 34, baseY + 5, isNight);
+    drawLvivParallaxLamp(x + 88, baseY + 2, isNight);
+  }
+
+  const glow = ctx.createLinearGradient(0, baseY - 96, 0, baseY + 28);
+  glow.addColorStop(0, "rgba(255,210,128,0)");
+  glow.addColorStop(0.72, isNight ? "rgba(255,190,98,0.18)" : "rgba(255,205,130,0.12)");
+  glow.addColorStop(1, "rgba(10,16,28,0.18)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, baseY - 100, W, 130);
+  ctx.restore();
+}
+function drawLvivParallaxFacade(x, y, w, h, body, roof, isNight, variant) {
+  ctx.save();
+  ctx.fillStyle = "rgba(6,10,18,0.28)";
+  ctx.fillRect(x + 5, y + 7, w, h);
+  ctx.fillStyle = body;
+  ctx.fillRect(x, y, w, h);
+
+  ctx.fillStyle = roof;
+  ctx.beginPath();
+  ctx.moveTo(x - 7, y);
+  ctx.lineTo(x + w * 0.5, y - 24 - (variant % 2) * 8);
+  ctx.lineTo(x + w + 7, y);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,232,170,0.82)";
+  const cols = Math.max(2, Math.floor(w / 24));
+  const rows = Math.max(2, Math.floor(h / 35));
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const wx = x + 10 + c * ((w - 20) / cols);
+      const wy = y + 18 + r * 31;
+      const lit = isNight || (r + c + variant) % 3 === 0;
+      ctx.fillStyle = lit ? "rgba(255,219,128,0.86)" : "rgba(42,64,82,0.72)";
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(wx, wy, 12, 18, 3);
+      else ctx.rect(wx, wy, 12, 18);
+      ctx.fill();
+      if ((r + c + variant) % 2 === 0) {
+        ctx.strokeStyle = "rgba(54,34,28,0.64)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(wx - 3, wy + 21);
+        ctx.lineTo(wx + 15, wy + 21);
+        ctx.stroke();
+      }
+    }
+  }
+
+  ctx.fillStyle = "#4c2f27";
+  ctx.fillRect(x + 8, y + h - 28, w - 16, 22);
+  ctx.fillStyle = "rgba(255,220,120,0.70)";
+  ctx.fillRect(x + 16, y + h - 22, w - 32, 10);
+  ctx.strokeStyle = "rgba(255,236,180,0.32)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+  ctx.restore();
+}
+function drawLvivParallaxTree(x, y, isNight) {
+  ctx.save();
+  ctx.fillStyle = "#4b3024";
+  ctx.fillRect(x - 4, y - 44, 8, 46);
+  ctx.fillStyle = isNight ? "#235037" : "#2f7a4d";
+  for (const [dx, dy, r] of [[-16, -50, 22], [12, -54, 25], [0, -74, 21], [24, -35, 18]]) {
+    ctx.beginPath();
+    ctx.arc(x + dx, y + dy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawLvivParallaxLamp(x, y, isNight) {
+  ctx.save();
+  ctx.strokeStyle = "#302a28";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y - 78);
+  ctx.quadraticCurveTo(x, y - 92, x + 22, y - 92);
+  ctx.stroke();
+  ctx.fillStyle = "#ffd56b";
+  ctx.beginPath();
+  ctx.ellipse(x + 27, y - 91, 8, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  if (isNight) {
+    ctx.fillStyle = "rgba(255,210,92,0.16)";
+    ctx.beginPath();
+    ctx.ellipse(x + 28, y - 58, 34, 42, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 function drawLvivGeneratedSceneGroundBlend(timePeriod) {
   const isNight = timePeriod === "time-night";
