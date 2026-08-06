@@ -6610,130 +6610,226 @@ function drawLvivStreetFurniture() {
     const x = base - off;
     for (const side of [-1, 1]) {
       const anchor = side < 0 ? x + 58 : W - x - 58;
-      const curbX = side < 0 ? Math.min(anchor, W / 2 - ROAD_BOTTOM_HALF - 26) : Math.max(anchor, W / 2 + ROAD_BOTTOM_HALF + 26);
+      const curbX = side < 0
+        ? Math.min(anchor, W / 2 - ROAD_BOTTOM_HALF - 22)
+        : Math.max(anchor, W / 2 + ROAD_BOTTOM_HALF + 22);
       const groundY = GND - 8;
 
-      ctx.fillStyle = "#2e7042";
+      // ─── Linden tree ───
+      ctx.fillStyle = "#4a7c38";
       ctx.beginPath();
-      ctx.ellipse(curbX, groundY - 72, 28, 22, 0, 0, Math.PI * 2);
-      ctx.ellipse(curbX - 18, groundY - 62, 20, 17, 0, 0, Math.PI * 2);
-      ctx.ellipse(curbX + 18, groundY - 60, 20, 18, 0, 0, Math.PI * 2);
+      ctx.ellipse(curbX, groundY - 80, 30, 24, 0, 0, Math.PI * 2);
+      ctx.ellipse(curbX - 18, groundY - 66, 22, 18, 0, 0, Math.PI * 2);
+      ctx.ellipse(curbX + 18, groundY - 64, 22, 20, 0, 0, Math.PI * 2);
       ctx.fill();
+      // Tree highlight (sunlit top)
+      ctx.fillStyle = "rgba(108,168,72,0.56)";
+      ctx.beginPath();
+      ctx.ellipse(curbX - 6, groundY - 90, 16, 12, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      // Tree trunk
       ctx.fillStyle = "#6a3c25";
-      ctx.fillRect(curbX - 4, groundY - 58, 8, 58);
+      ctx.fillRect(curbX - 4, groundY - 60, 8, 60);
+      ctx.fillStyle = "#7e4a30";
+      ctx.fillRect(curbX - 2, groundY - 60, 4, 60);
 
+      // ─── Flower bed ───
       ctx.fillStyle = "#3f7c4b";
-      ctx.fillRect(curbX - side * 132 - 32, groundY - 15, 64, 12);
-      ctx.fillStyle = "#dc4b51";
-      for (let f = -24; f <= 24; f += 12) {
+      ctx.fillRect(curbX - side * 132 - 34, groundY - 14, 68, 12);
+      // Flowers (red, yellow, purple)
+      const flowerColors = ["#e64050", "#eabf40", "#c060d8", "#e07030"];
+      for (let f = -28; f <= 28; f += 10) {
+        ctx.fillStyle = flowerColors[((Math.floor(curbX) + f + base) % 4 + 4) % 4];
         ctx.beginPath();
-        ctx.arc(curbX - side * 132 + f, groundY - 18, 3, 0, Math.PI * 2);
+        ctx.arc(curbX - side * 132 + f, groundY - 17, 4, 0, Math.PI * 2);
+        ctx.fill();
+        // Flower center
+        ctx.fillStyle = "rgba(255,240,180,0.82)";
+        ctx.beginPath();
+        ctx.arc(curbX - side * 132 + f, groundY - 17, 1.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      ctx.strokeStyle = "#171a20";
-      ctx.lineWidth = 4;
+      // ─── Cast-iron lamp post ───
+      const lampX = curbX + side * 44;
+      ctx.fillStyle = "#1e1f26";
+      ctx.fillRect(lampX - 4, groundY - 1, 8, 3);   // base plate
+      ctx.strokeStyle = "#1e1f26";
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.moveTo(curbX + side * 44, groundY);
-      ctx.lineTo(curbX + side * 44, groundY - 86);
+      ctx.moveTo(lampX, groundY - 1);
+      ctx.lineTo(lampX, groundY - 86);
       ctx.stroke();
-      const glow = ctx.createRadialGradient(curbX + side * 44, groundY - 88, 0, curbX + side * 44, groundY - 88, 25);
-      glow.addColorStop(0, "rgba(255,218,128,0.46)");
-      glow.addColorStop(1, "rgba(255,218,128,0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(curbX + side * 44, groundY - 88, 25, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ffd77d";
-      ctx.beginPath();
-      ctx.arc(curbX + side * 44, groundY - 88, 6, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = "#6d4934";
-      ctx.fillRect(curbX + side * 76 - 34, groundY - 26, 68, 8);
-      ctx.fillRect(curbX + side * 76 - 29, groundY - 12, 58, 7);
-      ctx.strokeStyle = "#33251d";
+      // Decorative arm curve
+      ctx.strokeStyle = "#1e1f26";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(curbX + side * 76 - 24, groundY - 18);
-      ctx.lineTo(curbX + side * 76 - 24, groundY);
-      ctx.moveTo(curbX + side * 76 + 24, groundY - 18);
-      ctx.lineTo(curbX + side * 76 + 24, groundY);
+      ctx.moveTo(lampX, groundY - 82);
+      ctx.quadraticCurveTo(lampX + side * 12, groundY - 100, lampX + side * 20, groundY - 96);
       ctx.stroke();
+      // Lamp globe housing
+      ctx.fillStyle = "#1e1f26";
+      ctx.beginPath();
+      ctx.arc(lampX + side * 20, groundY - 98, 9, 0, Math.PI * 2);
+      ctx.fill();
+      // Glow
+      const glow = ctx.createRadialGradient(lampX + side * 20, groundY - 90, 0, lampX + side * 20, groundY - 90, 26);
+      glow.addColorStop(0, "rgba(255,216,124,0.52)");
+      glow.addColorStop(1, "rgba(255,216,124,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(lampX + side * 20, groundY - 90, 26, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffd870";
+      ctx.beginPath();
+      ctx.arc(lampX + side * 20, groundY - 90, 5, 0, Math.PI * 2);
+      ctx.fill();
 
+      // ─── Wooden bench ───
+      const benchX = curbX + side * 78;
+      ctx.fillStyle = "#7a4e28";
+      ctx.fillRect(benchX - 34, groundY - 26, 68, 8);    // seat
+      ctx.fillRect(benchX - 30, groundY - 36, 60, 7);    // backrest
+      // Bench legs
+      ctx.fillStyle = "#2e2920";
+      ctx.fillRect(benchX - 28, groundY - 18, 6, 18);
+      ctx.fillRect(benchX + 22, groundY - 18, 6, 18);
+      // Backrest supports
+      ctx.fillRect(benchX - 24, groundY - 36, 4, 10);
+      ctx.fillRect(benchX + 20, groundY - 36, 4, 10);
+      // Armrests
+      ctx.fillStyle = "#6a3e20";
+      ctx.fillRect(benchX - 34, groundY - 28, 8, 5);
+      ctx.fillRect(benchX + 26, groundY - 28, 8, 5);
+
+      // ─── Tram stop shelter ───
       const stopX = curbX - side * 172;
-      ctx.fillStyle = "rgba(47,68,82,0.62)";
-      ctx.fillRect(stopX - 28, groundY - 66, 56, 56);
-      ctx.fillStyle = "rgba(160,216,232,0.35)";
-      ctx.fillRect(stopX - 22, groundY - 58, 44, 36);
-      ctx.fillStyle = "#25313c";
-      ctx.fillRect(stopX - 32, groundY - 72, 64, 8);
+      ctx.fillStyle = "rgba(44,64,80,0.72)";
+      ctx.fillRect(stopX - 30, groundY - 72, 60, 62);
+      // Glass side panels
+      ctx.fillStyle = "rgba(160,218,234,0.28)";
+      ctx.fillRect(stopX - 24, groundY - 64, 48, 40);
+      // Roof
+      ctx.fillStyle = "#1e2d3c";
+      ctx.fillRect(stopX - 34, groundY - 76, 68, 8);
+      // Timetable board inside
+      ctx.fillStyle = "rgba(240,240,220,0.52)";
+      ctx.fillRect(stopX - 16, groundY - 56, 32, 22);
       ctx.strokeStyle = "rgba(255,255,255,0.22)";
       ctx.lineWidth = 1;
-      ctx.strokeRect(stopX - 22.5, groundY - 58.5, 44, 36);
-
-      ctx.strokeStyle = "#314050";
-      ctx.lineWidth = 2;
-      const bikeX = curbX - side * 92;
+      ctx.strokeRect(stopX - 24.5, groundY - 64.5, 48, 40);
+      // Shelter support pole
+      ctx.strokeStyle = "#1e2d3c";
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(bikeX - 12, groundY - 7, 8, 0, Math.PI * 2);
-      ctx.arc(bikeX + 12, groundY - 7, 8, 0, Math.PI * 2);
-      ctx.moveTo(bikeX - 12, groundY - 7);
-      ctx.lineTo(bikeX, groundY - 22);
-      ctx.lineTo(bikeX + 12, groundY - 7);
-      ctx.moveTo(bikeX, groundY - 22);
-      ctx.lineTo(bikeX + 16, groundY - 26);
+      ctx.moveTo(stopX - 32, groundY - 8);
+      ctx.lineTo(stopX - 32, groundY - 76);
       ctx.stroke();
 
-      const binX = curbX + side * 16;
-      ctx.fillStyle = "#26383a";
-      ctx.fillRect(binX - 8, groundY - 26, 16, 24);
-      ctx.fillStyle = "#41565a";
-      ctx.fillRect(binX - 10, groundY - 30, 20, 5);
+      // ─── Bicycle rack ───
+      const bikeX = curbX - side * 92;
+      ctx.strokeStyle = "#3a4050";
+      ctx.lineWidth = 2;
+      // Bike wheels
+      ctx.beginPath();
+      ctx.arc(bikeX - 12, groundY - 8, 9, 0, Math.PI * 2);
+      ctx.arc(bikeX + 12, groundY - 8, 9, 0, Math.PI * 2);
+      ctx.stroke();
+      // Frame
+      ctx.beginPath();
+      ctx.moveTo(bikeX - 12, groundY - 8);
+      ctx.lineTo(bikeX, groundY - 24);
+      ctx.lineTo(bikeX + 12, groundY - 8);
+      ctx.moveTo(bikeX, groundY - 24);
+      ctx.lineTo(bikeX + 18, groundY - 28);
+      ctx.stroke();
+      // Handlebar
+      ctx.beginPath();
+      ctx.moveTo(bikeX + 14, groundY - 28);
+      ctx.lineTo(bikeX + 22, groundY - 28);
+      ctx.stroke();
 
+      // ─── Trash bin ───
+      const binX = curbX + side * 16;
+      ctx.fillStyle = "#2c4a3c";
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(binX - 9, groundY - 28, 18, 26, 3);
+      else ctx.fillRect(binX - 9, groundY - 28, 18, 26);
+      ctx.fill();
+      ctx.fillStyle = "#3a6050";
+      ctx.fillRect(binX - 11, groundY - 32, 22, 5);
+      // Bin opening
+      ctx.fillStyle = "rgba(0,0,0,0.38)";
+      ctx.fillRect(binX - 5, groundY - 29, 10, 4);
+
+      // ─── Traffic / road sign ───
       const signX = curbX + side * 118;
-      ctx.strokeStyle = "#39434b";
+      ctx.strokeStyle = "#3c4450";
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(signX, groundY);
-      ctx.lineTo(signX, groundY - 54);
+      ctx.lineTo(signX, groundY - 56);
       ctx.stroke();
+      // Round white sign with red ring
       ctx.fillStyle = "#f5f0de";
       ctx.beginPath();
-      ctx.arc(signX, groundY - 60, 13, 0, Math.PI * 2);
+      ctx.arc(signX, groundY - 62, 13, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#d23d37";
+      ctx.strokeStyle = "#cc3a34";
       ctx.lineWidth = 3;
       ctx.stroke();
+      // Blue square info sign below
+      ctx.fillStyle = "#1558b8";
+      ctx.fillRect(signX - 12, groundY - 44, 24, 16);
+      ctx.fillStyle = "#f0f8ff";
+      ctx.font = "bold 7px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Т", signX, groundY - 33);
+      ctx.textAlign = "left";
 
+      // ─── Traffic light (animated) ───
       const lightX = curbX - side * 42;
-      ctx.fillStyle = "#232832";
-      ctx.fillRect(lightX - 5, groundY - 62, 10, 28);
-      for (let i = 0; i < 3; i++) {
-        ctx.fillStyle = i === ((Math.floor(fr / 80) + (side > 0 ? 1 : 0)) % 3) ? ["#e94d45", "#f2c94c", "#45d06e"][i] : "#202833";
+      ctx.fillStyle = "#282c38";
+      ctx.fillRect(lightX - 6, groundY - 68, 12, 32);
+      ctx.fillStyle = "#1c2030";
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(lightX - 12, groundY - 90, 24, 44, 5);
+      else ctx.fillRect(lightX - 12, groundY - 90, 24, 44);
+      ctx.fill();
+      const lightPhase = (Math.floor(fr / 88) + (side > 0 ? 1 : 0)) % 3;
+      for (let li = 0; li < 3; li++) {
+        ctx.fillStyle = li === lightPhase ? ["#e84848", "#f0c83c", "#40cc6a"][li] : "rgba(255,255,255,0.10)";
         ctx.beginPath();
-        ctx.arc(lightX, groundY - 56 + i * 9, 3, 0, Math.PI * 2);
+        ctx.arc(lightX, groundY - 80 + li * 10, 3.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      const personX = curbX + side * 146;
-      ctx.fillStyle = "rgba(34,36,44,0.50)";
+      // ─── Pedestrian silhouette ───
+      const personX = curbX + side * 148;
+      const walkCycle = Math.sin(fr * 0.08 + base * 0.012) * 4;
+      ctx.fillStyle = "rgba(32,34,44,0.55)";
       ctx.beginPath();
-      ctx.arc(personX, groundY - 40, 5, 0, Math.PI * 2);
+      ctx.arc(personX, groundY - 48, 5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillRect(personX - 4, groundY - 35, 8, 20);
-      ctx.strokeStyle = "rgba(34,36,44,0.42)";
-      ctx.lineWidth = 2;
+      ctx.fillRect(personX - 4, groundY - 43, 8, 22);
+      ctx.strokeStyle = "rgba(32,34,44,0.48)";
+      ctx.lineWidth = 2.2;
       ctx.beginPath();
-      ctx.moveTo(personX - 2, groundY - 16);
-      ctx.lineTo(personX - 8, groundY);
-      ctx.moveTo(personX + 2, groundY - 16);
-      ctx.lineTo(personX + 8, groundY);
+      ctx.moveTo(personX - 2, groundY - 22);
+      ctx.lineTo(personX - 9 + walkCycle, groundY - 4);
+      ctx.moveTo(personX + 2, groundY - 22);
+      ctx.lineTo(personX + 9 - walkCycle, groundY - 4);
+      // Arms swing
+      ctx.moveTo(personX - 3, groundY - 36);
+      ctx.lineTo(personX - 12 - walkCycle, groundY - 26);
+      ctx.moveTo(personX + 3, groundY - 36);
+      ctx.lineTo(personX + 12 + walkCycle, groundY - 26);
       ctx.stroke();
     }
   }
   ctx.restore();
 }
+
 
 function drawLvivLivingCityLayer() {
   if (currentLocation !== 1) return;
@@ -6741,22 +6837,122 @@ function drawLvivLivingCityLayer() {
   ctx.save();
   clipOutsideRoad();
 
-  ctx.strokeStyle = "rgba(46, 42, 38, 0.56)";
-  ctx.lineWidth = 1.4;
-  for (let wireY = GND - 238; wireY <= GND - 202; wireY += 18) {
-    ctx.beginPath();
-    ctx.moveTo(-30, wireY + Math.sin(fr * 0.018 + wireY) * 2);
-    ctx.quadraticCurveTo(W / 2, wireY + 12, W + 30, wireY + Math.cos(fr * 0.015 + wireY) * 2);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = "rgba(35, 33, 31, 0.62)";
-  ctx.lineWidth = 3;
+  // ─── Tram catenary poles (overhead wire supports) ───
+  ctx.strokeStyle = "rgba(32,30,26,0.66)";
+  ctx.lineWidth = 3.2;
   for (let poleX = -80 - ((bgOff * 0.18) % 210); poleX < W + 120; poleX += 210) {
     ctx.beginPath();
-    ctx.moveTo(poleX, GND - 12);
-    ctx.lineTo(poleX + 10, GND - 222);
+    ctx.moveTo(poleX, GND - 14);
+    ctx.lineTo(poleX + 8, GND - 226);
+    ctx.stroke();
+    // Crossarm
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(poleX - 18, GND - 220);
+    ctx.lineTo(poleX + 26, GND - 220);
+    ctx.stroke();
+    ctx.lineWidth = 3.2;
+  }
+
+  // ─── Overhead electrical wires (sagging catenary) ───
+  ctx.strokeStyle = "rgba(44,40,36,0.56)";
+  ctx.lineWidth = 1.4;
+  for (let wireY = GND - 242; wireY <= GND - 208; wireY += 18) {
+    ctx.beginPath();
+    ctx.moveTo(-30, wireY + Math.sin(fr * 0.016 + wireY * 0.008) * 3);
+    ctx.quadraticCurveTo(W / 2, wireY + 14, W + 30, wireY + Math.cos(fr * 0.014 + wireY * 0.008) * 3);
     ctx.stroke();
   }
+  // Tram power wire (thicker, slightly lower)
+  ctx.strokeStyle = "rgba(30,28,24,0.72)";
+  ctx.lineWidth = 2.0;
+  ctx.beginPath();
+  ctx.moveTo(-30, GND - 248 + Math.sin(fr * 0.012) * 2);
+  ctx.quadraticCurveTo(W / 2, GND - 240, W + 30, GND - 248 + Math.cos(fr * 0.011) * 2);
+  ctx.stroke();
+
+  for (let base = -520; base < W + 520; base += 520) {
+    const x = base - off;
+    for (const side of [-1, 1]) {
+      const sidewalkX = side < 0 ? x + 82 : W - x - 82;
+      const y = GND - 11;
+
+      // ─── Walking pedestrians (3 variants, animated arms & legs) ───
+      for (let i = 0; i < 3; i++) {
+        const walk = Math.sin(fr * 0.07 + i * 1.7 + base * 0.01);
+        const walkSpeed = 0.055 + i * 0.012;
+        const px = sidewalkX + side * (i * 36 + Math.sin(fr * walkSpeed + i * 2.4) * 16);
+        if (px < -24 || px > W + 24) continue;
+        const py = y - i * 6;
+        // Body color variants
+        const coatColor = ["#4b5876", "#7a3d3a", "#3a5f48"][i % 3];
+        ctx.fillStyle = coatColor;
+        // Head
+        ctx.beginPath();
+        ctx.arc(px, py - 45, 5, 0, Math.PI * 2);
+        ctx.fill();
+        // Body (coat)
+        ctx.fillRect(px - 5, py - 40, 10, 22);
+        // Legs
+        ctx.strokeStyle = "rgba(28,26,30,0.62)";
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(px - 2, py - 19);
+        ctx.lineTo(px - 7 + walk * 2.5, py - 2);
+        ctx.moveTo(px + 2, py - 19);
+        ctx.lineTo(px + 7 - walk * 2.5, py - 2);
+        // Arms swing opposite to legs
+        ctx.moveTo(px - 3, py - 34);
+        ctx.lineTo(px - 11 - walk * 1.5, py - 24);
+        ctx.moveTo(px + 3, py - 34);
+        ctx.lineTo(px + 11 + walk * 1.5, py - 24);
+        ctx.stroke();
+      }
+
+      // ─── Pigeons (animated pecking & walking) ───
+      for (let p = 0; p < 4; p++) {
+        const birdX = sidewalkX + side * (p * 20 + 14);
+        if (birdX < -12 || birdX > W + 12) continue;
+        const isPecking = ((p + Math.floor(fr / 38)) % 4) === 0;
+        const birdY = GND - 5 - (isPecking ? 0 : ((p + Math.floor(fr / 44)) % 2) * 5);
+        ctx.fillStyle = "rgba(92,88,96,0.78)";
+        // Body
+        ctx.beginPath();
+        ctx.ellipse(birdX, birdY - 6, 6, 3.5, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Head & neck
+        ctx.fillStyle = "rgba(72,70,80,0.82)";
+        ctx.beginPath();
+        ctx.arc(birdX + side * 5, isPecking ? birdY - 4 : birdY - 8, 3, 0, Math.PI * 2);
+        ctx.fill();
+        // Beak
+        ctx.fillStyle = "rgba(180,160,100,0.72)";
+        ctx.beginPath();
+        ctx.moveTo(birdX + side * 7, isPecking ? birdY - 3 : birdY - 8);
+        ctx.lineTo(birdX + side * 11, isPecking ? birdY : birdY - 8);
+        ctx.lineTo(birdX + side * 7, isPecking ? birdY - 2 : birdY - 7);
+        ctx.fill();
+        // Wing detail
+        ctx.strokeStyle = "rgba(64,62,72,0.58)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(birdX - 3, birdY - 4);
+        ctx.lineTo(birdX - 7, birdY);
+        ctx.moveTo(birdX + 2, birdY - 4);
+        ctx.lineTo(birdX + 6, birdY);
+        ctx.stroke();
+      }
+
+      // ─── Wind-sway on tree tops (subtle oscillation) ───
+      const swayAmt = Math.sin(fr * 0.022 + sidewalkX * 0.006) * 3;
+      ctx.fillStyle = "rgba(82,136,62,0.22)";
+      ctx.beginPath();
+      ctx.ellipse(sidewalkX + swayAmt, y - 86, 18, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
 
   for (let base = -520; base < W + 520; base += 520) {
     const x = base - off;
