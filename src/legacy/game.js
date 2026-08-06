@@ -2451,15 +2451,17 @@ function drawGeneratedKyivSkyline() {
   drawKyivLargeCityLayer();
   return true;
 }
-function drawLoopedParallaxImage(img, speed, destY, destH, alpha = 1) {
+function drawLoopedParallaxImage(img, speed, destY, destH, alpha = 1, srcTop = 0, srcHeight = img?.naturalHeight || 0) {
   if (!img?.naturalWidth || !img?.naturalHeight) return;
-  const scale = destH / img.naturalHeight;
+  const safeSrcTop = Math.max(0, Math.min(img.naturalHeight - 1, srcTop));
+  const safeSrcHeight = Math.max(1, Math.min(img.naturalHeight - safeSrcTop, srcHeight));
+  const scale = destH / safeSrcHeight;
   const tileW = Math.ceil(img.naturalWidth * scale);
   const offset = Math.round(bgOff * speed) % tileW;
   ctx.save();
   ctx.globalAlpha = alpha;
   for (let x = -offset - tileW; x < W + tileW; x += tileW) {
-    ctx.drawImage(img, x, destY, tileW, destH);
+    ctx.drawImage(img, 0, safeSrcTop, img.naturalWidth, safeSrcHeight, x, destY, tileW, destH);
   }
   ctx.restore();
 }
@@ -2474,9 +2476,10 @@ function drawLvivImageParallaxBackground(timePeriod) {
   if (!isLvivParallaxReady()) return false;
   const isNight = timePeriod === "time-night";
   ctx.save();
-  drawLoopedParallaxImage(lvivParallaxImages[0], 0.055, 0, GND - 104, 0.98);
-  drawLoopedParallaxImage(lvivParallaxImages[1], 0.14, 84, GND - 66, 0.96);
-  drawLoopedParallaxImage(lvivParallaxImages[2], 0.27, GND - 190, 230, 0.95);
+  drawLoopedParallaxImage(lvivParallaxImages[0], 0.045, -6, GND - 112, 0.98);
+  drawLoopedParallaxImage(lvivParallaxImages[1], 0.11, 42, GND - 46, 0.98);
+  drawLoopedParallaxImage(lvivParallaxImages[2], 0.22, GND - 238, 188, 0.9, 0, Math.round(lvivParallaxImages[2].naturalHeight * 0.72));
+  drawLvivGeneratedSceneGroundBlend(timePeriod);
 
   const grade = ctx.createLinearGradient(0, 0, 0, H);
   grade.addColorStop(0, isNight ? "rgba(8,16,42,0.08)" : "rgba(255,196,116,0.06)");
@@ -2486,6 +2489,54 @@ function drawLvivImageParallaxBackground(timePeriod) {
   ctx.fillRect(0, 0, W, H);
   ctx.restore();
   return true;
+}
+function drawLvivGeneratedSceneGroundBlend(timePeriod) {
+  const isNight = timePeriod === "time-night";
+  const horizonY = GND - 132;
+  const cx = W / 2;
+  const topHalf = ROAD_TOP_HALF;
+  const bottomHalf = ROAD_BOTTOM_HALF;
+  const bottomY = H + 24;
+  const roadT = (y) => Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
+  const roadHalfAt = (t) => topHalf + (bottomHalf - topHalf) * t;
+
+  ctx.save();
+  clipOutsideRoad();
+
+  const wallCapY = GND - 150;
+  const plaza = ctx.createLinearGradient(0, wallCapY, 0, GND + 18);
+  plaza.addColorStop(0, isNight ? "rgba(34,40,54,0.62)" : "rgba(112,104,91,0.58)");
+  plaza.addColorStop(0.54, isNight ? "rgba(30,37,48,0.78)" : "rgba(128,119,103,0.72)");
+  plaza.addColorStop(1, isNight ? "rgba(22,29,39,0.94)" : "rgba(96,88,76,0.86)");
+  ctx.fillStyle = plaza;
+  ctx.fillRect(0, wallCapY, W, GND - wallCapY + 30);
+
+  const seamOffset = Math.round(bgOff * 0.18) % 44;
+  ctx.strokeStyle = isNight ? "rgba(240,232,212,0.10)" : "rgba(255,246,224,0.20)";
+  ctx.lineWidth = 1;
+  for (let y = wallCapY + 16 - seamOffset; y < GND + 24; y += 44) {
+    const t = roadT(y);
+    const half = roadHalfAt(t);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(cx - half * 1.07, y);
+    ctx.moveTo(cx + half * 1.07, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+
+  for (const side of [-1, 1]) {
+    const curb = ctx.createLinearGradient(0, horizonY, 0, H);
+    curb.addColorStop(0, isNight ? "rgba(232,222,196,0.42)" : "rgba(255,246,220,0.72)");
+    curb.addColorStop(1, isNight ? "rgba(164,150,122,0.55)" : "rgba(198,181,146,0.80)");
+    ctx.strokeStyle = curb;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(cx + side * topHalf * 1.07, horizonY);
+    ctx.lineTo(cx + side * bottomHalf * 1.07, bottomY);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 function isRoadEvent(type) {
   return roadEvent?.type === type && roadEvent.timer > 0;
@@ -6086,8 +6137,8 @@ function drawRoadsideSigns() {
 
 function drawLvivTram() {
   if (currentLocation !== 1) return;
-  const tramX = W + 190 - ((bgOff * 0.36) % (W + 490));
-  const tramY = GND - 256;
+  const tramX = W + 190 - ((bgOff * 0.28) % (W + 490));
+  const tramY = GND - 228;
   if (tramX < -310 || tramX > W + 140) return;
 
   ctx.save();
@@ -6102,8 +6153,8 @@ function drawLvivTram() {
   ctx.stroke();
 
   // Steel tram rails — metallic with tie sleepers
-  const railY1 = GND - 148;
-  const railY2 = GND - 142;
+  const railY1 = GND - 120;
+  const railY2 = GND - 114;
   const railStart = Math.max(-30, tramX - 50);
   const railEnd = Math.min(W + 30, tramX + 300);
   ctx.strokeStyle = "rgba(152,142,126,0.82)";
@@ -7540,26 +7591,26 @@ function drawLvivIndieArchitecture(timePeriod) {
   // 3rd Far-Distant Parallax Layer (subtle muted buildings)
   for (let base = -280; base < W + 280; base += 280) {
     const x = base - offVeryFar;
-    drawLvivIndieBuilding(x + 12, 118, 76, H - 168, 20 + base, 0.52, timePeriod);
-    drawLvivIndieBuilding(x + 104, 110, 82, H - 160, 21 + base, 0.52, timePeriod);
-    drawLvivIndieBuilding(x + 198, 124, 70, H - 174, 22 + base, 0.52, timePeriod);
+    drawLvivIndieBuilding(x + 12, 96, 96, H - 126, 20 + base, 0.58, timePeriod);
+    drawLvivIndieBuilding(x + 112, 88, 104, H - 118, 21 + base, 0.58, timePeriod);
+    drawLvivIndieBuilding(x + 220, 102, 90, H - 132, 22 + base, 0.58, timePeriod);
   }
 
   // 2nd Far Parallax Layer
   for (let base = -360; base < W + 360; base += 360) {
     const x = base - offFar;
-    drawLvivIndieBuilding(x + 8, 104, 92, H - 150, 10 + base, 0.78, timePeriod);
-    drawLvivIndieBuilding(x + 108, 92, 86, H - 144, 11 + base, 0.78, timePeriod);
-    drawLvivIndieBuilding(x + 204, 112, 104, H - 164, 12 + base, 0.78, timePeriod);
+    drawLvivIndieBuilding(x - 4, 72, 122, H - 92, 10 + base, 0.84, timePeriod);
+    drawLvivIndieBuilding(x + 126, 64, 112, H - 88, 11 + base, 0.84, timePeriod);
+    drawLvivIndieBuilding(x + 246, 84, 132, H - 108, 12 + base, 0.84, timePeriod);
   }
 
   // 1st Foreground Parallax Layer
   for (let base = -520; base < W + 520; base += 520) {
     const x = base - offMid;
-    drawLvivIndieBuilding(x - 8, 80, 118, H - 118, 1 + base, 1, timePeriod);
-    drawLvivIndieBuilding(x + 118, 98, 90, H - 152, 2 + base, 1, timePeriod);
-    drawLvivIndieBuilding(x + 218, 72, 108, H - 126, 3 + base, 1, timePeriod);
-    drawLvivIndieBuilding(x + 338, 104, 122, H - 166, 4 + base, 1, timePeriod);
+    drawLvivIndieBuilding(x - 22, 44, 152, H - 72, 1 + base, 1, timePeriod);
+    drawLvivIndieBuilding(x + 138, 62, 124, H - 96, 2 + base, 1, timePeriod);
+    drawLvivIndieBuilding(x + 270, 38, 146, H - 82, 3 + base, 1, timePeriod);
+    drawLvivIndieBuilding(x + 424, 70, 154, H - 112, 4 + base, 1, timePeriod);
   }
   ctx.restore();
 }
@@ -7724,10 +7775,8 @@ function drawBG() {
   }
 
   if (lv.loc === 0 && !generatedKyivSkyline) drawKyivMaidanScene();
-  if (lv.loc !== 1 || !generatedLvivParallax) {
-    drawLvivTram();
-    drawLvivIndieRoadside(timePeriod);
-  }
+  drawLvivTram();
+  drawLvivIndieRoadside(timePeriod);
   drawRealRoad(timePeriod);
   if (generatedKyivSkyline) drawKyivRoadsideDetails();
   drawRoadRunTrack();
