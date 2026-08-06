@@ -6980,58 +6980,39 @@ function drawLvivLivingCityLayer() {
       ctx.beginPath();
       ctx.ellipse(sidewalkX + swayAmt, y - 86, 18, 12, 0, 0, Math.PI * 2);
       ctx.fill();
-    }
-  }
-  ctx.restore();
-}
 
-  for (let base = -520; base < W + 520; base += 520) {
-    const x = base - off;
-    for (const side of [-1, 1]) {
-      const sidewalkX = side < 0 ? x + 82 : W - x - 82;
-      const y = GND - 11;
-      for (let i = 0; i < 3; i++) {
-        const walk = Math.sin(fr * 0.07 + i * 1.7 + base * 0.01);
-        const px = sidewalkX + side * (i * 34 + Math.sin(fr * 0.018 + i) * 18);
-        if (px < -20 || px > W + 20) continue;
-        const py = y - i * 7;
-        ctx.fillStyle = ["#4b5876", "#7a3d3a", "#365f4b"][i % 3];
-        ctx.beginPath();
-        ctx.arc(px, py - 44, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillRect(px - 4, py - 39, 8, 22);
-        ctx.strokeStyle = "rgba(32, 30, 32, 0.58)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(px - 2, py - 18);
-        ctx.lineTo(px - 7 + walk * 2, py - 2);
-        ctx.moveTo(px + 2, py - 18);
-        ctx.lineTo(px + 7 - walk * 2, py - 2);
-        ctx.moveTo(px - 3, py - 34);
-        ctx.lineTo(px - 10 - walk, py - 25);
-        ctx.moveTo(px + 3, py - 34);
-        ctx.lineTo(px + 10 + walk, py - 25);
-        ctx.stroke();
-      }
+      // ─── Flying Birds in Sky Backdrop ───
+      const flyX = ((fr * 0.8 + base * 1.5) % (W + 200)) - 100;
+      const flyY = 60 + Math.sin(fr * 0.03 + base) * 12;
+      const wingFlap = Math.sin(fr * 0.25) * 4;
+      ctx.strokeStyle = "rgba(60,65,75,0.68)";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(flyX - 8, flyY + wingFlap);
+      ctx.quadraticCurveTo(flyX - 4, flyY - 4, flyX, flyY);
+      ctx.quadraticCurveTo(flyX + 4, flyY - 4, flyX + 8, flyY + wingFlap);
+      ctx.stroke();
 
-      for (let p = 0; p < 4; p++) {
-        const birdX = sidewalkX + side * (p * 21 + 18);
-        const birdY = GND - 4 - ((p + Math.floor(fr / 45)) % 2) * 7;
-        ctx.fillStyle = "rgba(68, 70, 76, 0.72)";
-        ctx.beginPath();
-        ctx.ellipse(birdX, birdY - 5, 5, 3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(birdX + side * 5, birdY - 7, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(54, 54, 60, 0.62)";
+      // ─── Decorative Street Bunting / Banners ───
+      if (side < 0) {
+        ctx.strokeStyle = "rgba(100,80,50,0.5)";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(birdX - 3, birdY - 3);
-        ctx.lineTo(birdX - 7, birdY);
-        ctx.moveTo(birdX + 2, birdY - 3);
-        ctx.lineTo(birdX + 6, birdY);
+        ctx.moveTo(0, GND - 165);
+        ctx.quadraticCurveTo(W / 2, GND - 150, W, GND - 165);
         ctx.stroke();
+        // Flag pennants
+        const flagColors = ["#0057b7", "#ffd700", "#d64b53", "#3f7c4c", "#f0c84b"];
+        for (let fx = 30; fx < W - 30; fx += 34) {
+          const fy = GND - 162 + Math.sin(fx * 0.009) * 10;
+          ctx.fillStyle = flagColors[(Math.floor(fx / 34) + base) % flagColors.length];
+          ctx.beginPath();
+          ctx.moveTo(fx - 5, fy);
+          ctx.lineTo(fx + 5, fy);
+          ctx.lineTo(fx, fy + 8);
+          ctx.closePath();
+          ctx.fill();
+        }
       }
     }
   }
@@ -7236,6 +7217,69 @@ function drawLvivIndieBuilding(x, y, w, h, variant, depth = 1, timePeriod = "tim
     ctx.fillRect(x + 12, shopY - 26, 16, 6);
     ctx.fillStyle = "#ffd700";
     ctx.fillRect(x + 12, shopY - 20, 16, 6);
+  }
+
+  // Bay Window (Oriel / ERKER) on select buildings
+  if (variant % 4 === 1 && w > 80) {
+    const bayX = x + w / 2 - 16;
+    const bayY = y + 30;
+    ctx.fillStyle = trim;
+    ctx.fillRect(bayX - 2, bayY - 2, 36, 44);
+    ctx.fillStyle = body;
+    ctx.fillRect(bayX, bayY, 32, 40);
+    // Bay window glass
+    ctx.fillStyle = glass;
+    ctx.fillRect(bayX + 4, bayY + 6, 24, 26);
+    ctx.strokeStyle = isNight ? "rgba(255,220,140,0.4)" : "rgba(60,35,20,0.5)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bayX + 4, bayY + 6, 24, 26);
+    // Roof cap over bay window
+    ctx.fillStyle = roof;
+    ctx.beginPath();
+    ctx.moveTo(bayX - 4, bayY);
+    ctx.lineTo(bayX + 16, bayY - 12);
+    ctx.lineTo(bayX + 36, bayY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Wrought Iron Hanging Sign (Coffee pot / pretzel shape) on building side
+  if (variant % 2 === 1) {
+    const signSideX = x + w - 3;
+    const signY = shopY - 22;
+    ctx.strokeStyle = "#282018";
+    ctx.lineWidth = 1.5;
+    // Bracket
+    ctx.beginPath();
+    ctx.moveTo(signSideX, signY);
+    ctx.lineTo(signSideX + 14, signY);
+    ctx.lineTo(signSideX + 14, signY + 12);
+    ctx.stroke();
+    // Hanging icon plate
+    ctx.fillStyle = "#c89b48";
+    ctx.beginPath();
+    ctx.arc(signSideX + 14, signY + 14, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#382414";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Facade Wall Lanterns at shop height
+  for (const lx of [x + 6, x + w - 6]) {
+    ctx.fillStyle = "#201c18";
+    ctx.fillRect(lx - 2, shopY + 2, 4, 8);
+    if (isNight) {
+      const lGlow = ctx.createRadialGradient(lx, shopY + 6, 0, lx, shopY + 6, 12);
+      lGlow.addColorStop(0, "rgba(255,210,120,0.65)");
+      lGlow.addColorStop(1, "rgba(255,210,120,0)");
+      ctx.fillStyle = lGlow;
+      ctx.beginPath();
+      ctx.arc(lx, shopY + 6, 12, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#ffda78";
+    ctx.fillRect(lx - 1.5, shopY + 4, 3, 4);
   }
 
   drawLvivIndieShopSign(x + 14, shopY - 19, w - 28, variant, isNight);
