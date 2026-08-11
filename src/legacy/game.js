@@ -2031,10 +2031,17 @@ function drawTimeOfDaySky(lv) {
   const period = getMenuTimeOfDay().className;
   const sky = ctx.createLinearGradient(0, 0, 0, GND);
   if (period === "time-night") {
-    sky.addColorStop(0, "#07122f");
-    sky.addColorStop(0.58, "#111834");
-    sky.addColorStop(1, lv.sky);
+    sky.addColorStop(0, "#ffad42");
+    sky.addColorStop(0.24, "#ffd35d");
+    sky.addColorStop(0.52, "#8fd6ff");
+    sky.addColorStop(1, "#126fe6");
     ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+    const nightTone = ctx.createLinearGradient(0, 0, 0, GND);
+    nightTone.addColorStop(0, "rgba(12,18,52,0.30)");
+    nightTone.addColorStop(0.58, "rgba(10,28,82,0.22)");
+    nightTone.addColorStop(1, "rgba(4,16,44,0.34)");
+    ctx.fillStyle = nightTone;
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#f8f1c6";
     ctx.beginPath();
@@ -2051,9 +2058,10 @@ function drawTimeOfDaySky(lv) {
       ctx.fillRect(sx, sy, i % 4 === 0 ? 2 : 1, i % 5 === 0 ? 2 : 1);
     }
   } else if (period === "time-morning") {
-    sky.addColorStop(0, "#f3a35f");
-    sky.addColorStop(0.5, "#6da7d4");
-    sky.addColorStop(1, lv.sky);
+    sky.addColorStop(0, "#ffb13d");
+    sky.addColorStop(0.25, "#ffdc68");
+    sky.addColorStop(0.52, "#91dcff");
+    sky.addColorStop(1, "#1778f2");
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "rgba(255,218,105,0.9)";
@@ -2061,9 +2069,10 @@ function drawTimeOfDaySky(lv) {
     ctx.arc(96, 82, 34, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    sky.addColorStop(0, "#54a9e8");
-    sky.addColorStop(0.58, "#2e78b0");
-    sky.addColorStop(1, lv.sky);
+    sky.addColorStop(0, "#ffbf4d");
+    sky.addColorStop(0.25, "#ffe070");
+    sky.addColorStop(0.52, "#93ddff");
+    sky.addColorStop(1, "#1478f4");
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff6a6";
@@ -2284,8 +2293,8 @@ function drawKyivBridge(x, y, w, h) {
 function drawKyivDistantLayer() {
   const off = kyivParallaxOffset(0.08, 520);
   ctx.save();
-  ctx.globalAlpha = 0.72;
-  ctx.fillStyle = "rgba(78, 106, 132, 0.72)";
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = "rgba(68, 105, 142, 0.88)";
   for (let x = -520 - off; x < W + 520; x += 520) {
     drawKyivBridge(x + 28, GND - 146, 176, 30);
     drawKyivOfficeTower(x + 222, GND - 220, 46, 96, "#405a72", "#9ad9f2");
@@ -2296,7 +2305,7 @@ function drawKyivDistantLayer() {
   }
   const fog = ctx.createLinearGradient(0, GND - 204, 0, GND - 92);
   fog.addColorStop(0, "rgba(170, 205, 220, 0)");
-  fog.addColorStop(1, "rgba(185, 215, 224, 0.26)");
+  fog.addColorStop(1, "rgba(188, 224, 240, 0.14)");
   ctx.fillStyle = fog;
   ctx.fillRect(0, GND - 210, W, 124);
   ctx.restore();
@@ -2434,7 +2443,7 @@ function drawGeneratedKyivSkyline() {
     const destY = skylineBottomY - drawH;
     const offset = (bgOff * 0.12) % tileW;
     ctx.save();
-    ctx.globalAlpha = 0.34;
+    ctx.globalAlpha = 0.58;
     for (let x = -offset - tileW; x < W + tileW; x += tileW) {
       ctx.drawImage(img, 0, srcCropY, img.naturalWidth, srcCropH, x, destY, tileW, drawH);
     }
