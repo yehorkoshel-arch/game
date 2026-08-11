@@ -2012,9 +2012,9 @@ function getMenuTimeOfDay(date = new Date()) {
   if (settingTimeOfDay === "night")
     return { className: "time-night", label: "\u041d\u0456\u0447" };
   const hour = date.getHours();
-  if (hour >= 5 && hour < 11)
+  if (hour >= 6 && hour < 12)
     return { className: "time-morning", label: "\u0420\u0430\u043d\u043e\u043a" };
-  if (hour >= 11 && hour < 19)
+  if (hour >= 12 && hour < 18)
     return { className: "time-day", label: "\u0414\u0435\u043d\u044c" };
   return { className: "time-night", label: "\u041d\u0456\u0447" };
 }
@@ -3483,8 +3483,11 @@ function showScreen(id) {
   setActiveScreen(id);
   if (id !== "sGame") updateEndPanel();
   updatePausePanel();
-  if (id === "sMenu") updateQuestReadyBadge();
-  if (id === "sMenu") updateAchievementReadyBadge();
+  if (id === "sMenu") {
+    document.getElementById("sMenu")?.classList.add("menu-appearing");
+    updateQuestReadyBadge();
+    updateAchievementReadyBadge();
+  }
   if (id === "sQuests") buildQuests();
   if (id === "sAchievements") buildAchievements();
   if (id === "sCollection") buildCollection();
