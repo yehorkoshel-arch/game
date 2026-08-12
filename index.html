@@ -4,6 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Kyiv Runner</title>
+    <script>
+      (() => {
+        const VIRTUAL_WIDTH = 680;
+        const VIRTUAL_HEIGHT = 520;
+        const updateKyivRunnerViewport = () => {
+          const viewport = window.visualViewport;
+          const width = viewport?.width || window.innerWidth || VIRTUAL_WIDTH;
+          const height = viewport?.height || window.innerHeight || VIRTUAL_HEIGHT;
+          const scale = Math.max(0.1, Math.min(width / VIRTUAL_WIDTH, height / VIRTUAL_HEIGHT));
+          const root = document.documentElement;
+          root.style.setProperty('--kyiv-runner-scale', String(scale));
+          root.style.setProperty('--kyiv-runner-stage-width', `${Math.round(VIRTUAL_WIDTH * scale)}px`);
+          root.style.setProperty('--kyiv-runner-stage-height', `${Math.round(VIRTUAL_HEIGHT * scale)}px`);
+        };
+
+        window.__updateKyivRunnerViewport = updateKyivRunnerViewport;
+        updateKyivRunnerViewport();
+        window.addEventListener('resize', updateKyivRunnerViewport, { passive: true });
+        window.addEventListener('orientationchange', updateKyivRunnerViewport, { passive: true });
+        window.visualViewport?.addEventListener('resize', updateKyivRunnerViewport, { passive: true });
+      })();
+    </script>
     <script type="importmap">
 {
   "imports": {
