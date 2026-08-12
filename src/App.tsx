@@ -12,6 +12,27 @@ import { TutorialScreen } from './components/TutorialScreen';
 
 export function App() {
   useEffect(() => {
+    const VIRTUAL_WIDTH = 680;
+    const VIRTUAL_HEIGHT = 520;
+    const updateStageScale = () => {
+      const viewportWidth = window.innerWidth || VIRTUAL_WIDTH;
+      const viewportHeight = window.innerHeight || VIRTUAL_HEIGHT;
+      const scale = Math.max(0.1, Math.min(viewportWidth / VIRTUAL_WIDTH, viewportHeight / VIRTUAL_HEIGHT));
+      document.documentElement.style.setProperty('--kyiv-runner-scale', String(scale));
+      document.documentElement.style.setProperty('--kyiv-runner-stage-width', `${Math.round(VIRTUAL_WIDTH * scale)}px`);
+      document.documentElement.style.setProperty('--kyiv-runner-stage-height', `${Math.round(VIRTUAL_HEIGHT * scale)}px`);
+    };
+
+    updateStageScale();
+    window.addEventListener('resize', updateStageScale);
+    window.addEventListener('orientationchange', updateStageScale);
+    return () => {
+      window.removeEventListener('resize', updateStageScale);
+      window.removeEventListener('orientationchange', updateStageScale);
+    };
+  }, []);
+
+  useEffect(() => {
     const win = window as Window & {
       __kyivRunnerFinishIntroRequested?: boolean;
       __kyivRunnerStartIntroRequested?: boolean;
