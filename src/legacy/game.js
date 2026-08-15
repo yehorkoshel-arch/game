@@ -11849,6 +11849,23 @@ function isRoadHazard(type) {
     type === "traffic_car"
   );
 }
+function isBulletDestroyable(o) {
+  if (!o) return false;
+  return (
+    o.type === "tck" ||
+    o.type === "cop" ||
+    o.type === "boss_dancer" ||
+    o.type === "scooter" ||
+    o.type === "traffic_car" ||
+    o.type === "cone" ||
+    o.type === "hole" ||
+    o.type === "puddle" ||
+    o.type === "oil" ||
+    o.type === "crosswalk" ||
+    o.type === "kiosk" ||
+    o.type === "bollard"
+  );
+}
 function oRect(o) {
   if (o.type === "hole") {
     const p = getSmallRoadPoint(o, 0);
@@ -14018,14 +14035,9 @@ function update() {
     obs = obs.filter((o) => {
       const isEnemy =
         o.type === "tck" || o.type === "cop" || o.type === "boss_dancer";
-      const isMinigunTarget = b.type === "minigun" && isMinigunDestroyable(o);
-      const isLvivObject =
-        currentLocation === 1 &&
-        (b.type === "minigun"
-          ? isMinigunDestroyable(o)
-          : o.type === "kiosk" || o.type === "bollard");
-      const laneMatches = isMinigunTarget || b.lane === o.lane;
-      if (hitTarget || !laneMatches || (!isEnemy && !isLvivObject)) return true;
+      const destroyable = isBulletDestroyable(o);
+      const laneMatches = b.type === "minigun" || b.lane === o.lane;
+      if (hitTarget || !laneMatches || !destroyable) return true;
       const br =
         b.type === "minigun"
           ? {
@@ -15104,4 +15116,3 @@ const LEVEL2_DIALOG = [
 ];
 
 export {};
-
