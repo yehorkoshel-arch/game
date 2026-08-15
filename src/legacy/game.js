@@ -2527,6 +2527,7 @@ function drawLvivParallaxCityFrame(timePeriod) {
   ctx.clip();
 
   drawLvivRynokHorizon(baseY, isNight);
+  drawLvivExtraSkylineSilhouettes(baseY, isNight);
 
   for (let tile = -448 - off; tile < W + 448; tile += 448) {
     for (let i = 0; i < 6; i++) {
@@ -2553,6 +2554,64 @@ function drawLvivParallaxCityFrame(timePeriod) {
   ctx.fillRect(0, baseY - 100, W, 130);
   ctx.restore();
 }
+
+function drawLvivExtraSkylineSilhouettes(baseY, isNight) {
+  ctx.save();
+  const far = isNight ? "rgba(34,48,70,0.48)" : "rgba(92,111,119,0.38)";
+  const warm = isNight ? "rgba(255,204,112,0.58)" : "rgba(255,226,166,0.42)";
+
+  // High Castle hill silhouette on the left side of the horizon.
+  ctx.fillStyle = isNight ? "rgba(24,58,52,0.42)" : "rgba(76,123,85,0.34)";
+  ctx.beginPath();
+  ctx.moveTo(8, baseY - 54);
+  ctx.quadraticCurveTo(78, baseY - 130, 162, baseY - 72);
+  ctx.quadraticCurveTo(224, baseY - 112, 292, baseY - 56);
+  ctx.lineTo(292, baseY + 8);
+  ctx.lineTo(8, baseY + 8);
+  ctx.closePath();
+  ctx.fill();
+
+  // Small observation mound and cross, readable but kept behind gameplay.
+  ctx.fillStyle = far;
+  ctx.fillRect(128, baseY - 112, 20, 52);
+  ctx.fillRect(119, baseY - 68, 38, 10);
+  ctx.strokeStyle = warm;
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(138, baseY - 124);
+  ctx.lineTo(138, baseY - 142);
+  ctx.moveTo(130, baseY - 134);
+  ctx.lineTo(146, baseY - 134);
+  ctx.stroke();
+
+  // St. George-inspired dome and side towers on the right.
+  const x = W - 156;
+  const y = baseY - 92;
+  ctx.fillStyle = far;
+  ctx.fillRect(x - 38, y + 28, 76, 82);
+  ctx.fillRect(x - 72, y + 44, 26, 66);
+  ctx.fillRect(x + 46, y + 44, 26, 66);
+  ctx.fillStyle = isNight ? "#c99a44" : "#d2a446";
+  ctx.beginPath();
+  ctx.arc(x, y + 30, 38, Math.PI, 0);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x - 59, y + 45, 16, Math.PI, 0);
+  ctx.arc(x + 59, y + 45, 16, Math.PI, 0);
+  ctx.fill();
+  ctx.strokeStyle = warm;
+  ctx.lineWidth = 1.7;
+  for (const cx of [x, x - 59, x + 59]) {
+    ctx.beginPath();
+    ctx.moveTo(cx, y - 14);
+    ctx.lineTo(cx, y - 29);
+    ctx.moveTo(cx - 6, y - 22);
+    ctx.lineTo(cx + 6, y - 22);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawLvivVisibleRatusha(baseY, isNight) {
   const glow = isNight ? "rgba(255,204,103,0.88)" : "rgba(255,226,154,0.76)";
   const towerX = W / 2 - 36;
@@ -2944,10 +3003,15 @@ function drawLvivForegroundIdentity(isNight) {
   };
 
   // Background-only Lviv lion easter eggs, lifted away from road and sidewalks.
-  drawTinyLion(W / 2 - 88, GND - 166, 1, 0.42);
-  drawTinyLion(W / 2 + 88, GND - 166, -1, 0.42);
-  drawTinyLion(96, GND - 178, 1, 0.34);
-  drawTinyLion(W - 96, GND - 178, -1, 0.34);
+  drawTinyLion(W / 2 - 94, GND - 166, 1, 0.52);
+  drawTinyLion(W / 2 + 94, GND - 166, -1, 0.52);
+  drawTinyLion(96, GND - 178, 1, 0.40);
+  drawTinyLion(W - 96, GND - 178, -1, 0.40);
+  ctx.fillStyle = isNight ? "rgba(92,68,48,0.82)" : "rgba(126,92,62,0.70)";
+  ctx.fillRect(W / 2 - 16, GND - 151, 32, 10);
+  ctx.fillStyle = isNight ? "rgba(255,211,110,0.20)" : "rgba(255,198,76,0.12)";
+  ctx.fillRect(W / 2 - 19, GND - 155, 38, 4);
+  drawTinyLion(W / 2, GND - 160, 1, 0.36);
 
   const signX = W - 104;
   const signY = GND - 164;
@@ -3847,7 +3911,7 @@ function updateEndPanel() {
   panel.classList.toggle("active", active);
   if (!active) return;
   const levelName = getLevelNames(currentLocation, lang)[getPlayableLevel(currentLevel)] || "";
-  const scoreLine = `${score} ${t().pts || "pts"} � ${runCoins}\u20b4`;
+  const scoreLine = `${score} ${t().pts || "pts"} В· ${runCoins} РјРѕРЅРµС‚`;
   if (title) {
     title.textContent = isOver
       ? "\u0421\u043f\u0440\u043e\u0431\u0443\u0439 \u0449\u0435 \u0440\u0430\u0437"
@@ -6241,8 +6305,7 @@ function drawRealRoad(timePeriod) {
         ctx.stroke();
       }
     }
-    ctx.fillStyle = isNight ? "rgba(255,238,204,0.10)" : "rgba(255,255,255,0.13)";
-    ctx.strokeStyle = isNight ? "rgba(18,17,18,0.26)" : "rgba(48,42,36,0.27)";
+    ctx.strokeStyle = isNight ? "rgba(18,17,18,0.28)" : "rgba(48,42,36,0.30)";
     ctx.lineWidth = 0.8;
     for (let y = horizonY + (bottomY - horizonY) * 0.54 - (stoneOffset % 24); y < bottomY + 34; y += 21) {
       const t = roadT(y);
@@ -6252,6 +6315,11 @@ function drawRealRoad(timePeriod) {
       for (let x = cx - half * 0.86 + stagger; x < cx + half * 0.86; x += cell) {
         const rw = 8 + 11 * t;
         const rh = 3 + 5 * t;
+        const shade = Math.sin((Math.floor(x * 0.43) * 12.9898 + Math.floor(y * 0.61) * 78.233) * 0.017);
+        const alpha = Math.max(0.08, Math.min(0.22, 0.14 + shade * 0.045 + t * 0.025));
+        ctx.fillStyle = isNight
+          ? `rgba(${shade > 0 ? 255 : 198},${shade > 0 ? 242 : 214},${shade > 0 ? 212 : 184},${alpha})`
+          : `rgba(${shade > 0 ? 255 : 188},${shade > 0 ? 255 : 178},${shade > 0 ? 246 : 166},${alpha})`;
         ctx.beginPath();
         ctx.ellipse(x, y, rw, rh, 0.08 * Math.sin(x), 0, Math.PI * 2);
         ctx.fill();
@@ -6690,11 +6758,30 @@ function drawRoadsideSigns() {
 
 function drawLvivTram() {
   if (currentLocation !== 1) return;
-  const tramX = W + 190 - ((bgOff * 0.28) % (W + 490));
+  const eventMode = isRoadEvent("lviv_tram");
+  const eventProgress = eventMode ? 1 - Math.max(0, Math.min(1, roadEvent.timer / 520)) : 0;
+  const tramX = eventMode
+    ? W + 120 - eventProgress * (W + 360)
+    : W + 190 - ((bgOff * 0.28) % (W + 490));
   const tramY = GND - 228;
   if (tramX < -310 || tramX > W + 140) return;
 
   ctx.save();
+  if (eventMode) {
+    ctx.save();
+    ctx.fillStyle = "rgba(8,12,26,0.82)";
+    ctx.strokeStyle = "rgba(255,211,110,0.72)";
+    ctx.lineWidth = 1.5;
+    if (ctx.roundRect) ctx.roundRect(tramX + 58, tramY - 42, 112, 23, 7);
+    else ctx.rect(tramX + 58, tramY - 42, 112, 23);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#ffdf78";
+    ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("РґР·РµРЅСЊ-РґР·РµРЅСЊ!", tramX + 114, tramY - 27);
+    ctx.restore();
+  }
 
   // Overhead tram wire with gentle sway
   ctx.strokeStyle = "rgba(38,34,28,0.72)";
@@ -8333,7 +8420,10 @@ function drawBG() {
     drawLvivIndieRoadside(timePeriod);
   }
   drawRealRoad(timePeriod);
-  if (lv.loc === 1 && generatedLvivParallax) drawLvivForegroundIdentity(timePeriod === "time-night");
+  if (lv.loc === 1 && generatedLvivParallax) {
+    if (isRoadEvent("lviv_tram")) drawLvivTram();
+    drawLvivForegroundIdentity(timePeriod === "time-night");
+  }
   if (generatedKyivSkyline) drawKyivRoadsideDetails();
   drawRoadRunTrack();
   drawRoadsideSigns();
@@ -8535,13 +8625,11 @@ function drawSecretRouteEntrance() {
   ctx.textAlign = "center";
   const routeLabel = secretRoute.entering
     ? "\u0422\u0423\u041d\u0415\u041b\u042c"
-    : near
-      ? "\u25bc \u0423\u0412\u0406\u0419\u0422\u0418"
-      : secretRoute.id === "underpass"
-        ? "\u041f\u0406\u0414\u0417\u0415\u041c\u041d\u0418\u0419 \u041f\u0415\u0420\u0415\u0425\u0406\u0414"
-        : secretRoute.name.toUpperCase();
-  const labelW = secretRoute.id === "underpass" && !secretRoute.entering && !near ? 160 : 100;
-  const labelY = secretRoute.id === "underpass" && !secretRoute.entering && !near ? y - 120 : y - 90;
+    : secretRoute.id === "underpass"
+      ? "\u041f\u0406\u0414\u0417\u0415\u041c\u041d\u0418\u0419 \u041f\u0415\u0420\u0415\u0425\u0406\u0414"
+      : secretRoute.name.toUpperCase();
+  const labelW = secretRoute.id === "underpass" && !secretRoute.entering ? 160 : 100;
+  const labelY = secretRoute.id === "underpass" && !secretRoute.entering ? y - 120 : y - 90;
   ctx.fillStyle = "rgba(5,10,22,0.94)";
   ctx.beginPath();
   if (ctx.roundRect) ctx.roundRect(x - labelW / 2, labelY - 15, labelW, 21, 6);
@@ -11447,7 +11535,7 @@ function drawRescueBus(bus) {
   ctx.restore();
 }
 function drawCityGift(gift) {
-  const p = getSmallRoadPoint(gift, gift.kind === "shield" ? 18 : 12);
+  const p = getSmallRoadPoint(gift, gift.kind === "shield" ? 14 : 8);
   const x = p.x;
   const y = p.y;
   drawPeasantGiftGiver(gift);
@@ -12405,13 +12493,13 @@ function drawWinOverlay() {
   ctx.fillStyle = "#ffd700";
   ctx.font = "14px sans-serif";
   ctx.fillText(
-    `${L.earned}: ${runCoins}₴   ${L.winBonus}: +${getLvl().bonusCoins}₴`,
+    `${L.earned}: ${runCoins} РјРѕРЅРµС‚   ${L.winBonus}: +${getLvl().bonusCoins} РјРѕРЅРµС‚`,
     W / 2,
     H / 2 + 22,
   );
   ctx.fillStyle = "#aabbcc";
   ctx.font = "13px sans-serif";
-  ctx.fillText(L.total + ": " + totalCoins + "₴", W / 2, H / 2 + 48);
+  ctx.fillText(L.total + ": " + totalCoins + " РјРѕРЅРµС‚", W / 2, H / 2 + 48);
   ctx.fillStyle = "#8899aa";
   ctx.font = "12px sans-serif";
   ctx.fillText("↩ " + (t().back || "Back to menu"), W / 2, H / 2 + 76);
@@ -12450,13 +12538,13 @@ function drawOverlay() {
     ctx.fillStyle = "#ffd700";
     ctx.font = "15px sans-serif";
     ctx.fillText(
-      L.score + ": " + score + "   " + L.earned + ": " + runCoins + "₴",
+      L.score + ": " + score + "   " + L.earned + ": " + runCoins + " РјРѕРЅРµС‚",
       W / 2,
       H / 2 + 8,
     );
     ctx.fillStyle = "#6bcb77";
     ctx.font = "13px sans-serif";
-    ctx.fillText(L.total + ": " + totalCoins + "₴", W / 2, H / 2 + 32);
+    ctx.fillText(L.total + ": " + totalCoins + " РјРѕРЅРµС‚", W / 2, H / 2 + 32);
     ctx.fillStyle = "#8899aa";
     ctx.font = "12px sans-serif";
     ctx.fillText(
