@@ -5425,7 +5425,7 @@ function spawnCoin() {
   const l = Math.floor(Math.random() * 3),
     hi = Math.random() < 0.35;
   if (!reserveRoadPickupSpawn(l, BONUS_SPAWN_X, 34, 96)) return;
-  coins.push({ x: BONUS_SPAWN_X, lane: l, y: hi ? GND - 70 : GND, done: false });
+  coins.push({ x: BONUS_SPAWN_X, lane: l, y: GND, done: false });
 }
 function spawnMagnet() {
   const lane = Math.floor(Math.random() * 3);
@@ -6509,11 +6509,23 @@ function getSmallRoadPoint(o, yLift = 0) {
   const depth = getRoadObstacleDepth(o);
   const point = getRoadObjectLanePoint(o.lane, 0.14 + depth * 0.52);
   const scale = 0.5 + depth * 0.5;
+  const groundY = Math.min(GND + 4, point.y + 4);
   return {
     x: point.x,
-    y: Math.min(GND + 4, point.y + 4) - yLift * scale,
+    y: groundY - yLift * scale,
+    groundY,
     scale,
   };
+}
+function drawRoadObjectShadow(point, rx = 18, ry = 5, alpha = 0.28) {
+  const groundY = point.groundY ?? point.y;
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.fillStyle = "#000000";
+  ctx.beginPath();
+  ctx.ellipse(point.x, groundY + 2 * point.scale, rx * point.scale, ry * point.scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawRoadSign(x, y, label, kind = "direction") {
@@ -10307,17 +10319,17 @@ function drawObs(o) {
 
     ctx.fillStyle = "rgba(0,0,0,0.28)";
     ctx.beginPath();
-    ctx.ellipse(x, GND + 7, 48, 9, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, roadPoint.y + 7, 48, 9, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (isStormWeather()) {
-      const shine = ctx.createLinearGradient(x - 62, GND + 8, x + 62, GND + 18);
+      const shine = ctx.createLinearGradient(x - 62, roadPoint.y + 8, x + 62, roadPoint.y + 18);
       shine.addColorStop(0, "rgba(96, 180, 255, 0)");
       shine.addColorStop(0.5, "rgba(158, 222, 255, 0.26)");
       shine.addColorStop(1, "rgba(96, 180, 255, 0)");
       ctx.fillStyle = shine;
       ctx.beginPath();
-      ctx.ellipse(x, GND + 14, 62, 8, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, roadPoint.y + 14, 62, 8, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -14250,7 +14262,7 @@ function update() {
   });
   coins = coins.filter((c) => {
     if (!c.magneted && c.lane !== pLane) return true;
-    const point = getSmallRoadPoint(c, c.y < GND ? 70 : 14);
+    const point = getSmallRoadPoint(c, 16);
     const coinX = point.x;
     const coinY = point.y;
     const cr = {
