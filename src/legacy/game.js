@@ -5430,19 +5430,19 @@ function spawnCoin() {
 function spawnMagnet() {
   const lane = Math.floor(Math.random() * 3);
   if (!reserveRoadPickupSpawn(lane, ROAD_SPAWN_X, 50, 128)) return;
-  magnets.push({ x: ROAD_SPAWN_X, lane, y: GND - 36, phase: Math.random() * Math.PI * 2 });
+  magnets.push({ x: ROAD_SPAWN_X, lane, y: GND, phase: Math.random() * Math.PI * 2 });
 }
 function spawnChestnut() {
   if (currentLocation !== 0) return;
   const lane = Math.floor(Math.random() * 3);
   if (!reserveRoadPickupSpawn(lane, BONUS_SPAWN_X, 46, 116)) return;
-  chestnuts.push({ x: BONUS_SPAWN_X, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
+  chestnuts.push({ x: BONUS_SPAWN_X, lane, y: GND, phase: Math.random() * Math.PI * 2 });
 }
 function spawnCoffee() {
   if (currentLocation !== 1) return;
   const lane = Math.floor(Math.random() * 3);
   if (!reserveRoadPickupSpawn(lane, BONUS_SPAWN_X, 46, 116)) return;
-  coffees.push({ x: BONUS_SPAWN_X, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
+  coffees.push({ x: BONUS_SPAWN_X, lane, y: GND, phase: Math.random() * Math.PI * 2 });
 }
 function spawnRescueBus() {
   if (secretRoute?.active || bossActive || gameState !== "run") return;
@@ -5459,28 +5459,33 @@ function spawnRescueBus() {
 function spawnShield() {
   const lane = Math.floor(Math.random() * 3);
   if (!reserveRoadPickupSpawn(lane, ROAD_SPAWN_X, 54, 132)) return;
-  shields.push({ x: ROAD_SPAWN_X, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
+  shields.push({ x: ROAD_SPAWN_X, lane, y: GND, phase: Math.random() * Math.PI * 2 });
 }
 function spawnSuperJump() {
   const lane = Math.floor(Math.random() * 3);
   if (!reserveRoadPickupSpawn(lane, ROAD_SPAWN_X, 54, 132)) return;
-  superJumps.push({ x: ROAD_SPAWN_X, lane, y: GND - 40, phase: Math.random() * Math.PI * 2 });
+  superJumps.push({ x: ROAD_SPAWN_X, lane, y: GND, phase: Math.random() * Math.PI * 2 });
 }
 function spawnCityGift(secret = false) {
   if (secretRoute?.active || bossActive || gameState !== "run") return;
   const lane = Math.floor(Math.random() * 3);
-  const sourceX = LANES[lane] + (Math.random() - 0.5) * 80;
-  const sourceY = secret ? 88 : 120 + Math.random() * 74;
+  if (!roadItemSpacingClear(lane, BONUS_SPAWN_X, 116)) return;
+  const side = Math.random() < 0.5 ? -1 : 1;
+  const sourceX = side < 0 ? 58 : W - 58;
+  const sourceY = GND - 24;
   const kind = secret && Math.random() < 0.35 ? "shield" : "coin";
   const value = kind === "shield" ? 0 : secret ? 12 : 4;
   cityGifts.push({
-    x: sourceX,
-    y: sourceY,
-    giverX: sourceX + (sourceX < W / 2 ? -18 : 18),
-    giverY: sourceY + 58,
+    x: BONUS_SPAWN_X,
+    y: GND,
+    sourceX,
+    sourceY,
+    giverX: sourceX,
+    giverY: sourceY,
+    side,
     lane,
-    vx: (LANES[lane] - sourceX) / 95,
-    vy: secret ? 1.25 : 1.65,
+    vx: 0,
+    vy: 0,
     value,
     kind,
     life: 170,
@@ -6527,6 +6532,14 @@ function drawRoadObjectShadow(point, rx = 18, ry = 5, alpha = 0.28) {
   ctx.fill();
   ctx.restore();
 }
+function drawRoadSpriteAt(point, drawBody, shadowRx = 18, shadowRy = 5, shadowAlpha = 0.28) {
+  drawRoadObjectShadow(point, shadowRx, shadowRy, shadowAlpha);
+  ctx.save();
+  ctx.translate(point.x, point.y);
+  ctx.scale(point.scale, point.scale);
+  drawBody(point.x, point.y, point.scale);
+  ctx.restore();
+}
 
 function drawRoadSign(x, y, label, kind = "direction") {
   ctx.save();
@@ -6693,15 +6706,15 @@ function drawRoadsideSigns() {
   for (const sign of signs) {
     const x = W + 120 + sign.gap - off;
     if (x < -90 || x > W + 100) continue;
-    drawRoadSign(x + sign.side * 18, sign.y, sign.label, sign.kind);
+    drawRoadSign(x + sign.side * (currentLocation === 1 ? 34 : 18), sign.y, sign.label, sign.kind);
   }
 
   const lightX = W + 360 - ((bgOff * 0.54) % 920);
   if (lightX > -70 && lightX < W + 80) {
     const safeLightX = currentLocation === 1
-      ? ((Math.floor(bgOff / 460) % 2 === 0) ? 58 : W - 58)
+      ? ((Math.floor(bgOff / 460) % 2 === 0) ? 28 : W - 28)
       : lightX;
-    drawTrafficLight(safeLightX, currentLocation === 1 ? GND - 18 : GND - 1);
+    drawTrafficLight(safeLightX, currentLocation === 1 ? GND - 24 : GND - 1);
   }
 }
 
@@ -8468,57 +8481,53 @@ function drawSecretRouteEntrance() {
   )
     return;
 
-  const x = secretRoute.entering
-    ? LANES[secretRoute.lane]
-    : secretRoute.entranceX;
+  const rawX = secretRoute.entering ? LANES[secretRoute.lane] : secretRoute.entranceX;
+  const x = secretRoute.id === "underpass" ? LANES[1] : rawX;
   const y = GND;
   const near =
-    pLane === secretRoute.lane && Math.abs(x - LANES[pLane]) <= 72;
+    pLane === secretRoute.lane && Math.abs(rawX - LANES[pLane]) <= 72;
   ctx.save();
-  ctx.globalAlpha = Math.max(0.25, Math.min(1, (x + 80) / 150));
+  ctx.globalAlpha = Math.max(0.25, Math.min(1, (rawX + 80) / 150));
   ctx.shadowColor = secretRoute.color;
   ctx.shadowBlur = near ? 22 : 10;
   ctx.fillStyle = "#343a40";
   ctx.beginPath();
-  ctx.moveTo(x - 52, y);
-  ctx.lineTo(x - 52, y - 72);
-  ctx.arc(x, y - 72, 52, Math.PI, 0);
-  ctx.lineTo(x + 52, y);
+  ctx.moveTo(x - 54, y);
+  ctx.lineTo(x - 54, y - 74);
+  ctx.arc(x, y - 74, 54, Math.PI, 0);
+  ctx.lineTo(x + 54, y);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = near ? "#ffffff" : secretRoute.color;
   ctx.lineWidth = near ? 6 : 4;
   ctx.stroke();
-  const tunnelGlow = ctx.createRadialGradient(
-    x,
-    y - 58,
-    4,
-    x,
-    y - 58,
-    45,
-  );
+
+  const tunnelGlow = ctx.createRadialGradient(x, y - 59, 4, x, y - 59, 46);
   tunnelGlow.addColorStop(0, "rgba(20,26,35,1)");
   tunnelGlow.addColorStop(0.65, "rgba(5,8,13,0.98)");
   tunnelGlow.addColorStop(1, "rgba(0,0,0,1)");
   ctx.fillStyle = tunnelGlow;
   ctx.beginPath();
-  ctx.moveTo(x - 42, y);
-  ctx.lineTo(x - 42, y - 69);
-  ctx.arc(x, y - 69, 42, Math.PI, 0);
-  ctx.lineTo(x + 42, y);
+  ctx.moveTo(x - 43, y);
+  ctx.lineTo(x - 43, y - 70);
+  ctx.arc(x, y - 70, 43, Math.PI, 0);
+  ctx.lineTo(x + 43, y);
   ctx.closePath();
   ctx.fill();
+
   ctx.strokeStyle = "rgba(255,255,255,0.16)";
   ctx.lineWidth = 2;
   for (let ring = 0; ring < 3; ring++) {
     const inset = 9 + ring * 10;
     ctx.beginPath();
-    ctx.arc(x, y - 65, 45 - inset, Math.PI, 0);
+    ctx.arc(x, y - 66, 46 - inset, Math.PI, 0);
     ctx.stroke();
   }
+
   ctx.fillStyle = "#1e252c";
   for (let step = 0; step < 5; step++)
     ctx.fillRect(x - 34 + step * 4, y - 12 + step * 3, 68 - step * 8, 3);
+
   if (secretRoute.id === "metro") {
     ctx.fillStyle = "#10241e";
     ctx.fillRect(x - 62, y - 108, 124, 26);
@@ -8542,6 +8551,7 @@ function drawSecretRouteEntrance() {
     ctx.fillRect(x - 38, y - 33, 76, 4);
     ctx.fillRect(x - 30, y - 47, 60, 4);
   }
+
   ctx.fillStyle = secretRoute.color;
   ctx.beginPath();
   ctx.moveTo(x - 18, y - 70);
@@ -8549,8 +8559,9 @@ function drawSecretRouteEntrance() {
   ctx.lineTo(x, y - 48);
   ctx.closePath();
   ctx.fill();
+
   ctx.shadowBlur = 0;
-  ctx.font = "bold 10px sans-serif";
+  ctx.font = secretRoute.id === "underpass" ? "bold 11px sans-serif" : "bold 10px sans-serif";
   ctx.textAlign = "center";
   const routeLabel = secretRoute.entering
     ? "\u0422\u0423\u041d\u0415\u041b\u042c"
@@ -8559,18 +8570,21 @@ function drawSecretRouteEntrance() {
       : secretRoute.id === "underpass"
         ? "\u041f\u0406\u0414\u0417\u0415\u041c\u041d\u0418\u0419 \u041f\u0415\u0420\u0415\u0425\u0406\u0414"
         : secretRoute.name.toUpperCase();
-  const labelW = secretRoute.id === "underpass" && !secretRoute.entering && !near ? 132 : 96;
-  const labelY = secretRoute.id === "underpass" && !secretRoute.entering && !near ? y - 116 : y - 88;
-  ctx.fillStyle = "rgba(10,18,32,0.86)";
+  const labelW = secretRoute.id === "underpass" && !secretRoute.entering && !near ? 160 : 100;
+  const labelY = secretRoute.id === "underpass" && !secretRoute.entering && !near ? y - 120 : y - 90;
+  ctx.fillStyle = "rgba(5,10,22,0.94)";
   ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(x - labelW / 2, labelY - 13, labelW, 18, 5);
-  else ctx.rect(x - labelW / 2, labelY - 13, labelW, 18);
+  if (ctx.roundRect) ctx.roundRect(x - labelW / 2, labelY - 15, labelW, 21, 6);
+  else ctx.rect(x - labelW / 2, labelY - 15, labelW, 21);
   ctx.fill();
-  ctx.strokeStyle = near ? "#ffffff" : secretRoute.color;
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
   ctx.stroke();
+  ctx.shadowColor = "rgba(0,0,0,0.9)";
+  ctx.shadowBlur = 4;
   ctx.fillStyle = "#ffffff";
   ctx.fillText(routeLabel, x, labelY);
+  ctx.shadowBlur = 0;
   ctx.textAlign = "left";
   ctx.restore();
 }
@@ -11148,9 +11162,10 @@ function drawScooterRider(o) {
 
 function drawCoin(c) {
   if (c.done) return;
-  const p = getSmallRoadPoint(c, c.y < GND ? 70 : 14);
-  const x = p.x,
-    y = p.y;
+  const p = getSmallRoadPoint(c, 12);
+  const x = p.x;
+  const y = p.y;
+  drawRoadObjectShadow(p, 13, 4, 0.24);
   if (magnetTimer > 0 && c.magneted) {
     ctx.globalAlpha = 0.72;
     ctx.strokeStyle = "rgba(99, 214, 255, 0.62)";
@@ -11161,22 +11176,21 @@ function drawCoin(c) {
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
-  const g = ctx.createRadialGradient(x, y, 0, x, y, 20);
+  const g = ctx.createRadialGradient(x, y, 0, x, y, 17 * p.scale);
   g.addColorStop(0, "rgba(255,255,180,1)");
   g.addColorStop(1, "rgba(255,215,0,0)");
   ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(x, y, 20, 0, Math.PI * 2);
+  ctx.arc(x, y, 18 * p.scale, 0, Math.PI * 2);
   ctx.fill();
-
   ctx.fillStyle = "#ffd700";
   ctx.beginPath();
-  ctx.arc(x, y, 9, 0, Math.PI * 2);
+  ctx.arc(x, y, 8 * p.scale, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#b8860b";
-  ctx.font = "bold 10px sans-serif";
+  ctx.font = `bold ${Math.max(7, 10 * p.scale)}px sans-serif`;
   ctx.textAlign = "center";
-  ctx.fillText("₴", x, y + 3);
+  ctx.fillText("в‚ґ", x, y + 3 * p.scale);
   ctx.textAlign = "left";
 }
 
@@ -11463,32 +11477,33 @@ function drawRescueBus(bus) {
   ctx.restore();
 }
 function drawCityGift(gift) {
-  const bob = Math.sin(fr * 0.16 + gift.x * 0.04) * 3;
-  const x = gift.x;
-  const y = gift.y + bob;
+  const p = getSmallRoadPoint(gift, gift.kind === "shield" ? 18 : 12);
+  const x = p.x;
+  const y = p.y;
   drawPeasantGiftGiver(gift);
+  drawRoadObjectShadow(p, gift.secret ? 20 : 15, 5, 0.28);
   ctx.save();
   ctx.globalAlpha = Math.min(1, gift.life / 24);
-  const glow = ctx.createRadialGradient(x, y, 0, x, y, gift.secret ? 28 : 22);
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, (gift.secret ? 24 : 19) * p.scale);
   glow.addColorStop(0, gift.kind === "shield" ? "rgba(88,190,255,0.95)" : gift.secret ? "rgba(255,247,178,0.95)" : "rgba(255,255,210,0.8)");
   glow.addColorStop(1, "rgba(255,215,0,0)");
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(x, y, gift.secret ? 28 : 22, 0, Math.PI * 2);
+  ctx.arc(x, y, (gift.secret ? 24 : 19) * p.scale, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = gift.kind === "shield" ? "#58beff" : gift.secret ? "#ffd45c" : "#ffd700";
   ctx.beginPath();
-  ctx.arc(x, y, gift.secret ? 12 : 9, 0, Math.PI * 2);
+  ctx.arc(x, y, (gift.secret ? 10 : 8) * p.scale, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = gift.kind === "shield" ? "#e7f8ff" : gift.secret ? "#0057b7" : "#b8860b";
-  ctx.lineWidth = 3;
+  ctx.lineWidth = Math.max(1.5, 2.5 * p.scale);
   ctx.beginPath();
-  ctx.arc(x, y, gift.secret ? 12 : 9, 0, Math.PI * 2);
+  ctx.arc(x, y, (gift.secret ? 10 : 8) * p.scale, 0, Math.PI * 2);
   ctx.stroke();
   ctx.fillStyle = "#6b4b00";
-  ctx.font = gift.secret ? "bold 12px sans-serif" : "bold 10px sans-serif";
+  ctx.font = `bold ${Math.max(8, (gift.secret ? 11 : 9) * p.scale)}px sans-serif`;
   ctx.textAlign = "center";
-  ctx.fillText(gift.kind === "shield" ? "\u0429" : "+" + gift.value, x, y + 4);
+  ctx.fillText(gift.kind === "shield" ? "\u0429" : "+" + gift.value, x, y + 4 * p.scale);
   ctx.textAlign = "left";
   ctx.restore();
 }
@@ -11496,18 +11511,20 @@ function drawCityGift(gift) {
 function drawPostcardItem(item) {
   const card = CITY_POSTCARDS.find((entry) => entry.id === item.cardId);
   if (!card) return;
-  const x = item.x;
-  const y = item.y + Math.sin(fr * 0.12 + item.phase) * 5;
+  const p = getSmallRoadPoint(item, 16);
+  const x = p.x;
+  const y = p.y;
+  drawRoadObjectShadow(p, 17, 5, 0.25);
   ctx.save();
-  const glow = ctx.createRadialGradient(x, y, 0, x, y, 30);
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 26 * p.scale);
   glow.addColorStop(0, card.color + "cc");
   glow.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(x, y, 30, 0, Math.PI * 2);
+  ctx.arc(x, y, 26 * p.scale, 0, Math.PI * 2);
   ctx.fill();
-
   ctx.translate(x, y);
+  ctx.scale(p.scale, p.scale);
   ctx.rotate(Math.sin(fr * 0.05 + item.phase) * 0.08);
   ctx.fillStyle = "#f8f1d0";
   ctx.strokeStyle = card.color;
