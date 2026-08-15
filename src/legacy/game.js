@@ -13403,9 +13403,9 @@ function update() {
     spd *= 0.68;
     puddleSlow--;
   }
-  score = Math.round((fr * spd) / 10);
   const distanceStep = spd / 60;
   totalDist += distanceStep;
+  score = Math.max(score, Math.round(totalDist * 10));
   addQuestProgress("distance", distanceStep);
   addLevelMissionProgress("distance", distanceStep);
   if (fr % 120 === 0) saveGame();
@@ -14360,6 +14360,7 @@ function update() {
       addMarichkaChainProgress("coins", mult);
       addLevelMissionProgress("coins", mult);
       runCoins += mult;
+      score += mult * 25;
       c.done = true;
       sfxCoin();
       addParts(coinX, coinY, "#ffd700");
