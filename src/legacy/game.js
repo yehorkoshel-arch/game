@@ -602,9 +602,9 @@ function getMusicTrackIndex(track = settingMusicTrack) {
   return 0;
 }
 function getActiveMusicTrackIndex() {
-  if (bossActive) return 3;
   if (currentLocation === 1 && settingMusicTrack === "kyiv") return 4;
-  return getMusicTrackIndex();
+  const index = MUSIC_TRACKS.findIndex((track) => track.id === settingMusicTrack);
+  return index >= 0 ? index : 0;
 }
 function resetMusicPattern() {
   melodyIdx = 0;
@@ -3230,7 +3230,7 @@ function drawRoadEventBanner() {
   const title = getRoadEventTitle(roadEvent.type);
   const hint = getRoadEventHint(roadEvent.type);
   const x = W / 2;
-  const y = 44;
+  const y = currentLocation === 1 ? 132 : 44;
   ctx.save();
   ctx.globalAlpha = 0.92 * a;
   ctx.fillStyle = "rgba(10, 14, 28, 0.82)";
@@ -5336,6 +5336,19 @@ function reserveRoadHazardSpawn(minFrames = 58) {
   lastRoadHazardSpawnFrame = fr;
   return true;
 }
+let lastRoadPickupSpawnFrame = -9999;
+function roadItemSpacingClear(lane, x = BONUS_SPAWN_X, minX = 112) {
+  const groups = [obs, coins, magnets, chestnuts, coffees, shields, superJumps, rescueBuses, postcardItems];
+  return groups.every((group) =>
+    !group.some((item) => item && item.lane === lane && Math.abs((item.x || x) - x) < minX),
+  );
+}
+function reserveRoadPickupSpawn(lane, x = BONUS_SPAWN_X, minFrames = 42, minX = 112) {
+  if (fr - lastRoadPickupSpawnFrame < minFrames) return false;
+  if (!roadItemSpacingClear(lane, x, minX)) return false;
+  lastRoadPickupSpawnFrame = fr;
+  return true;
+}
 function spawnObs() {
   if (!reserveRoadHazardSpawn()) return;
   const lv = getLvl();
@@ -5411,20 +5424,24 @@ function spawnTrafficCar() {
 function spawnCoin() {
   const l = Math.floor(Math.random() * 3),
     hi = Math.random() < 0.35;
+  if (!reserveRoadPickupSpawn(l, BONUS_SPAWN_X, 34, 96)) return;
   coins.push({ x: BONUS_SPAWN_X, lane: l, y: hi ? GND - 70 : GND, done: false });
 }
 function spawnMagnet() {
   const lane = Math.floor(Math.random() * 3);
+  if (!reserveRoadPickupSpawn(lane, ROAD_SPAWN_X, 50, 128)) return;
   magnets.push({ x: ROAD_SPAWN_X, lane, y: GND - 36, phase: Math.random() * Math.PI * 2 });
 }
 function spawnChestnut() {
   if (currentLocation !== 0) return;
   const lane = Math.floor(Math.random() * 3);
+  if (!reserveRoadPickupSpawn(lane, BONUS_SPAWN_X, 46, 116)) return;
   chestnuts.push({ x: BONUS_SPAWN_X, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
 function spawnCoffee() {
   if (currentLocation !== 1) return;
   const lane = Math.floor(Math.random() * 3);
+  if (!reserveRoadPickupSpawn(lane, BONUS_SPAWN_X, 46, 116)) return;
   coffees.push({ x: BONUS_SPAWN_X, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
 function spawnRescueBus() {
@@ -5441,10 +5458,12 @@ function spawnRescueBus() {
 }
 function spawnShield() {
   const lane = Math.floor(Math.random() * 3);
+  if (!reserveRoadPickupSpawn(lane, ROAD_SPAWN_X, 54, 132)) return;
   shields.push({ x: ROAD_SPAWN_X, lane, y: GND - 38, phase: Math.random() * Math.PI * 2 });
 }
 function spawnSuperJump() {
   const lane = Math.floor(Math.random() * 3);
+  if (!reserveRoadPickupSpawn(lane, ROAD_SPAWN_X, 54, 132)) return;
   superJumps.push({ x: ROAD_SPAWN_X, lane, y: GND - 40, phase: Math.random() * Math.PI * 2 });
 }
 function spawnCityGift(secret = false) {
@@ -5457,10 +5476,10 @@ function spawnCityGift(secret = false) {
   cityGifts.push({
     x: sourceX,
     y: sourceY,
-    giverX: sourceX - 24,
+    giverX: sourceX + (sourceX < W / 2 ? -18 : 18),
     giverY: sourceY + 58,
     lane,
-    vx: (LANES[lane] - sourceX) / 70,
+    vx: (LANES[lane] - sourceX) / 95,
     vy: secret ? 1.25 : 1.65,
     value,
     kind,
@@ -5469,9 +5488,9 @@ function spawnCityGift(secret = false) {
   });
   showAndriiBubble(
     kind === "shield"
-      ? "\u0414\u0456\u0434 \u0437 \u0431\u0430\u043b\u043a\u043e\u043d\u0430 \u043a\u0438\u0434\u0430\u0454 \u0449\u0438\u0442!"
+      ? "\u0414\u0456\u0434 \u043a\u0438\u0434\u0430\u0454 \u0449\u0438\u0442!"
       : secret
-      ? "\u0414\u0456\u0434 \u0437 \u0431\u0430\u043b\u043a\u043e\u043d\u0430 \u0434\u0430\u0454 \u0431\u043e\u043d\u0443\u0441!"
+      ? "\u0414\u0456\u0434 \u0434\u0430\u0454 \u0431\u043e\u043d\u0443\u0441!"
       : "\u0411\u0456\u0436\u0438, \u0410\u043d\u0434\u0440\u0456\u044e!",
   );
 }
@@ -6666,7 +6685,12 @@ function drawRoadsideSigns() {
   }
 
   const lightX = W + 360 - ((bgOff * 0.54) % 920);
-  if (lightX > -70 && lightX < W + 80) drawTrafficLight(lightX, GND - 1);
+  if (lightX > -70 && lightX < W + 80) {
+    const safeLightX = currentLocation === 1
+      ? ((Math.floor(bgOff / 460) % 2 === 0) ? 58 : W - 58)
+      : lightX;
+    drawTrafficLight(safeLightX, currentLocation === 1 ? GND - 18 : GND - 1);
+  }
 }
 
 function drawLvivTram() {
@@ -8514,18 +8538,27 @@ function drawSecretRouteEntrance() {
   ctx.closePath();
   ctx.fill();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = "#ffffff";
   ctx.font = "bold 10px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(
-    secretRoute.entering
-      ? "\u0422\u0423\u041d\u0415\u041b\u042c"
-      : near
+  const routeLabel = secretRoute.entering
+    ? "\u0422\u0423\u041d\u0415\u041b\u042c"
+    : near
       ? "\u25bc \u0423\u0412\u0406\u0419\u0422\u0418"
-      : secretRoute.name.toUpperCase(),
-    x,
-    y - 88,
-  );
+      : secretRoute.id === "underpass"
+        ? "\u041f\u0406\u0414\u0417\u0415\u041c\u041d\u0418\u0419 \u041f\u0415\u0420\u0415\u0425\u0406\u0414"
+        : secretRoute.name.toUpperCase();
+  const labelW = secretRoute.id === "underpass" && !secretRoute.entering && !near ? 132 : 96;
+  const labelY = secretRoute.id === "underpass" && !secretRoute.entering && !near ? y - 116 : y - 88;
+  ctx.fillStyle = "rgba(10,18,32,0.86)";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - labelW / 2, labelY - 13, labelW, 18, 5);
+  else ctx.rect(x - labelW / 2, labelY - 13, labelW, 18);
+  ctx.fill();
+  ctx.strokeStyle = near ? "#ffffff" : secretRoute.color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(routeLabel, x, labelY);
   ctx.textAlign = "left";
   ctx.restore();
 }
@@ -11992,7 +12025,7 @@ function drawHUDCanvas() {
     ctx.fillStyle = "#ffd28a";
     ctx.fillRect(10, 76, 92 * remain, 6);
     ctx.font = "bold 10px sans-serif";
-    ctx.fillText("LVIV COFFEE", 14, 73);
+    ctx.fillText("Р›Р¬Р’Р†Р’РЎР¬РљРђ РљРђР’Рђ", 14, 73);
   }
   if (rescueBusTimer > 0) {
     const remain = Math.max(0, Math.min(1, rescueBusTimer / 330));
@@ -14456,17 +14489,53 @@ function speakMarichkaHint(key, cooldown = 640) {
 // Bubble над гравцем
 let bubbleText = "",
   bubbleTimer = 0,
-  bubbleQuietTimer = 0;
+  bubbleQuietTimer = 0,
+  bubbleQueue = [];
+function enqueueBubbleText(text) {
+  if (!text || bubbleQueue.length >= 4) return;
+  if (bubbleText === text || bubbleQueue[bubbleQueue.length - 1] === text) return;
+  bubbleQueue.push(text);
+}
+function activateBubbleText(text, duration = 130) {
+  bubbleText = text;
+  bubbleTimer = duration;
+}
 function showAndriiBubble(text, force = false) {
-  if (!force && gameState === "run") {
-    if (bubbleQuietTimer > 0 || bubbleTimer > 35) return;
+  if (gameState === "over") {
+    bubbleText = "";
+    bubbleTimer = 0;
+    bubbleQueue = [];
+    return;
+  }
+  const formatted = formatActiveCharacterText(text);
+  if (!formatted) return;
+  if (force) {
+    bubbleQueue = [];
+    bubbleQuietTimer = 0;
+    activateBubbleText(formatted);
+    return;
+  }
+  if (gameState === "run") {
+    if (bubbleTimer > 0 || bubbleQuietTimer > 0) {
+      enqueueBubbleText(formatted);
+      return;
+    }
     bubbleQuietTimer = 90;
   }
-  bubbleText = formatActiveCharacterText(text);
-  bubbleTimer = 130;
+  activateBubbleText(formatted);
 }
 function drawAndriiBubble() {
-  if (bubbleTimer <= 0) return;
+  if (gameState === "over") {
+    bubbleText = "";
+    bubbleTimer = 0;
+    bubbleQueue = [];
+    return;
+  }
+  if (bubbleTimer <= 0) {
+    const nextBubble = bubbleQueue.shift();
+    if (!nextBubble) return;
+    activateBubbleText(nextBubble);
+  }
   bubbleTimer--;
   const x = LANES[pLane],
     y = pY - 112;
