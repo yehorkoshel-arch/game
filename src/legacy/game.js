@@ -2533,12 +2533,12 @@ function drawLvivParallaxCityFrame(timePeriod) {
       drawLvivParallaxFacade(x, y, w, h, body, roof, isNight, i);
     }
   }
-
   const treeOff = Math.round(bgOff * 0.18) % 240;
   for (let x = -160 - treeOff; x < W + 220; x += 120) {
     drawLvivParallaxTree(x + 34, baseY + 15, isNight);
     drawLvivParallaxLamp(x + 88, baseY + 10, isNight);
   }
+  drawLvivVisibleRatusha(baseY, isNight);
 
   const glow = ctx.createLinearGradient(0, baseY - 96, 0, baseY + 28);
   glow.addColorStop(0, "rgba(255,210,128,0)");
@@ -2548,11 +2548,61 @@ function drawLvivParallaxCityFrame(timePeriod) {
   ctx.fillRect(0, baseY - 100, W, 130);
   ctx.restore();
 }
+function drawLvivVisibleRatusha(baseY, isNight) {
+  const glow = isNight ? "rgba(255,204,103,0.88)" : "rgba(255,226,154,0.76)";
+  const towerX = W / 2 - 36;
+  const towerY = baseY - 210;
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(25,18,18,0.58)";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(towerX - 8, towerY + 68, 78, 176);
+  ctx.fillStyle = "rgba(12,10,16,0.32)";
+  ctx.fillRect(towerX + 9, towerY + 12, 72, 236);
+  ctx.fillStyle = "#c89d70";
+  ctx.fillRect(towerX - 6, towerY + 70, 74, 172);
+  ctx.fillStyle = "#8b6754";
+  ctx.fillRect(towerX - 20, towerY + 58, 100, 14);
+  ctx.fillRect(towerX + 8, towerY + 24, 48, 38);
+  ctx.fillStyle = "#6f4e45";
+  ctx.beginPath();
+  ctx.moveTo(towerX - 12, towerY + 24);
+  ctx.lineTo(towerX + 32, towerY - 6);
+  ctx.lineTo(towerX + 76, towerY + 24);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#e1bb73";
+  ctx.fillRect(towerX + 27, towerY - 20, 10, 20);
+  ctx.fillStyle = glow;
+  for (let wy = towerY + 94; wy < towerY + 214; wy += 32) {
+    ctx.fillRect(towerX + 10, wy, 10, 16);
+    ctx.fillRect(towerX + 31, wy - 4, 10, 16);
+    ctx.fillRect(towerX + 52, wy, 10, 16);
+  }
+  ctx.fillStyle = "#f4d891";
+  ctx.beginPath();
+  ctx.arc(towerX + 33, towerY + 113, 19, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#422d28";
+  ctx.lineWidth = 2.3;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(towerX + 33, towerY + 113);
+  ctx.lineTo(towerX + 33, towerY + 99);
+  ctx.moveTo(towerX + 33, towerY + 113);
+  ctx.lineTo(towerX + 47, towerY + 118);
+  ctx.stroke();
+  ctx.fillStyle = glow;
+  ctx.font = "bold 11px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Ратуша", towerX + 33, towerY + 151);
+  ctx.restore();
+}
 function drawLvivRynokHorizon(baseY, isNight) {
   const glow = isNight ? "rgba(255,190,96,0.84)" : "rgba(255,226,154,0.72)";
   const shadow = "rgba(18,16,22,0.34)";
-  const towerX = W / 2 - 88;
-  const towerY = baseY - 164;
+  const towerX = W / 2 - 36;
+  const towerY = baseY - 218;
 
   ctx.save();
   const hill = ctx.createLinearGradient(0, baseY - 124, 0, baseY - 24);
@@ -2579,36 +2629,44 @@ function drawLvivRynokHorizon(baseY, isNight) {
   }
 
   ctx.fillStyle = shadow;
-  ctx.fillRect(towerX + 6, towerY + 8, 58, 184);
-  ctx.fillStyle = "#bd9367";
-  ctx.fillRect(towerX - 3, towerY + 50, 58, 138);
-  ctx.fillStyle = "#80604e";
-  ctx.fillRect(towerX - 11, towerY + 42, 76, 12);
-  ctx.fillRect(towerX + 8, towerY + 18, 36, 30);
+  ctx.fillRect(towerX + 8, towerY + 10, 70, 238);
+  ctx.fillStyle = "#c89d70";
+  ctx.fillRect(towerX - 6, towerY + 68, 72, 174);
+  ctx.fillStyle = "#8b6754";
+  ctx.fillRect(towerX - 18, towerY + 58, 96, 14);
+  ctx.fillRect(towerX + 10, towerY + 24, 44, 38);
   ctx.fillStyle = "#6f4e45";
   ctx.beginPath();
-  ctx.moveTo(towerX - 7, towerY + 18);
-  ctx.lineTo(towerX + 26, towerY);
-  ctx.lineTo(towerX + 59, towerY + 18);
+  ctx.moveTo(towerX - 10, towerY + 24);
+  ctx.lineTo(towerX + 32, towerY - 4);
+  ctx.lineTo(towerX + 74, towerY + 24);
   ctx.closePath();
   ctx.fill();
+  ctx.fillStyle = "#e1bb73";
+  ctx.fillRect(towerX + 27, towerY - 18, 10, 18);
+  ctx.fillStyle = glow;
+  for (let wy = towerY + 92; wy < towerY + 214; wy += 32) {
+    ctx.fillRect(towerX + 10, wy, 10, 16);
+    ctx.fillRect(towerX + 30, wy - 4, 10, 16);
+    ctx.fillRect(towerX + 50, wy, 10, 16);
+  }
   ctx.fillStyle = "#f2d28b";
   ctx.beginPath();
-  ctx.arc(towerX + 26, towerY + 86, 14, 0, Math.PI * 2);
+  ctx.arc(towerX + 32, towerY + 112, 18, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#4a332d";
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(towerX + 26, towerY + 86);
-  ctx.lineTo(towerX + 26, towerY + 76);
-  ctx.moveTo(towerX + 26, towerY + 86);
-  ctx.lineTo(towerX + 36, towerY + 90);
+  ctx.moveTo(towerX + 32, towerY + 112);
+  ctx.lineTo(towerX + 32, towerY + 99);
+  ctx.moveTo(towerX + 32, towerY + 112);
+  ctx.lineTo(towerX + 45, towerY + 117);
   ctx.stroke();
   ctx.fillStyle = glow;
-  ctx.font = "bold 9px sans-serif";
+  ctx.font = "bold 11px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Ринок", towerX + 26, towerY + 122);
+  ctx.fillText("Ратуша", towerX + 32, towerY + 150);
 
   const domes = [
     [towerX - 136, baseY - 96, 36, "#b7774f"],
@@ -2836,37 +2894,59 @@ function drawLvivCobblestoneSidewalks(horizonY, bottomY, isNight) {
 }
 function drawLvivForegroundIdentity(isNight) {
   ctx.save();
-  const lionColor = isNight ? "#c99b55" : "#b8843d";
+  const lionColor = isNight ? "#d2a257" : "#be873c";
+  const maneColor = isNight ? "#7b4d25" : "#6e421f";
   const drawLion = (x, y, flip = 1) => {
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(flip, 1);
+    ctx.fillStyle = isNight ? "rgba(105,96,82,0.92)" : "rgba(156,141,115,0.96)";
+    ctx.fillRect(-24, 18, 48, 10);
+    ctx.fillStyle = isNight ? "rgba(76,70,64,0.94)" : "rgba(126,112,92,0.96)";
+    ctx.fillRect(-18, 8, 36, 12);
     ctx.fillStyle = "rgba(0,0,0,0.22)";
     ctx.beginPath();
-    ctx.ellipse(0, 11, 28, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 23, 30, 5, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = lionColor;
     ctx.beginPath();
-    ctx.ellipse(0, -2, 22, 12, 0, 0, Math.PI * 2);
-    ctx.ellipse(19, -10, 11, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(-2, -3, 23, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(20, -12, 11, 10, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillRect(-14, 4, 7, 18);
-    ctx.fillRect(6, 4, 7, 18);
+    ctx.fillRect(-16, 4, 6, 15);
+    ctx.fillRect(-2, 5, 6, 14);
+    ctx.fillRect(9, 4, 6, 15);
+    ctx.fillStyle = maneColor;
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 5) {
+      ctx.beginPath();
+      ctx.ellipse(20 + Math.cos(a) * 7, -12 + Math.sin(a) * 7, 4, 5, a, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = lionColor;
+    ctx.beginPath();
+    ctx.ellipse(20, -12, 7, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.strokeStyle = lionColor;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3.4;
     ctx.beginPath();
-    ctx.moveTo(-18, -4);
-    ctx.quadraticCurveTo(-30, -20, -18, -28);
+    ctx.moveTo(-20, -7);
+    ctx.quadraticCurveTo(-34, -24, -18, -31);
     ctx.stroke();
-    ctx.fillStyle = "#5b371e";
+    ctx.fillStyle = maneColor;
     ctx.beginPath();
-    ctx.arc(22, -11, 1.5, 0, Math.PI * 2);
+    ctx.ellipse(-18, -31, 4, 6, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = "#2f2116";
+    ctx.beginPath();
+    ctx.arc(23, -13, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3d2918";
+    ctx.fillRect(25, -8, 5, 1.4);
     ctx.restore();
   };
 
-  drawLion(114, GND - 8, 1);
-  drawLion(W - 114, GND - 8, -1);
+  drawLion(114, GND - 18, 1);
+  drawLion(W - 114, GND - 18, -1);
 
   const cafeX = 54;
   const cafeY = GND - 116;
@@ -6161,8 +6241,8 @@ function drawRealRoad(timePeriod) {
     ctx.clip();
 
     const stoneOffset = (bgOff * 0.48) % 34;
-    ctx.strokeStyle = isNight ? "rgba(255,240,214,0.13)" : "rgba(54,48,42,0.22)";
-    ctx.lineWidth = 0.9;
+    ctx.strokeStyle = isNight ? "rgba(255,240,214,0.19)" : "rgba(44,39,35,0.30)";
+    ctx.lineWidth = 1.05;
     for (let y = horizonY - stoneOffset; y < bottomY + 36; y += 17) {
       const t = roadT(y);
       const half = roadHalfAt(t);
@@ -6174,8 +6254,25 @@ function drawRealRoad(timePeriod) {
       const stagger = (Math.floor(y / 17) % 2) * cell * 0.5;
       for (let x = cx - half * 0.9 + stagger; x < cx + half * 0.9; x += cell) {
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + 8 * t, y + 12 + 5 * t);
+        ctx.moveTo(x, y - 1);
+        ctx.lineTo(x + 7 * t, y + 13 + 6 * t);
+        ctx.stroke();
+      }
+    }
+    ctx.fillStyle = isNight ? "rgba(255,238,204,0.10)" : "rgba(255,255,255,0.13)";
+    ctx.strokeStyle = isNight ? "rgba(18,17,18,0.26)" : "rgba(48,42,36,0.27)";
+    ctx.lineWidth = 0.8;
+    for (let y = horizonY + (bottomY - horizonY) * 0.54 - (stoneOffset % 24); y < bottomY + 34; y += 21) {
+      const t = roadT(y);
+      const half = roadHalfAt(t);
+      const cell = 20 + 30 * t;
+      const stagger = (Math.floor(y / 21) % 2) * cell * 0.45;
+      for (let x = cx - half * 0.86 + stagger; x < cx + half * 0.86; x += cell) {
+        const rw = 8 + 11 * t;
+        const rh = 3 + 5 * t;
+        ctx.beginPath();
+        ctx.ellipse(x, y, rw, rh, 0.08 * Math.sin(x), 0, Math.PI * 2);
+        ctx.fill();
         ctx.stroke();
       }
     }
