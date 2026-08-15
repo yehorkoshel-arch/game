@@ -2899,106 +2899,72 @@ function drawLvivCobblestoneSidewalks(horizonY, bottomY, isNight) {
 }
 function drawLvivForegroundIdentity(isNight) {
   ctx.save();
-  const lionColor = isNight ? "#d2a257" : "#be873c";
-  const maneColor = isNight ? "#7b4d25" : "#6e421f";
-  const drawLion = (x, y, flip = 1) => {
+
+  const drawTinyLion = (x, y, flip = 1, scale = 0.42) => {
     ctx.save();
     ctx.translate(x, y);
-    ctx.scale(flip, 1);
-    ctx.fillStyle = isNight ? "rgba(105,96,82,0.92)" : "rgba(156,141,115,0.96)";
-    ctx.fillRect(-24, 18, 48, 10);
-    ctx.fillStyle = isNight ? "rgba(76,70,64,0.94)" : "rgba(126,112,92,0.96)";
-    ctx.fillRect(-18, 8, 36, 12);
-    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.scale(flip * scale, scale);
+    const lionColor = isNight ? "#d7a64f" : "#c9872d";
+    const maneColor = isNight ? "#8b5a2a" : "#7a421e";
+    ctx.fillStyle = "rgba(0,0,0,0.16)";
     ctx.beginPath();
-    ctx.ellipse(0, 23, 30, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 12, 24, 4, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = lionColor;
     ctx.beginPath();
-    ctx.ellipse(-2, -3, 23, 12, 0, 0, Math.PI * 2);
-    ctx.ellipse(20, -12, 11, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 28, 12, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillRect(-16, 4, 6, 15);
-    ctx.fillRect(-2, 5, 6, 14);
-    ctx.fillRect(9, 4, 6, 15);
     ctx.fillStyle = maneColor;
-    for (let a = 0; a < Math.PI * 2; a += Math.PI / 5) {
-      ctx.beginPath();
-      ctx.ellipse(20 + Math.cos(a) * 7, -12 + Math.sin(a) * 7, 4, 5, a, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.beginPath();
+    ctx.arc(26, -3, 13, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = lionColor;
     ctx.beginPath();
-    ctx.ellipse(20, -12, 7, 6, 0, 0, Math.PI * 2);
+    ctx.arc(30, -4, 8, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = lionColor;
-    ctx.lineWidth = 3.4;
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(-20, -7);
-    ctx.quadraticCurveTo(-34, -24, -18, -31);
+    ctx.moveTo(-24, -2);
+    ctx.quadraticCurveTo(-42, -22, -24, -30);
     ctx.stroke();
     ctx.fillStyle = maneColor;
     ctx.beginPath();
-    ctx.ellipse(-18, -31, 4, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(-24, -30, 5, 7, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#2f2116";
     ctx.beginPath();
-    ctx.arc(23, -13, 1.4, 0, Math.PI * 2);
+    ctx.arc(33, -5, 2, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#3d2918";
-    ctx.fillRect(25, -8, 5, 1.4);
     ctx.restore();
   };
 
-  drawLion(114, GND - 18, 1);
-  drawLion(W - 114, GND - 18, -1);
+  // Small Lviv lion references live high in the background, away from lanes.
+  drawTinyLion(W / 2 - 82, GND - 156, 1, 0.34);
+  drawTinyLion(W / 2 + 82, GND - 156, -1, 0.34);
+  drawTinyLion(92, GND - 164, 1, 0.28);
+  drawTinyLion(W - 92, GND - 164, -1, 0.28);
 
-  const cafeX = 54;
-  const cafeY = GND - 116;
-  ctx.fillStyle = isNight ? "rgba(98,54,48,0.94)" : "#b76c50";
-  ctx.fillRect(cafeX, cafeY + 42, 86, 40);
-  ctx.fillStyle = "#f0c978";
-  ctx.fillRect(cafeX + 9, cafeY + 50, 26, 20);
-  ctx.fillRect(cafeX + 48, cafeY + 50, 26, 20);
-  ctx.fillStyle = "#2f4f77";
+  // Move the Rynok sign into the far roadside/background.
+  const signX = W - 96;
+  const signY = GND - 148;
+  ctx.fillStyle = "#4a3028";
+  ctx.fillRect(signX + 32, signY + 26, 4, 52);
+  ctx.fillStyle = "rgba(192,138,73,0.92)";
   ctx.beginPath();
-  ctx.moveTo(cafeX - 12, cafeY + 42);
-  ctx.lineTo(cafeX + 43, cafeY + 5);
-  ctx.lineTo(cafeX + 98, cafeY + 42);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#ffd36e";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.fillStyle = "#ffe08a";
-  ctx.font = "bold 11px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("КАВА", cafeX + 43, cafeY + 35);
-  if (isNight) {
-    ctx.fillStyle = "rgba(255,191,88,0.18)";
-    ctx.beginPath();
-    ctx.ellipse(cafeX + 43, cafeY + 58, 76, 42, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  const signX = W - 184;
-  ctx.fillStyle = "#5a382c";
-  ctx.fillRect(signX + 38, GND - 110, 5, 76);
-  ctx.fillStyle = "#c08a49";
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(signX, GND - 112, 78, 28, 5);
-  else ctx.rect(signX, GND - 112, 78, 28);
+  if (ctx.roundRect) ctx.roundRect(signX, signY, 68, 24, 5);
+  else ctx.rect(signX, signY, 68, 24);
   ctx.fill();
   ctx.strokeStyle = "#ffe0a0";
   ctx.stroke();
   ctx.fillStyle = "#271a16";
-  ctx.font = "bold 13px sans-serif";
+  ctx.font = "bold 11px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Ринок", signX + 39, GND - 93);
+  ctx.fillText("Р РёРЅРѕРє", signX + 34, signY + 16);
 
-  const lamps = [64, 180, W - 188, W - 58];
+  const lamps = [42, W - 42];
   lamps.forEach((x, i) => {
-    const y = GND - 22 - (i % 2) * 8;
+    const y = GND - 34 - (i % 2) * 8;
     ctx.strokeStyle = "#2c2524";
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -3010,22 +2976,23 @@ function drawLvivForegroundIdentity(isNight) {
     ctx.ellipse(x, y - 80, 8, 12, 0, 0, Math.PI * 2);
     ctx.fill();
     if (isNight) {
-      ctx.fillStyle = "rgba(255,205,92,0.14)";
+      ctx.fillStyle = "rgba(255,205,92,0.12)";
       ctx.beginPath();
-      ctx.ellipse(x, y - 48, 30, 40, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y - 48, 26, 36, 0, 0, Math.PI * 2);
       ctx.fill();
     }
   });
-  ctx.strokeStyle = isNight ? "rgba(255,213,110,0.72)" : "rgba(255,192,76,0.46)";
-  ctx.lineWidth = 1.5;
+
+  ctx.strokeStyle = isNight ? "rgba(255,213,110,0.58)" : "rgba(255,192,76,0.38)";
+  ctx.lineWidth = 1.3;
   ctx.beginPath();
-  ctx.moveTo(46, GND - 122);
-  ctx.quadraticCurveTo(W / 2, GND - 82, W - 46, GND - 122);
+  ctx.moveTo(70, GND - 138);
+  ctx.quadraticCurveTo(W / 2, GND - 104, W - 70, GND - 138);
   ctx.stroke();
-  for (let x = 72; x < W - 46; x += 42) {
-    ctx.fillStyle = isNight ? "rgba(255,213,110,0.88)" : "rgba(255,196,80,0.55)";
+  for (let x = 96; x < W - 70; x += 46) {
+    ctx.fillStyle = isNight ? "rgba(255,213,110,0.78)" : "rgba(255,196,80,0.48)";
     ctx.beginPath();
-    ctx.arc(x, GND - 119 + Math.sin(x * 0.05) * 11, 3.5, 0, Math.PI * 2);
+    ctx.arc(x, GND - 135 + Math.sin(x * 0.05) * 8, 3, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -6706,15 +6673,15 @@ function drawRoadsideSigns() {
   for (const sign of signs) {
     const x = W + 120 + sign.gap - off;
     if (x < -90 || x > W + 100) continue;
-    drawRoadSign(x + sign.side * (currentLocation === 1 ? 34 : 18), sign.y, sign.label, sign.kind);
+    drawRoadSign(x + sign.side * (currentLocation === 1 ? 58 : 18), sign.y, sign.label, sign.kind);
   }
 
   const lightX = W + 360 - ((bgOff * 0.54) % 920);
   if (lightX > -70 && lightX < W + 80) {
     const safeLightX = currentLocation === 1
-      ? ((Math.floor(bgOff / 460) % 2 === 0) ? 28 : W - 28)
+      ? ((Math.floor(bgOff / 460) % 2 === 0) ? 22 : W - 22)
       : lightX;
-    drawTrafficLight(safeLightX, currentLocation === 1 ? GND - 24 : GND - 1);
+    drawTrafficLight(safeLightX, currentLocation === 1 ? GND - 60 : GND - 1);
   }
 }
 
