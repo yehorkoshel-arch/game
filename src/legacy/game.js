@@ -2904,8 +2904,12 @@ function drawLvivForegroundIdentity(isNight) {
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(flip * scale, scale);
-    const lionColor = isNight ? "#d7a64f" : "#c9872d";
-    const maneColor = isNight ? "#8b5a2a" : "#7a421e";
+    const lionColor = isNight ? "#ffd36e" : "#d49334";
+    const maneColor = isNight ? "#a4692d" : "#7a421e";
+    ctx.fillStyle = isNight ? "rgba(255,211,110,0.18)" : "rgba(255,198,76,0.12)";
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 42, 22, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = "rgba(0,0,0,0.16)";
     ctx.beginPath();
     ctx.ellipse(0, 12, 24, 4, 0, 0, Math.PI * 2);
@@ -2939,18 +2943,17 @@ function drawLvivForegroundIdentity(isNight) {
     ctx.restore();
   };
 
-  // Small Lviv lion references live high in the background, away from lanes.
-  drawTinyLion(W / 2 - 82, GND - 156, 1, 0.34);
-  drawTinyLion(W / 2 + 82, GND - 156, -1, 0.34);
-  drawTinyLion(92, GND - 164, 1, 0.28);
-  drawTinyLion(W - 92, GND - 164, -1, 0.28);
+  // Background-only Lviv lion easter eggs, lifted away from road and sidewalks.
+  drawTinyLion(W / 2 - 88, GND - 166, 1, 0.42);
+  drawTinyLion(W / 2 + 88, GND - 166, -1, 0.42);
+  drawTinyLion(96, GND - 178, 1, 0.34);
+  drawTinyLion(W - 96, GND - 178, -1, 0.34);
 
-  // Move the Rynok sign into the far roadside/background.
-  const signX = W - 96;
-  const signY = GND - 148;
+  const signX = W - 104;
+  const signY = GND - 164;
   ctx.fillStyle = "#4a3028";
   ctx.fillRect(signX + 32, signY + 26, 4, 52);
-  ctx.fillStyle = "rgba(192,138,73,0.92)";
+  ctx.fillStyle = "rgba(192,138,73,0.94)";
   ctx.beginPath();
   if (ctx.roundRect) ctx.roundRect(signX, signY, 68, 24, 5);
   else ctx.rect(signX, signY, 68, 24);
@@ -2960,11 +2963,11 @@ function drawLvivForegroundIdentity(isNight) {
   ctx.fillStyle = "#271a16";
   ctx.font = "bold 11px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Р РёРЅРѕРє", signX + 34, signY + 16);
+  ctx.fillText("\u0420\u0438\u043d\u043e\u043a", signX + 34, signY + 16);
 
-  const lamps = [42, W - 42];
+  const lamps = [36, W - 36];
   lamps.forEach((x, i) => {
-    const y = GND - 34 - (i % 2) * 8;
+    const y = GND - 48 - (i % 2) * 8;
     ctx.strokeStyle = "#2c2524";
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -2976,23 +2979,23 @@ function drawLvivForegroundIdentity(isNight) {
     ctx.ellipse(x, y - 80, 8, 12, 0, 0, Math.PI * 2);
     ctx.fill();
     if (isNight) {
-      ctx.fillStyle = "rgba(255,205,92,0.12)";
+      ctx.fillStyle = "rgba(255,205,92,0.10)";
       ctx.beginPath();
-      ctx.ellipse(x, y - 48, 26, 36, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y - 48, 24, 34, 0, 0, Math.PI * 2);
       ctx.fill();
     }
   });
 
-  ctx.strokeStyle = isNight ? "rgba(255,213,110,0.58)" : "rgba(255,192,76,0.38)";
+  ctx.strokeStyle = isNight ? "rgba(255,213,110,0.56)" : "rgba(255,192,76,0.36)";
   ctx.lineWidth = 1.3;
   ctx.beginPath();
-  ctx.moveTo(70, GND - 138);
-  ctx.quadraticCurveTo(W / 2, GND - 104, W - 70, GND - 138);
+  ctx.moveTo(76, GND - 146);
+  ctx.quadraticCurveTo(W / 2, GND - 112, W - 76, GND - 146);
   ctx.stroke();
-  for (let x = 96; x < W - 70; x += 46) {
-    ctx.fillStyle = isNight ? "rgba(255,213,110,0.78)" : "rgba(255,196,80,0.48)";
+  for (let x = 104; x < W - 76; x += 48) {
+    ctx.fillStyle = isNight ? "rgba(255,213,110,0.76)" : "rgba(255,196,80,0.46)";
     ctx.beginPath();
-    ctx.arc(x, GND - 135 + Math.sin(x * 0.05) * 8, 3, 0, Math.PI * 2);
+    ctx.arc(x, GND - 143 + Math.sin(x * 0.05) * 8, 3, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -5438,8 +5441,8 @@ function spawnCityGift(secret = false) {
   const lane = Math.floor(Math.random() * 3);
   if (!roadItemSpacingClear(lane, BONUS_SPAWN_X, 116)) return;
   const side = Math.random() < 0.5 ? -1 : 1;
-  const sourceX = side < 0 ? 58 : W - 58;
-  const sourceY = GND - 24;
+  const sourceX = side < 0 ? 42 : W - 42;
+  const sourceY = GND - 30;
   const kind = secret && Math.random() < 0.35 ? "shield" : "coin";
   const value = kind === "shield" ? 0 : secret ? 12 : 4;
   cityGifts.push({
@@ -6673,15 +6676,15 @@ function drawRoadsideSigns() {
   for (const sign of signs) {
     const x = W + 120 + sign.gap - off;
     if (x < -90 || x > W + 100) continue;
-    drawRoadSign(x + sign.side * (currentLocation === 1 ? 58 : 18), sign.y, sign.label, sign.kind);
+    drawRoadSign(x + sign.side * (currentLocation === 1 ? 72 : 18), sign.y, sign.label, sign.kind);
   }
 
   const lightX = W + 360 - ((bgOff * 0.54) % 920);
   if (lightX > -70 && lightX < W + 80) {
     const safeLightX = currentLocation === 1
-      ? ((Math.floor(bgOff / 460) % 2 === 0) ? 22 : W - 22)
+      ? ((Math.floor(bgOff / 460) % 2 === 0) ? 20 : W - 20)
       : lightX;
-    drawTrafficLight(safeLightX, currentLocation === 1 ? GND - 60 : GND - 1);
+    drawTrafficLight(safeLightX, currentLocation === 1 ? GND - 82 : GND - 1);
   }
 }
 
