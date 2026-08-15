@@ -1060,6 +1060,7 @@ function playMarchVocal(index) {
 }
 function showLyric() {
   if (!musicPlaying) return;
+  const copy = t();
   const lines =
     musicTrackIdx === 1
       ? getMarchLyrics()
@@ -1067,7 +1068,9 @@ function showLyric() {
         ? getRainLyrics()
         : musicTrackIdx === 3
           ? getBossLyrics()
-        : t().lyrics || [];
+        : currentLocation === 1 && copy.lvivLyrics
+          ? copy.lvivLyrics
+          : copy.lyrics || [];
   if (!lines.length) return;
   const line = lines[lyricIdx % lines.length];
   LYRIC_DIV.textContent = line;
@@ -2517,6 +2520,8 @@ function drawLvivParallaxCityFrame(timePeriod) {
   ctx.rect(0, 42, W, baseY - 32);
   ctx.clip();
 
+  drawLvivRynokHorizon(baseY, isNight);
+
   for (let tile = -420 - off; tile < W + 420; tile += 420) {
     for (let i = 0; i < 5; i++) {
       const w = 76 + ((i * 17) % 34);
@@ -2540,6 +2545,75 @@ function drawLvivParallaxCityFrame(timePeriod) {
   glow.addColorStop(1, "rgba(10,16,28,0.18)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, baseY - 100, W, 130);
+  ctx.restore();
+}
+function drawLvivRynokHorizon(baseY, isNight) {
+  const glow = isNight ? "rgba(255,190,96,0.84)" : "rgba(255,226,154,0.72)";
+  const shadow = "rgba(18,16,22,0.34)";
+  const towerX = W / 2 - 24;
+  const towerY = baseY - 148;
+
+  ctx.save();
+  ctx.fillStyle = shadow;
+  ctx.fillRect(towerX + 6, towerY + 8, 52, 150);
+  ctx.fillStyle = "#b98a62";
+  ctx.fillRect(towerX, towerY + 42, 52, 112);
+  ctx.fillStyle = "#80604e";
+  ctx.fillRect(towerX - 7, towerY + 34, 66, 12);
+  ctx.fillStyle = "#6f4e45";
+  ctx.beginPath();
+  ctx.moveTo(towerX - 3, towerY + 34);
+  ctx.lineTo(towerX + 26, towerY);
+  ctx.lineTo(towerX + 55, towerY + 34);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#f2d28b";
+  ctx.beginPath();
+  ctx.arc(towerX + 26, towerY + 72, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#4a332d";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(towerX + 26, towerY + 72);
+  ctx.lineTo(towerX + 26, towerY + 64);
+  ctx.moveTo(towerX + 26, towerY + 72);
+  ctx.lineTo(towerX + 34, towerY + 75);
+  ctx.stroke();
+
+  const domes = [
+    [towerX - 116, baseY - 74, 32, "#b7774f"],
+    [towerX + 136, baseY - 78, 34, "#9b665a"],
+  ];
+  domes.forEach(([x, y, r, color]) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 15, y, 30, 66);
+    ctx.fillStyle = "#d7a23d";
+    ctx.beginPath();
+    ctx.arc(x, y, r, Math.PI, 0);
+    ctx.fill();
+    ctx.strokeStyle = glow;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y - r - 5);
+    ctx.lineTo(x, y - r - 18);
+    ctx.moveTo(x - 6, y - r - 12);
+    ctx.lineTo(x + 6, y - r - 12);
+    ctx.stroke();
+  });
+
+  ctx.strokeStyle = isNight ? "rgba(255,216,116,0.54)" : "rgba(255,232,164,0.44)";
+  ctx.lineWidth = 2;
+  for (let x = -40; x < W + 40; x += 56) {
+    ctx.beginPath();
+    ctx.moveTo(x, baseY - 12 + Math.sin((x + bgOff) * 0.01) * 2);
+    ctx.quadraticCurveTo(x + 28, baseY + 3, x + 56, baseY - 12);
+    ctx.stroke();
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x + 28, baseY - 2, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 function drawLvivParallaxFacade(x, y, w, h, body, roof, isNight, variant) {
@@ -2669,6 +2743,104 @@ function drawLvivGeneratedSceneGroundBlend(timePeriod) {
     ctx.lineTo(cx + side * bottomHalf * 1.07, bottomY);
     ctx.stroke();
   }
+  drawLvivCobblestoneSidewalks(horizonY, bottomY, isNight);
+  drawLvivForegroundIdentity(isNight);
+  ctx.restore();
+}
+function drawLvivCobblestoneSidewalks(horizonY, bottomY, isNight) {
+  const cx = W / 2;
+  ctx.save();
+  ctx.strokeStyle = isNight ? "rgba(245,236,214,0.11)" : "rgba(70,54,42,0.14)";
+  ctx.lineWidth = 1;
+  for (let y = horizonY + 24; y < H + 18; y += 18) {
+    const t = Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
+    const half = ROAD_TOP_HALF + (ROAD_BOTTOM_HALF - ROAD_TOP_HALF) * t;
+    const cellW = 20 + t * 18;
+    const stagger = ((Math.floor(y / 18) % 2) * cellW) / 2;
+    const leftEnd = cx - half * 1.12;
+    for (let x = -stagger; x < leftEnd; x += cellW) {
+      ctx.strokeRect(x, y, cellW, 12 + t * 4);
+    }
+    const rightStart = cx + half * 1.12;
+    for (let x = rightStart + stagger; x < W + cellW; x += cellW) {
+      ctx.strokeRect(x, y, cellW, 12 + t * 4);
+    }
+  }
+  ctx.restore();
+}
+function drawLvivForegroundIdentity(isNight) {
+  ctx.save();
+  const lionColor = isNight ? "#c99b55" : "#b8843d";
+  const drawLion = (x, y, flip = 1) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(flip, 1);
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(0, 11, 28, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = lionColor;
+    ctx.beginPath();
+    ctx.ellipse(0, -2, 22, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(19, -10, 11, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(-14, 4, 7, 18);
+    ctx.fillRect(6, 4, 7, 18);
+    ctx.strokeStyle = lionColor;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-18, -4);
+    ctx.quadraticCurveTo(-30, -20, -18, -28);
+    ctx.stroke();
+    ctx.fillStyle = "#5b371e";
+    ctx.beginPath();
+    ctx.arc(22, -11, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
+  drawLion(114, GND - 8, 1);
+  drawLion(W - 114, GND - 8, -1);
+
+  ctx.fillStyle = "#0f5bb5";
+  ctx.strokeStyle = "#e8f2ff";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(W - 104, GND - 82, 62, 24, 4);
+  else ctx.rect(W - 104, GND - 82, 62, 24);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 13px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Львів", W - 73, GND - 65);
+  ctx.strokeStyle = "#6f7f93";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(W - 73, GND - 58);
+  ctx.lineTo(W - 73, GND - 20);
+  ctx.stroke();
+
+  const lamps = [64, 180, W - 188, W - 58];
+  lamps.forEach((x, i) => {
+    const y = GND - 22 - (i % 2) * 8;
+    ctx.strokeStyle = "#2c2524";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y - 76);
+    ctx.stroke();
+    ctx.fillStyle = "#ffd36e";
+    ctx.beginPath();
+    ctx.ellipse(x, y - 80, 8, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (isNight) {
+      ctx.fillStyle = "rgba(255,205,92,0.14)";
+      ctx.beginPath();
+      ctx.ellipse(x, y - 48, 30, 40, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
   ctx.restore();
 }
 function isRoadEvent(type) {
@@ -11584,7 +11756,7 @@ function drawHUDCanvas() {
     ctx.fillStyle = "#58beff";
     ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText(shieldCharges > 1 ? "SHIELD x" + shieldCharges : "SHIELD", 14, 46);
+    ctx.fillText(shieldCharges > 1 ? "Щит x" + shieldCharges : "Щит", 14, 46);
   }
   if (coffeeTimer > 0) {
     const remain = Math.max(0, Math.min(1, coffeeTimer / 520));
@@ -11648,7 +11820,7 @@ function drawHUDCanvas() {
   ctx.fillStyle = "#cde7ff";
   ctx.font = "bold 10px sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText("BACKPACK  E", W - 136, 34);
+  ctx.fillText("Рюкзак  E", W - 136, 34);
   for (let i = 0; i < backpackSlots; i++) {
     const bx = W - 62 - Math.max(0, backpackSlots - 2) * 25 + i * 25;
     const by = 39;
@@ -14070,7 +14242,7 @@ function drawAndriiBubble() {
   if (bubbleTimer <= 0) return;
   bubbleTimer--;
   const x = LANES[pLane],
-    y = pY - 80;
+    y = pY - 112;
   const alpha = Math.min(1, bubbleTimer / 20);
   ctx.globalAlpha = alpha;
   // хмарка
