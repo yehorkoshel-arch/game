@@ -234,7 +234,7 @@ canvas{display:block}
 #sMenu .lvl-btn.unlocked:hover{border-color:var(--menu-btn-border);color:var(--menu-btn-text);background:var(--menu-btn-bg-hover)}
 #sMenu .lvl-btn.current{border-color:var(--menu-btn-active-bg);color:var(--menu-btn-active-text);background:var(--menu-btn-active-bg);box-shadow:0 0 10px rgba(255,215,0,0.3);text-shadow:none}
 #sMenu .lvl-btn.done{border-color:#2d6a34;color:#6bcb77;background:#0d1e10}
-#sMenu .lvl-btn-name{font-size:7px;opacity:.9;letter-spacing:0.3px;text-transform:uppercase}
+#sMenu .lvl-btn-name{max-width:40px;font-size:6px;line-height:.95;opacity:.9;letter-spacing:0;text-transform:uppercase;white-space:normal;overflow-wrap:anywhere;text-align:center}
 .loc-tabs{display:flex;gap:0;margin-bottom:10px;border-radius:8px;overflow:hidden;border:1px solid var(--menu-chip-border)}
 .loc-tab{flex:1;padding:7px 10px;font-size:12px;font-weight:700;border:none;background:var(--menu-chip-bg);color:var(--menu-chip-text);cursor:pointer;transition:background .2s,color .2s;text-shadow:0 1px 4px rgba(0,0,0,.35)}
 .loc-tab.active{background:var(--menu-btn-active-bg);color:var(--menu-btn-active-text);text-shadow:none}

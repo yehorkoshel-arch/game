@@ -586,14 +586,25 @@ const BOSS_NOTES = [
   [0, 0.25], [3, 0.25], [6, 0.25], [10, 0.25],
   [12, 0.5], [10, 0.5], [6, 1],
 ];
-const MUSIC_TRACKS = [MELODY_NOTES, MARCH_NOTES, RAIN_NOTES, BOSS_NOTES];
+const LVIV_NOTES = [
+  [0, 1], [4, 1], [7, 1], [9, 1],
+  [7, 1], [4, 1], [2, 1], [0, 1],
+  [5, 1], [9, 1], [12, 1], [11, 1],
+  [9, 2], [7, 2],
+  [4, 1], [7, 1], [9, 1], [12, 1],
+  [14, 1], [12, 1], [9, 1], [7, 1],
+  [5, 1], [4, 1], [2, 1], [0, 2],
+];
+const MUSIC_TRACKS = [MELODY_NOTES, MARCH_NOTES, RAIN_NOTES, BOSS_NOTES, LVIV_NOTES];
 function getMusicTrackIndex(track = settingMusicTrack) {
   if (track === "march") return 1;
   if (track === "rain") return 2;
   return 0;
 }
 function getActiveMusicTrackIndex() {
-  return bossActive ? 3 : getMusicTrackIndex();
+  if (bossActive) return 3;
+  if (currentLocation === 1 && settingMusicTrack === "kyiv") return 4;
+  return getMusicTrackIndex();
 }
 function resetMusicPattern() {
   melodyIdx = 0;
@@ -1867,17 +1878,11 @@ function robotRadio(key, cooldown = 360) {
 function updateFireControl() {
   const weapon = getAndriiWeapon(currentLevel, currentLocation);
   const fireButton = document.getElementById("cFire");
-  fireButton.textContent =
-    weapon === "minigun"
-      ? "Мініган"
-      : weapon === "bossblaster"
-        ? "Бластер"
-        : weapon
-          ? "Вогонь"
-          : t().menu;
   const L = t();
-  fireButton.textContent =
-    weapon === "minigun" ? L.minigun : weapon === "bossblaster" ? L.blaster : weapon ? L.fire : L.menu;
+  fireButton.textContent = weapon ? L.fire : "";
+  fireButton.title =
+    weapon === "minigun" ? L.minigun : weapon === "bossblaster" ? L.blaster : weapon ? L.fire : "";
+  fireButton.setAttribute("aria-label", fireButton.title || L.fire || "Fire");
   fireButton.style.display = weapon ? "" : "none";
 }
 const ROBOT_VOICE_UI = {
@@ -2991,25 +2996,6 @@ function drawLvivForegroundIdentity(isNight) {
   ctx.textAlign = "center";
   ctx.fillText("Ринок", signX + 39, GND - 93);
 
-  ctx.fillStyle = "#0f5bb5";
-  ctx.strokeStyle = "#e8f2ff";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(W - 104, GND - 82, 62, 24, 4);
-  else ctx.rect(W - 104, GND - 82, 62, 24);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 13px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("Львів", W - 73, GND - 65);
-  ctx.strokeStyle = "#6f7f93";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(W - 73, GND - 58);
-  ctx.lineTo(W - 73, GND - 20);
-  ctx.stroke();
-
   const lamps = [64, 180, W - 188, W - 58];
   lamps.forEach((x, i) => {
     const y = GND - 22 - (i % 2) * 8;
@@ -3622,7 +3608,9 @@ function buildLevelBar() {
     const locked = i > progress;
     btn.className = "lvl-btn" + (done ? " done" : isCur ? " current" : "");
     if (!locked) btn.classList.add("unlocked");
-    btn.innerHTML = `<span>${done ? "✓" : locked ? "🔒" : i + 1}</span><span class="lvl-btn-name">${(lvNames[i] || "").slice(0, 5)}</span>`;
+    const levelName = lvNames[i] || "";
+    btn.title = levelName;
+    btn.innerHTML = `<span>${done ? "✓" : locked ? "🔒" : i + 1}</span><span class="lvl-btn-name">${levelName}</span>`;
     if (!locked) {
       btn.onclick = () => {
         currentLevel = i;

@@ -113,8 +113,7 @@ export function playRecordedVoice(text, onDone) {
     console.warn("Recorded voice file unavailable", src);
     finish();
   };
-  recordedAudio.play().catch((err) => {
-    console.warn("Recorded voice playback failed", err);
+  recordedAudio.play().catch(() => {
     finish();
   });
   return true;
