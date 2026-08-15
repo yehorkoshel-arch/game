@@ -6579,40 +6579,7 @@ function drawRoadSpriteAt(point, drawBody, shadowRx = 18, shadowRy = 5, shadowAl
   ctx.restore();
 }
 
-const LVIV_SIGN_TEXT_BY_TYPE = Object.freeze({
-  lviv: "\u041b\u044c\u0432\u0456\u0432",
-  rynok: "\u0420\u0438\u043d\u043e\u043a",
-  shkola: "\u0428\u043a\u043e\u043b\u0430",
-  repair: "\u0420\u0435\u043c\u043e\u043d\u0442",
-});
-function getLvivSignType(signOrKind, fallbackLabel = "") {
-  if (signOrKind && typeof signOrKind === "object") {
-    if (signOrKind.type) return signOrKind.type;
-    return getLvivSignType(signOrKind.kind, signOrKind.label);
-  }
-  const kind = String(signOrKind || "");
-  const label = String(fallbackLabel || "");
-  if (kind === "lvivEntry") return "lviv";
-  if (kind === "uaSchool" || kind === "school") return "shkola";
-  if (kind === "uaWarning" || kind === "repair") return "repair";
-  if (/\u0420\u0438\u043d\u043e\u043a/i.test(label)) return "rynok";
-  if (/\u041b\u044c\u0432\u0456\u0432/i.test(label)) return "lviv";
-  if (/\u0428\u043a\u043e\u043b\u0430/i.test(label)) return "shkola";
-  return "";
-}
-function isGarbledRoadSignText(label) {
-  const text = String(label || "").trim();
-  return !text || /P{2,}|PePS|PPS|PSP|PP PP/i.test(text);
-}
-function getRoadSignSafeLabel(label, kind = "direction", type = "") {
-  if (currentLocation !== 1) return label;
-  const signType = type || getLvivSignType(kind, label);
-  if (LVIV_SIGN_TEXT_BY_TYPE[signType]) return LVIV_SIGN_TEXT_BY_TYPE[signType];
-  return isGarbledRoadSignText(label) ? LVIV_SIGN_TEXT_BY_TYPE.lviv : label;
-}
-
-function drawRoadSign(x, y, label, kind = "direction", type = "") {
-  label = getRoadSignSafeLabel(label, kind, type);
+function drawRoadSign(x, y, label, kind = "direction") {
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.beginPath();
@@ -6763,10 +6730,9 @@ function drawRoadsideSigns() {
   const signText = gt("signs");
   const signs = currentLocation === 1
     ? [
-      { type: "lviv", label: LVIV_SIGN_TEXT_BY_TYPE.lviv, kind: "lvivEntry", y: GND - 82, side: 1, gap: 0, version: LVIV_ROADSIDE_VERSION },
-      { type: "rynok", label: LVIV_SIGN_TEXT_BY_TYPE.rynok, kind: "direction", y: GND - 86, side: -1, gap: 210, version: LVIV_ROADSIDE_VERSION },
-      { type: "shkola", label: LVIV_SIGN_TEXT_BY_TYPE.shkola, kind: "uaSchool", y: GND - 82, side: 1, gap: 430, version: LVIV_ROADSIDE_VERSION },
-      { type: "repair", label: LVIV_SIGN_TEXT_BY_TYPE.repair, kind: "uaWarning", y: GND - 80, side: -1, gap: 650, version: LVIV_ROADSIDE_VERSION },
+      { label: locLabel, kind: "lvivEntry", y: GND - 2, side: 1, gap: 0, version: LVIV_ROADSIDE_VERSION },
+      { label: signText.school, kind: "uaSchool", y: GND - 4, side: 1, gap: 230, version: LVIV_ROADSIDE_VERSION },
+      { label: signText.repair, kind: "uaWarning", y: GND - 1, side: -1, gap: 450, version: LVIV_ROADSIDE_VERSION },
     ]
     : [
       { label: locLabel, kind: "direction", y: GND - 2, side: -1, gap: 0 },
@@ -6778,13 +6744,7 @@ function drawRoadsideSigns() {
   for (const sign of signs) {
     const x = W + 120 + sign.gap - off;
     if (x < -90 || x > W + 100) continue;
-    drawRoadSign(
-      x + sign.side * (currentLocation === 1 ? 116 : 18),
-      sign.y,
-      sign.label,
-      sign.kind,
-      sign.type,
-    );
+    drawRoadSign(x + sign.side * (currentLocation === 1 ? 72 : 18), sign.y, sign.label, sign.kind);
   }
 
   const lightX = W + 360 - ((bgOff * 0.54) % 920);
@@ -6819,7 +6779,7 @@ function drawLvivTram() {
     ctx.fillStyle = "#ffdf78";
     ctx.font = "bold 11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("\u0434\u0437\u0435\u043d\u044c-\u0434\u0437\u0435\u043d\u044c!", tramX + 114, tramY - 27);
+    ctx.fillText("РґР·РµРЅСЊ-РґР·РµРЅСЊ!", tramX + 114, tramY - 27);
     ctx.restore();
   }
 
