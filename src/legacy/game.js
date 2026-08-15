@@ -3911,7 +3911,7 @@ function updateEndPanel() {
   panel.classList.toggle("active", active);
   if (!active) return;
   const levelName = getLevelNames(currentLocation, lang)[getPlayableLevel(currentLevel)] || "";
-  const scoreLine = `${score} ${t().pts || "pts"} В· ${runCoins} РјРѕРЅРµС‚`;
+  const scoreLine = `${score} ${t().pts || "\u043e\u0447\u043e\u043a"} В· ${runCoins} \u043c\u043e\u043d\u0435\u0442`;
   if (title) {
     title.textContent = isOver
       ? "\u0421\u043f\u0440\u043e\u0431\u0443\u0439 \u0449\u0435 \u0440\u0430\u0437"
@@ -3920,7 +3920,7 @@ function updateEndPanel() {
         : "\u0420\u0456\u0432\u0435\u043d\u044c \u043f\u0440\u043e\u0439\u0434\u0435\u043d\u043e!";
   }
   if (stats) {
-    stats.textContent = `${scoreLine} � ${t().levelLabel || "Level"} ${getPlayableLevel(currentLevel) + 1} ${levelName}`;
+    stats.textContent = `${scoreLine} В· ${t().levelLabel || "\u0420\u0456\u0432\u0435\u043d\u044c"} ${getPlayableLevel(currentLevel) + 1} ${levelName}`;
   }
   if (retry) {
     retry.hidden = isClear;
