@@ -5601,6 +5601,12 @@ function reserveRoadPickupSpawn(lane, x = BONUS_SPAWN_X, minFrames = 42, minX = 
   lastRoadPickupSpawnFrame = fr;
   return true;
 }
+function getSmoothDifficultyFactor() {
+  if (fr < 60 * 20) return 1;
+  const elapsedMinutes = Math.min(1, (fr - 60 * 20) / (60 * 70));
+  const scorePressure = Math.min(1, Math.max(0, score) / 3000);
+  return 1 + elapsedMinutes * scorePressure * 0.08;
+}
 function spawnObs() {
   if (!reserveRoadHazardSpawn()) return;
   const lv = getLvl();
@@ -5677,7 +5683,7 @@ function spawnCoin() {
   const l = Math.floor(Math.random() * 3),
     hi = Math.random() < 0.35;
   if (!reserveRoadPickupSpawn(l, BONUS_SPAWN_X, 34, 96)) return;
-  coins.push({ x: BONUS_SPAWN_X, lane: l, y: GND, done: false });
+  coins.push({ x: BONUS_SPAWN_X, lane: l, y: GND, done: false, phase: Math.random() * Math.PI * 2 });
 }
 function spawnMagnet() {
   const lane = Math.floor(Math.random() * 3);
@@ -6636,21 +6642,36 @@ function drawRealRoad(timePeriod) {
   ctx.lineCap = "round";
   const dashCount = isLvivRoad ? 13 : 11;
   const animProgress = (bgOff * 0.007) % 1;
-  for (const laneEdgeRatio of laneEdgeRatios) {
+  const stableDash01 = (seed) => {
+    const s = Math.sin(seed * 12.9898) * 43758.5453;
+    return s - Math.floor(s);
+  };
+  for (let laneIdx = 0; laneIdx < laneEdgeRatios.length; laneIdx++) {
+    const laneEdgeRatio = laneEdgeRatios[laneIdx];
     for (let i = 0; i < dashCount; i++) {
       const u = (i / dashCount + animProgress) % 1;
       if (u < 0.035) continue;
+      if (isLvivRoad && (i + laneIdx * 3) % 9 === 4) continue;
       const t1 = u * u;
       const y1 = horizonY + (bottomY - horizonY) * t1;
-      const y2 = Math.min(bottomY, y1 + (isLvivRoad ? (5 + 30 * u) * u : 14 + 44 * u));
+      const dashSeed = i + laneIdx * 31 + (isLvivRoad ? 101 : 17);
+      const dashLengthVar = 0.84 + stableDash01(dashSeed) * 0.46;
+      const dashWidthVar = 0.86 + stableDash01(dashSeed + 7.5) * 0.36;
+      const y2 = Math.min(
+        bottomY,
+        y1 + (isLvivRoad ? (5 + 30 * u) * u : 14 + 44 * u) * dashLengthVar,
+      );
       const t2 = roadT(y2);
       const half1 = roadHalfAt(t1);
       const half2 = roadHalfAt(t2);
-      ctx.lineWidth = isLvivRoad ? 1.1 + 3.6 * u : 1.4 + 4.2 * u;
+      ctx.lineWidth = (isLvivRoad ? 1.1 + 3.6 * u : 1.4 + 4.2 * u) * dashWidthVar;
+      const prevAlpha = ctx.globalAlpha;
+      ctx.globalAlpha = prevAlpha * (0.42 + 0.58 * u);
       ctx.beginPath();
       ctx.moveTo(cx + half1 * laneEdgeRatio, y1);
       ctx.lineTo(cx + half2 * laneEdgeRatio, y2);
       ctx.stroke();
+      ctx.globalAlpha = prevAlpha;
     }
   }
   ctx.lineCap = "butt";
@@ -6854,6 +6875,24 @@ function drawRoadSign(x, y, label, kind = "direction") {
     ctx.font = "bold 13px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(label, x, y - 23);
+  } else if (kind === "kyivCulture") {
+    ctx.fillStyle = "#0057b7";
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x - 42, y - 45, 84, 32, 5) : ctx.rect(x - 42, y - 45, 84, 32);
+    ctx.fill();
+    ctx.strokeStyle = "#f8fafc";
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+    ctx.fillStyle = "#f8fafc";
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x, y - 25);
+    ctx.strokeStyle = "#ffd700";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 26, y - 18);
+    ctx.lineTo(x + 26, y - 18);
+    ctx.stroke();
   } else if (kind === "repair") {
     ctx.fillStyle = "#f2c94c";
     ctx.beginPath();
@@ -6957,6 +6996,7 @@ function drawRoadsideSigns() {
       { label: signText.school, kind: "school", y: GND - 4, side: 1, gap: 210 },
       { label: signText.repair, kind: "repair", y: GND - 1, side: -1, gap: 420 },
       { label: signText.metro, kind: "metro", y: GND - 5, side: 1, gap: 620 },
+      { label: "ТРИПІЛЛЯ", kind: "kyivCulture", y: GND - 7, side: -1, gap: 760 },
     ];
   const off = (bgOff * 0.62) % 820;
   for (const sign of signs) {
@@ -11459,14 +11499,22 @@ function drawCoin(c) {
   ctx.beginPath();
   ctx.arc(x, y, 18 * p.scale, 0, Math.PI * 2);
   ctx.fill();
+  const spin = Math.abs(Math.cos(fr * 0.13 + (c.phase || c.x * 0.01)));
+  const coinW = (5.2 + spin * 5.8) * p.scale;
+  const coinH = 8.2 * p.scale;
   ctx.fillStyle = "#ffd700";
   ctx.beginPath();
-  ctx.arc(x, y, 8 * p.scale, 0, Math.PI * 2);
+  ctx.ellipse(x, y, coinW, coinH, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.56)";
+  ctx.lineWidth = Math.max(0.8, 1.2 * p.scale);
+  ctx.beginPath();
+  ctx.ellipse(x - coinW * 0.26, y - coinH * 0.18, coinW * 0.28, coinH * 0.42, 0, 0, Math.PI * 2);
+  ctx.stroke();
   ctx.fillStyle = "#b8860b";
   ctx.font = `bold ${Math.max(7, 10 * p.scale)}px sans-serif`;
   ctx.textAlign = "center";
-  ctx.fillText("в‚ґ", x, y + 3 * p.scale);
+  if (spin > 0.32) ctx.fillText("₴", x, y + 3 * p.scale);
   ctx.textAlign = "left";
 }
 
@@ -13928,7 +13976,7 @@ function update() {
     160 - Math.floor(spd * 6),
     settingDiff === "hard" ? 75 : settingDiff === "easy" ? 118 : 96,
   );
-  const interval = Math.ceil(baseObstacleInterval * OBSTACLE_SPAWN_GAP_MULT);
+  const interval = Math.ceil((baseObstacleInterval * OBSTACLE_SPAWN_GAP_MULT) / getSmoothDifficultyFactor());
   const startEmpty = fr < START_EMPTY_FRAMES || totalDist < START_EMPTY_DISTANCE;
   const startSafe = fr < START_SAFE_FRAMES || totalDist < START_SAFE_DISTANCE;
   updateRoadEvent(startSafe);
