@@ -1558,6 +1558,40 @@ const ROAD_TOP_HALF = 80;
 const ROAD_BOTTOM_HALF = 300;
 const ROAD_LANE_RATIOS = [-0.62, 0, 0.62];
 const ROAD_LANE_EDGE_RATIOS = [-0.31, 0.31];
+
+// A light S-bend gives the track depth while keeping the gameplay camera centered.
+// Every road layer uses this same curve, including lane markers and pickups.
+function catmullRom(p0, p1, p2, p3, t) {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return {
+    x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+    y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3),
+  };
+}
+
+function getRoadCurveCenter(t) {
+  const safeT = Math.max(0, Math.min(1, t));
+  const cx = W / 2;
+  const bend = Math.min(W * 0.36, 210);
+  return catmullRom(
+    { x: cx + bend, y: -0.25 },
+    { x: cx, y: 0 },
+    { x: cx, y: 1 },
+    { x: cx - bend, y: 1.25 },
+    safeT,
+  ).x;
+}
+
+function getRoadPerspectivePoint(t, laneRatio = 0) {
+  const safeT = Math.max(0, Math.min(1, t));
+  const half = ROAD_TOP_HALF + (ROAD_BOTTOM_HALF - ROAD_TOP_HALF) * safeT;
+  return {
+    x: getRoadCurveCenter(safeT) + half * laneRatio,
+    y: GND - 128 + (H + 24 - (GND - 128)) * safeT,
+    half,
+  };
+}
 const PUBLIC_BASE_URL = import.meta.env?.BASE_URL || "/";
 const KYIV_SKYLINE_SRC = `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/kyiv-skyline-generated.png`;
 const ROAD_IMAGE_SRC = `${PUBLIC_BASE_URL.replace(/\/?$/, "/")}assets/road-kyiv-night.png`;
@@ -6372,6 +6406,23 @@ function drawRealRoad(timePeriod) {
   // and sidewalks, so scrolling it inside the road polygon puts city objects on the asphalt.
   const roadT = (y) => Math.max(0, Math.min(1, (y - horizonY) / (bottomY - horizonY)));
   const roadHalfAt = (t) => topHalf + (bottomHalf - topHalf) * t;
+  const centerAt = (t) => getRoadCurveCenter(t);
+  const traceRoadSurface = () => {
+    ctx.beginPath();
+    for (let step = 0; step <= 16; step++) {
+      const t = step / 16;
+      const y = horizonY + (bottomY - horizonY) * t;
+      const x = centerAt(t) - roadHalfAt(t);
+      if (step === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    for (let step = 16; step >= 0; step--) {
+      const t = step / 16;
+      const y = horizonY + (bottomY - horizonY) * t;
+      ctx.lineTo(centerAt(t) + roadHalfAt(t), y);
+    }
+    ctx.closePath();
+  };
 
   if (currentLocation === 0) {
     const sidewalk = ctx.createLinearGradient(0, horizonY, 0, bottomY);
@@ -6389,8 +6440,8 @@ function drawRealRoad(timePeriod) {
       const half = roadHalfAt(t);
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(cx - half * 1.03, y);
-      ctx.moveTo(cx + half * 1.03, y);
+      ctx.lineTo(centerAt(t) - half * 1.03, y);
+      ctx.moveTo(centerAt(t) + half * 1.03, y);
       ctx.lineTo(W, y);
       ctx.stroke();
     }
@@ -6401,15 +6452,15 @@ function drawRealRoad(timePeriod) {
     ctx.fillStyle = verge;
     ctx.beginPath();
     ctx.moveTo(0, horizonY);
-    ctx.lineTo(cx - topHalf * 1.34, horizonY);
-    ctx.lineTo(cx - bottomHalf * 1.06, bottomY);
+    ctx.lineTo(centerAt(0) - topHalf * 1.34, horizonY);
+    ctx.lineTo(centerAt(1) - bottomHalf * 1.06, bottomY);
     ctx.lineTo(0, bottomY);
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
     ctx.moveTo(W, horizonY);
-    ctx.lineTo(cx + topHalf * 1.34, horizonY);
-    ctx.lineTo(cx + bottomHalf * 1.06, bottomY);
+    ctx.lineTo(centerAt(0) + topHalf * 1.34, horizonY);
+    ctx.lineTo(centerAt(1) + bottomHalf * 1.06, bottomY);
     ctx.lineTo(W, bottomY);
     ctx.closePath();
     ctx.fill();
@@ -6432,8 +6483,8 @@ function drawRealRoad(timePeriod) {
         const t = step / 12;
         const y = horizonY + (bottomY - horizonY) * t;
         const half = roadHalfAt(t);
-        const inner = cx + side * half * 1.06;
-        const outer = cx + side * half * 1.38;
+        const inner = centerAt(t) + side * half * 1.06;
+        const outer = centerAt(t) + side * half * 1.38;
         if (step === 0) ctx.moveTo(inner, y);
         else ctx.lineTo(inner, y);
         if (step === 12) ctx.lineTo(outer, y);
@@ -6442,7 +6493,7 @@ function drawRealRoad(timePeriod) {
         const t = step / 12;
         const y = horizonY + (bottomY - horizonY) * t;
         const half = roadHalfAt(t);
-        ctx.lineTo(cx + side * half * 1.38, y);
+        ctx.lineTo(centerAt(t) + side * half * 1.38, y);
       }
       ctx.closePath();
       ctx.fill();
@@ -6453,8 +6504,8 @@ function drawRealRoad(timePeriod) {
         const t = roadT(y);
         const half = roadHalfAt(t);
         ctx.beginPath();
-        ctx.moveTo(cx + side * half * 1.08, y);
-        ctx.lineTo(cx + side * half * 1.34, y);
+        ctx.moveTo(centerAt(t) + side * half * 1.08, y);
+        ctx.lineTo(centerAt(t) + side * half * 1.34, y);
         ctx.stroke();
       }
       const cobbleOffset = Math.round(bgOff * 0.28) % 26;
@@ -6462,8 +6513,8 @@ function drawRealRoad(timePeriod) {
       for (let y = horizonY + 12 - cobbleOffset; y < bottomY; y += 26) {
         const t = roadT(y);
         const half = roadHalfAt(t);
-        const inner = cx + side * half * 1.08;
-        const outer = cx + side * half * 1.34;
+        const inner = centerAt(t) + side * half * 1.08;
+        const outer = centerAt(t) + side * half * 1.34;
         const cell = 16 + t * 15;
         for (let x = Math.min(inner, outer); x < Math.max(inner, outer); x += cell) {
           ctx.strokeRect(x, y, cell * 0.86, 8 + t * 6);
@@ -6473,8 +6524,8 @@ function drawRealRoad(timePeriod) {
       ctx.strokeStyle = isNight ? "rgba(245,250,255,0.30)" : "rgba(240,238,228,0.62)";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(cx + side * topHalf * 1.055, horizonY);
-      ctx.lineTo(cx + side * bottomHalf * 1.055, bottomY);
+      ctx.moveTo(centerAt(0) + side * topHalf * 1.055, horizonY);
+      ctx.lineTo(centerAt(1) + side * bottomHalf * 1.055, bottomY);
       ctx.stroke();
     };
     drawLvivSidewalkBand(-1);
@@ -6492,22 +6543,12 @@ function drawRealRoad(timePeriod) {
     road.addColorStop(1, "#1a1a2e");
   }
   ctx.fillStyle = road;
-  ctx.beginPath();
-  ctx.moveTo(cx - topHalf, horizonY);
-  ctx.lineTo(cx + topHalf, horizonY);
-  ctx.lineTo(cx + bottomHalf, bottomY);
-  ctx.lineTo(cx - bottomHalf, bottomY);
-  ctx.closePath();
+  traceRoadSurface();
   ctx.fill();
 
   if (isLvivRoad) {
     ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx - topHalf, horizonY);
-    ctx.lineTo(cx + topHalf, horizonY);
-    ctx.lineTo(cx + bottomHalf, bottomY);
-    ctx.lineTo(cx - bottomHalf, bottomY);
-    ctx.closePath();
+    traceRoadSurface();
     ctx.clip();
 
     const stoneOffset = (bgOff * 0.48) % 34;
@@ -6517,12 +6558,12 @@ function drawRealRoad(timePeriod) {
       const t = roadT(y);
       const half = roadHalfAt(t);
       ctx.beginPath();
-      ctx.moveTo(cx - half * 0.92, y);
-      ctx.lineTo(cx + half * 0.92, y);
+      ctx.moveTo(centerAt(t) - half * 0.92, y);
+      ctx.lineTo(centerAt(t) + half * 0.92, y);
       ctx.stroke();
       const cell = 18 + 24 * t;
       const stagger = (Math.floor(y / 17) % 2) * cell * 0.5;
-      for (let x = cx - half * 0.9 + stagger; x < cx + half * 0.9; x += cell) {
+      for (let x = centerAt(t) - half * 0.9 + stagger; x < centerAt(t) + half * 0.9; x += cell) {
         ctx.beginPath();
         ctx.moveTo(x, y - 1);
         ctx.lineTo(x + 7 * t, y + 13 + 6 * t);
@@ -6536,7 +6577,7 @@ function drawRealRoad(timePeriod) {
       const half = roadHalfAt(t);
       const cell = 20 + 30 * t;
       const stagger = (Math.floor(y / 21) % 2) * cell * 0.45;
-      for (let x = cx - half * 0.86 + stagger; x < cx + half * 0.86; x += cell) {
+      for (let x = centerAt(t) - half * 0.86 + stagger; x < centerAt(t) + half * 0.86; x += cell) {
         const rw = 8 + 11 * t;
         const rh = 3 + 5 * t;
         const shade = Math.sin((Math.floor(x * 0.43) * 12.9898 + Math.floor(y * 0.61) * 78.233) * 0.017);
@@ -6555,14 +6596,24 @@ function drawRealRoad(timePeriod) {
     ctx.lineWidth = 2.1;
     for (const railRatio of [-0.42, 0.42]) {
       ctx.beginPath();
-      ctx.moveTo(cx + topHalf * railRatio, horizonY);
-      ctx.lineTo(cx + bottomHalf * railRatio, bottomY);
+      for (let step = 0; step <= 16; step++) {
+        const t = step / 16;
+        const x = centerAt(t) + roadHalfAt(t) * railRatio;
+        const y = horizonY + (bottomY - horizonY) * t;
+        if (step === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
       ctx.stroke();
       ctx.strokeStyle = isNight ? "rgba(235,221,190,0.38)" : "rgba(255,242,207,0.46)";
       ctx.lineWidth = 0.9;
       ctx.beginPath();
-      ctx.moveTo(cx + topHalf * (railRatio + 0.018), horizonY);
-      ctx.lineTo(cx + bottomHalf * (railRatio + 0.018), bottomY);
+      for (let step = 0; step <= 16; step++) {
+        const t = step / 16;
+        const x = centerAt(t) + roadHalfAt(t) * (railRatio + 0.018);
+        const y = horizonY + (bottomY - horizonY) * t;
+        if (step === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
       ctx.stroke();
       ctx.strokeStyle = isNight ? "rgba(36,31,28,0.72)" : "rgba(58,50,43,0.62)";
       ctx.lineWidth = 2.1;
@@ -6576,7 +6627,7 @@ function drawRealRoad(timePeriod) {
       const half = roadHalfAt(roadT(y));
       ctx.fillStyle = isNight ? "rgba(245,238,220,0.34)" : "rgba(255,250,236,0.58)";
       for (let s = -3; s <= 3; s++) {
-        ctx.fillRect(cx + s * half * 0.24 - half * 0.07, y, half * 0.14, 4 + 9 * t);
+        ctx.fillRect(centerAt(roadT(y)) + s * half * 0.24 - half * 0.07, y, half * 0.14, 4 + 9 * t);
       }
     }
 
@@ -6585,7 +6636,7 @@ function drawRealRoad(timePeriod) {
       if (t < 0.28) continue;
       const half = roadHalfAt(t);
       const y = horizonY + (bottomY - horizonY) * t;
-      const x = cx + half * (i % 2 ? -0.24 : 0.24);
+      const x = centerAt(t) + half * (i % 2 ? -0.24 : 0.24);
       ctx.fillStyle = "rgba(24,25,28,0.42)";
       ctx.beginPath();
       ctx.ellipse(x, y, 8 + 13 * t, 3 + 5 * t, 0, 0, Math.PI * 2);
@@ -6597,12 +6648,7 @@ function drawRealRoad(timePeriod) {
     ctx.restore();
   } else {
     ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx - topHalf, horizonY);
-    ctx.lineTo(cx + topHalf, horizonY);
-    ctx.lineTo(cx + bottomHalf, bottomY);
-    ctx.lineTo(cx - bottomHalf, bottomY);
-    ctx.closePath();
+    traceRoadSurface();
     ctx.clip();
 
     const textureOffset = (bgOff * 0.45) % 42;
@@ -6612,8 +6658,8 @@ function drawRealRoad(timePeriod) {
       ctx.strokeStyle = "rgba(255, 255, 255, 0.035)";
       ctx.lineWidth = 0.7 + 0.9 * t;
       ctx.beginPath();
-      ctx.moveTo(cx - half * 0.82, y);
-      ctx.lineTo(cx + half * 0.82, y);
+      ctx.moveTo(centerAt(t) - half * 0.82, y);
+      ctx.lineTo(centerAt(t) + half * 0.82, y);
       ctx.stroke();
     }
 
@@ -6629,10 +6675,15 @@ function drawRealRoad(timePeriod) {
   ctx.strokeStyle = isLvivRoad ? (isNight ? "rgba(255, 236, 190, 0.78)" : "rgba(255, 248, 220, 0.90)") : "#ffd700";
   ctx.lineWidth = isLvivRoad ? 5.2 : 4.5;
   ctx.beginPath();
-  ctx.moveTo(cx - topHalf * 0.96, horizonY);
-  ctx.lineTo(cx - bottomHalf * 0.96, bottomY);
-  ctx.moveTo(cx + topHalf * 0.96, horizonY);
-  ctx.lineTo(cx + bottomHalf * 0.96, bottomY);
+  for (const side of [-1, 1]) {
+    for (let step = 0; step <= 16; step++) {
+      const t = step / 16;
+      const x = centerAt(t) + side * roadHalfAt(t) * 0.96;
+      const y = horizonY + (bottomY - horizonY) * t;
+      if (step === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+  }
   ctx.stroke();
 
 
@@ -6668,8 +6719,8 @@ function drawRealRoad(timePeriod) {
       const prevAlpha = ctx.globalAlpha;
       ctx.globalAlpha = prevAlpha * (0.42 + 0.58 * u);
       ctx.beginPath();
-      ctx.moveTo(cx + half1 * laneEdgeRatio, y1);
-      ctx.lineTo(cx + half2 * laneEdgeRatio, y2);
+      ctx.moveTo(centerAt(t1) + half1 * laneEdgeRatio, y1);
+      ctx.lineTo(centerAt(t2) + half2 * laneEdgeRatio, y2);
       ctx.stroke();
       ctx.globalAlpha = prevAlpha;
     }
@@ -6689,34 +6740,19 @@ function drawRealRoad(timePeriod) {
     wet.addColorStop(0.6, "rgba(125, 205, 255, 0.18)");
     wet.addColorStop(1, "rgba(190, 236, 255, 0.08)");
     ctx.fillStyle = wet;
-    ctx.beginPath();
-    ctx.moveTo(cx - topHalf, horizonY);
-    ctx.lineTo(cx + topHalf, horizonY);
-    ctx.lineTo(cx + bottomHalf, bottomY);
-    ctx.lineTo(cx - bottomHalf, bottomY);
-    ctx.closePath();
+    traceRoadSurface();
     ctx.fill();
   }
 }
 
 function drawRoadRunTrack() {
   const isLvivRoad = currentLocation === 1;
-  const horizonY = GND - 128;
-  const bottomY = H + 24;
-  const cx = W / 2;
-  const topHalf = ROAD_TOP_HALF;
-  const bottomHalf = ROAD_BOTTOM_HALF;
   const laneRatios = ROAD_LANE_RATIOS;
-  const roadAt = (t, laneRatio) => {
-    const half = topHalf + (bottomHalf - topHalf) * t;
-    const y = horizonY + (bottomY - horizonY) * t;
-    return { x: cx + half * laneRatio, y, half };
-  };
 
   ctx.save();
   const activeRatio = laneRatios[pLane] || 0;
   const t = 0.72;
-  const active = roadAt(t, activeRatio);
+  const active = getRoadPerspectivePoint(t, activeRatio);
   const pulse = 0.35 + Math.sin(fr * 0.12) * 0.1;
   ctx.globalAlpha = pulse;
   ctx.fillStyle = isLvivRoad ? "rgba(255, 211, 120, 0.16)" : "rgba(98, 214, 255, 0.16)";
@@ -6726,18 +6762,8 @@ function drawRoadRunTrack() {
   ctx.restore();
 }
 function getPerspectiveLanePoint(lane = pLane, t = 0.78, laneInset = 1) {
-  const horizonY = GND - 128;
-  const bottomY = H + 24;
-  const cx = W / 2;
-  const topHalf = ROAD_TOP_HALF;
-  const bottomHalf = ROAD_BOTTOM_HALF;
   const laneRatios = ROAD_LANE_RATIOS;
-  const safeT = Math.max(0, Math.min(1, t));
-  const half = topHalf + (bottomHalf - topHalf) * safeT;
-  return {
-    x: cx + half * (laneRatios[lane] || 0) * laneInset,
-    y: horizonY + (bottomY - horizonY) * safeT,
-  };
+  return getRoadPerspectivePoint(t, (laneRatios[lane] || 0) * laneInset);
 }
 
 function getRoadObjectLanePoint(lane = pLane, t = 0.78) {
