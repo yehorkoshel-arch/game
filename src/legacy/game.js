@@ -2497,6 +2497,7 @@ function drawLvivImageParallaxBackground(timePeriod) {
   drawLoopedParallaxImage(lvivParallaxImages[1], 0.11, 42, GND - 46, 0.98);
   drawLoopedParallaxImage(lvivParallaxImages[2], 0.22, GND - 238, 188, 0.9, 0, Math.round(lvivParallaxImages[2].naturalHeight * 0.72));
   drawLvivParallaxCityFrame(timePeriod);
+  drawLvivRunnerMarketDepth(timePeriod);
   drawLvivGeneratedSceneGroundBlend(timePeriod);
 
   const grade = ctx.createLinearGradient(0, 0, 0, H);
@@ -2552,6 +2553,223 @@ function drawLvivParallaxCityFrame(timePeriod) {
   glow.addColorStop(1, "rgba(10,16,28,0.18)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, baseY - 100, W, 130);
+  ctx.restore();
+}
+
+function drawLvivRunnerMarketDepth(timePeriod) {
+  const isNight = timePeriod === "time-night";
+  const horizonY = GND - 128;
+  const cx = W / 2;
+  const topHalf = ROAD_TOP_HALF;
+  const bottomHalf = ROAD_BOTTOM_HALF;
+  const roadT = (y) => Math.max(0, Math.min(1, (y - horizonY) / (H + 24 - horizonY)));
+  const roadHalfAtY = (y) => {
+    const t = roadT(y);
+    return topHalf + (bottomHalf - topHalf) * t;
+  };
+  const sideX = (side, y, pad = 18) => cx + side * (roadHalfAtY(y) + pad);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, GND - 42);
+  ctx.clip();
+
+  const marketGlow = ctx.createLinearGradient(0, GND - 210, 0, GND - 70);
+  marketGlow.addColorStop(0, "rgba(255, 205, 108, 0)");
+  marketGlow.addColorStop(0.68, isNight ? "rgba(255, 185, 90, 0.18)" : "rgba(255, 220, 132, 0.14)");
+  marketGlow.addColorStop(1, isNight ? "rgba(12, 16, 28, 0.18)" : "rgba(86, 92, 112, 0.10)");
+  ctx.fillStyle = marketGlow;
+  ctx.fillRect(0, GND - 224, W, 160);
+
+  const facadePalette = [
+    ["#d88f62", "#7f3d32"],
+    ["#e2bd68", "#8b5635"],
+    ["#8eb0bf", "#37586a"],
+    ["#cc8e9a", "#743b4c"],
+    ["#d7c37a", "#715a35"],
+    ["#a6b87f", "#47654b"],
+  ];
+
+  for (const side of [-1, 1]) {
+    const farY = GND - 146;
+    const nearY = GND - 54;
+    const innerFar = sideX(side, farY, 18);
+    const innerNear = sideX(side, nearY, 34);
+    const outerFar = side < 0 ? -8 : W + 8;
+    const outerNear = side < 0 ? -20 : W + 20;
+
+    const sidewalk = ctx.createLinearGradient(0, farY, 0, nearY);
+    sidewalk.addColorStop(0, isNight ? "rgba(74, 70, 70, 0.56)" : "rgba(168, 153, 132, 0.56)");
+    sidewalk.addColorStop(1, isNight ? "rgba(44, 45, 50, 0.86)" : "rgba(120, 108, 92, 0.76)");
+    ctx.fillStyle = sidewalk;
+    ctx.beginPath();
+    ctx.moveTo(innerFar, farY);
+    ctx.lineTo(outerFar, farY - 10);
+    ctx.lineTo(outerNear, nearY + 34);
+    ctx.lineTo(innerNear, nearY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = isNight ? "rgba(255, 236, 190, 0.18)" : "rgba(78, 60, 42, 0.22)";
+    ctx.lineWidth = 1;
+    for (let row = 0; row < 8; row++) {
+      const y = farY + row * 14;
+      const left = side < 0 ? outerFar : innerFar;
+      const right = side < 0 ? innerFar : outerFar;
+      ctx.beginPath();
+      ctx.moveTo(left, y);
+      ctx.lineTo(right, y + 8);
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < 5; i++) {
+      const t = i / 4;
+      const yBase = GND - 146 + t * 42;
+      const h = 74 + t * 38 + ((i * 17) % 22);
+      const w = 58 + t * 30;
+      const inner = sideX(side, yBase, 30 + t * 16);
+      const x = side < 0 ? inner - w - 10 : inner + 10;
+      const [body, roof] = facadePalette[(i + (side > 0 ? 2 : 0)) % facadePalette.length];
+      drawLvivRunnerFacade(x, yBase - h, w, h, body, roof, isNight, i + (side > 0 ? 10 : 0), side);
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const y = GND - 130 + i * 22;
+      const x = sideX(side, y, 54 + i * 10);
+      drawLvivRunnerLamp(x, y + 14, isNight, side);
+    }
+  }
+
+  drawLvivRunnerDirectionSign(sideX(-1, GND - 106, 72), GND - 126, "Львів", -1);
+  drawLvivRunnerDirectionSign(sideX(1, GND - 94, 80), GND - 114, "Ринок", 1);
+  drawLvivRunnerMarketFlag(cx - 154, GND - 150, 0.72);
+  drawLvivRunnerMarketFlag(cx + 172, GND - 144, 0.64);
+
+  ctx.restore();
+}
+
+function drawLvivRunnerFacade(x, y, w, h, body, roof, isNight, variant, side) {
+  ctx.save();
+  ctx.fillStyle = "rgba(5, 8, 16, 0.28)";
+  ctx.fillRect(x + side * 5, y + 7, w, h);
+  ctx.fillStyle = body;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = roof;
+  ctx.beginPath();
+  ctx.moveTo(x - 5, y);
+  ctx.lineTo(x + w * 0.5, y - 18 - (variant % 3) * 4);
+  ctx.lineTo(x + w + 5, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(255, 238, 188, 0.34)";
+  ctx.fillRect(x + 4, y + 9, w - 8, 3);
+  ctx.fillRect(x + 3, y + h - 34, w - 6, 4);
+
+  const cols = Math.max(2, Math.floor(w / 23));
+  const rows = Math.max(2, Math.floor(h / 31));
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const wx = x + 9 + c * ((w - 18) / cols);
+      const wy = y + 17 + r * 28;
+      const lit = isNight || (r + c + variant) % 2 === 0;
+      ctx.fillStyle = lit ? "rgba(255, 222, 132, 0.92)" : "rgba(41, 61, 77, 0.78)";
+      ctx.beginPath();
+      if ((variant + r + c) % 3 === 0) {
+        ctx.moveTo(wx, wy + 16);
+        ctx.lineTo(wx, wy + 7);
+        ctx.quadraticCurveTo(wx + 6, wy - 2, wx + 12, wy + 7);
+        ctx.lineTo(wx + 12, wy + 16);
+        ctx.closePath();
+      } else if (ctx.roundRect) ctx.roundRect(wx, wy, 12, 16, 3);
+      else ctx.rect(wx, wy, 12, 16);
+      ctx.fill();
+      if (r === 1 && (c + variant) % 2 === 0) {
+        ctx.strokeStyle = "rgba(36, 25, 24, 0.58)";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(wx - 3, wy + 14, 18, 5);
+        ctx.fillStyle = "#e8717c";
+        ctx.fillRect(wx + 1, wy + 17, 10, 3);
+      }
+    }
+  }
+
+  ctx.fillStyle = "#3f2b25";
+  ctx.fillRect(x + 8, y + h - 26, w - 16, 21);
+  ctx.fillStyle = "rgba(255, 219, 122, 0.66)";
+  ctx.fillRect(x + 15, y + h - 19, w - 30, 8);
+  ctx.strokeStyle = "rgba(255, 240, 194, 0.24)";
+  ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+  ctx.restore();
+}
+
+function drawLvivRunnerLamp(x, y, isNight, side = 1) {
+  ctx.save();
+  ctx.strokeStyle = "#262222";
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y - 58);
+  ctx.quadraticCurveTo(x, y - 70, x + side * 18, y - 70);
+  ctx.stroke();
+  ctx.fillStyle = "#ffd56f";
+  ctx.beginPath();
+  ctx.ellipse(x + side * 22, y - 69, 7, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  if (isNight) {
+    ctx.fillStyle = "rgba(255, 208, 94, 0.13)";
+    ctx.beginPath();
+    ctx.ellipse(x + side * 22, y - 48, 28, 33, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawLvivRunnerDirectionSign(x, y, label, side = 1) {
+  ctx.save();
+  ctx.strokeStyle = "#20242c";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x, y + 28);
+  ctx.lineTo(x, y + 78);
+  ctx.stroke();
+  ctx.fillStyle = "#0b57a3";
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - 35, y, 70, 30, 5);
+  else ctx.rect(x - 35, y, 70, 30);
+  ctx.fill();
+  ctx.strokeStyle = "#eaf6ff";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 14px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(label, x, y + 20);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x + side * 12, y + 24);
+  ctx.lineTo(x + side * 26, y + 24);
+  ctx.lineTo(x + side * 19, y + 18);
+  ctx.moveTo(x + side * 26, y + 24);
+  ctx.lineTo(x + side * 19, y + 30);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawLvivRunnerMarketFlag(x, y, scale = 1) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.strokeStyle = "#2d2928";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, 58);
+  ctx.stroke();
+  ctx.fillStyle = "#1e8ee8";
+  ctx.fillRect(0, 2, 44, 14);
+  ctx.fillStyle = "#ffd542";
+  ctx.fillRect(0, 16, 44, 14);
   ctx.restore();
 }
 
