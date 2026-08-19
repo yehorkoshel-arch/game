@@ -2908,10 +2908,6 @@ function drawLvivVisibleRatusha(baseY, isNight) {
   ctx.moveTo(towerX + 33, towerY + 113);
   ctx.lineTo(towerX + 47, towerY + 118);
   ctx.stroke();
-  ctx.fillStyle = glow;
-  ctx.font = "bold 11px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("Ратуша", towerX + 33, towerY + 151);
   ctx.restore();
 }
 function drawLvivRynokHorizon(baseY, isNight) {
@@ -2979,10 +2975,6 @@ function drawLvivRynokHorizon(baseY, isNight) {
   ctx.moveTo(towerX + 32, towerY + 112);
   ctx.lineTo(towerX + 45, towerY + 117);
   ctx.stroke();
-  ctx.fillStyle = glow;
-  ctx.font = "bold 11px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("Ратуша", towerX + 32, towerY + 150);
 
   const domes = [
     [towerX - 136, baseY - 96, 36, "#b7774f"],
@@ -3254,16 +3246,14 @@ function drawLvivForegroundIdentity(isNight) {
     ctx.restore();
   };
 
-  // Background-only Lviv lion easter eggs, lifted away from road and sidewalks.
-  drawTinyLion(W / 2 - 94, GND - 166, 1, 0.52);
-  drawTinyLion(W / 2 + 94, GND - 166, -1, 0.52);
-  drawTinyLion(96, GND - 178, 1, 0.40);
-  drawTinyLion(W - 96, GND - 178, -1, 0.40);
-  ctx.fillStyle = isNight ? "rgba(92,68,48,0.82)" : "rgba(126,92,62,0.70)";
-  ctx.fillRect(W / 2 - 16, GND - 151, 32, 10);
-  ctx.fillStyle = isNight ? "rgba(255,211,110,0.20)" : "rgba(255,198,76,0.12)";
-  ctx.fillRect(W / 2 - 19, GND - 155, 38, 4);
-  drawTinyLion(W / 2, GND - 160, 1, 0.36);
+  // One readable lion statue by the Ratusha; no repeated animals across the road.
+  const lionStatueX = W / 2 + 112;
+  const lionStatueY = GND - 169;
+  ctx.fillStyle = isNight ? "rgba(71,50,42,0.92)" : "rgba(118,86,61,0.82)";
+  ctx.fillRect(lionStatueX - 23, lionStatueY + 12, 46, 13);
+  ctx.fillStyle = isNight ? "rgba(255,211,110,0.24)" : "rgba(255,198,76,0.15)";
+  ctx.fillRect(lionStatueX - 26, lionStatueY + 9, 52, 4);
+  drawTinyLion(lionStatueX, lionStatueY - 8, -1, 0.48);
 
   const signX = W - 104;
   const signY = GND - 164;
@@ -12581,14 +12571,15 @@ function drawLevelMiniMap() {
 
 function drawLevelMissionHud() {
   if (!levelMissions.length) return;
-  const compact = multiplayerMode;
-  const x = compact ? 12 : 188;
-  const y = compact ? 52 : 58;
-  const w = compact ? 214 : 304;
+  const lvivHud = !multiplayerMode && currentLocation === 1;
+  const compact = multiplayerMode || lvivHud;
+  const x = multiplayerMode ? 12 : lvivHud ? 16 : 188;
+  const y = multiplayerMode ? 52 : lvivHud ? 118 : 58;
+  const w = compact ? (lvivHud ? 244 : 214) : 304;
   const rowH = compact ? 12 : 15;
   const panelH = (compact ? 15 : 18) + levelMissions.length * rowH;
   ctx.save();
-  ctx.globalAlpha = compact ? 0.78 : 1;
+  ctx.globalAlpha = compact ? (lvivHud ? 0.86 : 0.78) : 1;
   ctx.fillStyle = compact ? "rgba(7,18,28,0.46)" : "rgba(7,18,28,0.68)";
   ctx.beginPath();
   if (ctx.roundRect) ctx.roundRect(x, y, w, panelH, 7);
