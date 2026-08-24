@@ -54,6 +54,8 @@ export function TutorialScreen() {
     document.getElementById('btnPlay')?.click();
   };
 
+  const closeTutorial = () => setVisible(false);
+
   if (!visible) return null;
 
   const copy = UI_TEXT[language] || UI_TEXT.uk;
@@ -79,10 +81,21 @@ export function TutorialScreen() {
             <span className="key">F</span>
             <p>{copy.tutorialFire}</p>
           </div>
+          <div className="step">
+            <span className="key">E</span>
+            <p>{copy.tutorialBackpack || 'Відкрий рюкзак і активуй зібраний бонус.'}</p>
+          </div>
+          <div className="step">
+            <span className="key">Щит / Розгін</span>
+            <p>{copy.tutorialShield || 'Щит захищає від удару; на розгоні збирай монети й шукай секретний прохід.'}</p>
+          </div>
         </div>
-        <button className="btn-primary" id="start-game-btn" type="button" onClick={startGame} disabled={!legacyReady}>
-          {legacyReady ? copy.tutorialStart : copy.tutorialLoading}
-        </button>
+        <div className="tutorial-actions">
+          <button className="btn-secondary" type="button" onClick={closeTutorial}>{copy.tutorialClose || 'Закрити'}</button>
+          <button className="btn-primary" id="start-game-btn" type="button" onClick={startGame} disabled={!legacyReady}>
+            {legacyReady ? copy.tutorialStart : copy.tutorialLoading}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { LANGS, LOCATION_NAMES, SKINS_BASE, UI_TEXT } from "../data/gameData.js";
+import { CITY_CONFIG, LANGS, LOCATION_NAMES, SKINS_BASE, UI_TEXT } from "../data/gameData.js";
 import {
   getLevelNames,
   LEVELS_KYIV,
@@ -19,6 +19,27 @@ function getLevels() {
 
 function getPlayableLevel(level) {
   return Math.min(Math.max(Number(level) || 0, 0), getLevels().length - 1);
+}
+
+function getCityConfig() {
+  return CITY_CONFIG[currentLocation] || CITY_CONFIG[0];
+}
+
+function getCityCopy() {
+  const city = getCityConfig();
+  return {
+    brand: city.brand[lang] || city.brand.uk,
+    subtitle: city.subtitle[lang] || city.subtitle.uk,
+    music: city.music[lang] || city.music.uk,
+  };
+}
+
+function getCoinWord() {
+  return ({ uk: "монет", en: "coins", de: "Münzen", fr: "pièces", es: "monedas" })[lang] || "coins";
+}
+
+function formatCoins(amount) {
+  return `${Math.max(0, Number(amount) || 0)} ${getCoinWord()}`;
 }
 
 const FINISH_DIST = 800;
@@ -57,7 +78,7 @@ const QUEST_REWARD = 100;
 const MARICHKA_CHAIN_REWARD = 150;
 const QUESTS = [
   { id: "distance", title: "Пробіжи 2 000 метрів", target: 2000, unit: "м" },
-  { id: "coins", title: "Збери 100 монет", target: 100, unit: "₴" },
+  { id: "coins", title: "Збери 100 монет", target: 100, unit: "" },
   { id: "jumps", title: "Зроби 50 стрибків", target: 50, unit: "" },
   { id: "slides", title: "Зроби 30 слайдів", target: 30, unit: "" },
   { id: "shots", title: "Зроби 75 пострілів", target: 75, unit: "" },
@@ -69,7 +90,7 @@ const QUESTS = [
 ];
 const MARICHKA_CHAIN = [
   { id: "project", title: "Знайди проєкт Андрія", target: 1, unit: "" },
-  { id: "coins", title: "Збери 30 монет для Марічки", target: 30, unit: "₴" },
+  { id: "coins", title: "Збери 30 монет для Марічки", target: 30, unit: "" },
   { id: "route", title: "Пройди секретний маршрут", target: 1, unit: "" },
   { id: "bell", title: "Встигни до школи до дзвоника", target: 1, unit: "" },
   { id: "finish", title: "Заведи Андрія до школи", target: 1, unit: "" },
@@ -107,7 +128,7 @@ const ACHIEVEMENTS = [
   {
     id: "trick3",
     title: "\u041c\u0430\u0439\u0441\u0442\u0435\u0440 \u0442\u0440\u044e\u043a\u0456\u0432",
-    desc: "\u0417\u0440\u043e\u0431\u0438 TRICK x3",
+    desc: "\u0417\u0440\u043e\u0431\u0438 3 \u0442\u0440\u044e\u043a\u0438",
     target: 1,
     icon: "x3",
   },
@@ -123,7 +144,7 @@ const ACHIEVEMENTS = [
     title: "\u0421\u043a\u0430\u0440\u0431 \u0410\u043d\u0434\u0440\u0456\u044f",
     desc: "\u0417\u0431\u0435\u0440\u0438 1000 \u043c\u043e\u043d\u0435\u0442 \u0437\u0430 \u0432\u0441\u044e \u0433\u0440\u0443",
     target: 1000,
-    icon: "\u20b4",
+    icon: "●",
   },
   {
     id: "chase_survivor",
@@ -178,56 +199,66 @@ let achievementRewards =
     : {};
 const CITY_POSTCARDS = [
   {
+    id: "kyiv_khreshchatyk",
+    loc: 0,
+    icon: "K",
+    title: "Хрещатик",
+    desc: "Головна вулиця Києва з каштанами.",
+    color: "#4ea7ff",
+  },
+  {
     id: "kyiv_maidan",
     loc: 0,
     icon: "M",
     title: "Майдан",
     desc: "Святкова площа з прапорами та вогнями.",
-    color: "#4ea7ff",
-  },
-  {
-    id: "kyiv_metro",
-    loc: 0,
-    icon: "M",
-    title: "Київське метро",
-    desc: "Секретний маршрут під містом.",
     color: "#62d6ff",
   },
   {
-    id: "kyiv_rain",
+    id: "kyiv_arsenalna",
     loc: 0,
-    icon: "☔",
-    title: "Дощовий Київ",
-    desc: "Фари машин блищать на мокрій дорозі.",
+    icon: "A",
+    title: "Метро «Арсенальна»",
+    desc: "Найглибша станція київського метро.",
     color: "#9ee8ff",
   },
   {
-    id: "lviv_tram",
+    id: "lviv_ratusha",
     loc: 1,
-    icon: "T",
-    title: "Львівський трамвай",
-    desc: "Трамвай дзвенить поруч із бруківкою.",
+    icon: "R",
+    title: "Ратуша",
+    desc: "Вежа над площею Ринок.",
     color: "#ffd45c",
   },
   {
-    id: "lviv_cobble",
+    id: "lviv_opera",
     loc: 1,
-    icon: "L",
-    title: "Львівська бруківка",
-    desc: "Кам’яна дорога старого міста.",
+    icon: "O",
+    title: "Львівський оперний театр",
+    desc: "Світло фасаду на проспекті Свободи.",
     color: "#d7b58a",
   },
   {
-    id: "school_finish",
-    loc: 2,
-    icon: "S",
-    title: "Шкільний фініш",
-    desc: "Андрій добігає до школи.",
+    id: "lviv_high_castle",
+    loc: 1,
+    icon: "V",
+    title: "Високий Замок",
+    desc: "Панорама Львова з пагорба.",
     color: "#6bcb77",
   },
 ];
 const savedPostcards =
   save.postcards && typeof save.postcards === "object" ? save.postcards : {};
+const legacyPostcardIds = {
+  kyiv_metro: "kyiv_arsenalna",
+  kyiv_rain: "kyiv_khreshchatyk",
+  lviv_tram: "lviv_opera",
+  lviv_cobble: "lviv_ratusha",
+  school_finish: "lviv_high_castle",
+};
+Object.entries(legacyPostcardIds).forEach(([legacyId, currentId]) => {
+  if (savedPostcards[legacyId]) savedPostcards[currentId] = true;
+});
 let postcards = Object.fromEntries(
   CITY_POSTCARDS.map((card) => [card.id, Boolean(savedPostcards[card.id])]),
 );
@@ -236,14 +267,14 @@ const COLLECTION_REWARDS = [
     id: "kyiv",
     title: "Київський набір",
     desc: "Збери всі листівки Києва",
-    ids: ["kyiv_maidan", "kyiv_metro", "kyiv_rain"],
+    ids: ["kyiv_khreshchatyk", "kyiv_maidan", "kyiv_arsenalna"],
     coins: 300,
   },
   {
     id: "lviv",
     title: "Львівський набір",
     desc: "Збери всі листівки Львова",
-    ids: ["lviv_tram", "lviv_cobble"],
+    ids: ["lviv_ratusha", "lviv_opera", "lviv_high_castle"],
     coins: 300,
   },
   {
@@ -271,7 +302,7 @@ const COLLECTION_I18N = {
     headerTitle: "Колекція", headerSubtitle: "Листівки Києва та Львова", claim: "Забрати", claimed: "Отримано", inProgress: "В процесі", newBadge: "НОВЕ", skin: "скін", unknownPostcard: "Невідома листівка", lockedPostcard: "Знайди її під час забігу містом.", finish: "Фініш",
     rewards: { kyiv: { title: "Київський набір", desc: "Збери всі листівки Києва" }, lviv: { title: "Львівський набір", desc: "Збери всі листівки Львова" }, all: { title: "Повний альбом", desc: "Збери всі листівки та відкрий космічного кур’єра" } },
     postcards: { kyiv_maidan: { title: "Майдан", desc: "Святкова площа з прапорами та вогнями." }, kyiv_metro: { title: "Київське метро", desc: "Секретний маршрут під містом." }, kyiv_rain: { title: "Дощовий Київ", desc: "Фари машин блищать на мокрій дорозі." }, lviv_tram: { title: "Львівський трамвай", desc: "Трамвай дзвенить поруч із бруківкою." }, lviv_cobble: { title: "Львівська бруківка", desc: "Кам’яна дорога старого міста." }, school_finish: { title: "Шкільний фініш", desc: "Андрій добігає до школи." } },
-    achievements: { metro_passenger: { title: "Пасажир метро", desc: "Пройди секретний маршрут метро" }, trick_master: { title: "Майстер трюків", desc: "Зроби TRICK x3" }, boss_defeated: { title: "Бос переможений", desc: "Переможи київського боса" }, coins1000: { title: "Скарб Андрія", desc: "Збери 1000 монет за всю гру" }, chase_survivor: { title: "Втеча вдалася", desc: "Переживи режим погоні" }, clean_chase: { title: "Чиста втеча", desc: "Переживи погоню без удару" }, road_event_master: { title: "Майстер подій", desc: "Переживи 3 дорожні події" }, rain_runner: { title: "Герой дощу", desc: "Переживи зливу в Києві" }, lviv_maneuver: { title: "Львівський маневр", desc: "Переживи трамвай або ремонт у Львові" } },
+    achievements: { metro_passenger: { title: "Пасажир метро", desc: "Пройди секретний маршрут метро" }, trick_master: { title: "Майстер трюків", desc: "Зроби 3 трюки" }, boss_defeated: { title: "Бос переможений", desc: "Переможи київського боса" }, coins1000: { title: "Скарб Андрія", desc: "Збери 1000 монет за всю гру" }, chase_survivor: { title: "Втеча вдалася", desc: "Переживи режим погоні" }, clean_chase: { title: "Чиста втеча", desc: "Переживи погоню без удару" }, road_event_master: { title: "Майстер подій", desc: "Переживи 3 дорожні події" }, rain_runner: { title: "Герой дощу", desc: "Переживи зливу в Києві" }, lviv_maneuver: { title: "Львівський маневр", desc: "Переживи трамвай або ремонт у Львові" } },
   },
   en: {
     headerTitle: "Collection", headerSubtitle: "Kyiv and Lviv postcard sets", claim: "Claim", claimed: "Claimed", inProgress: "In progress", newBadge: "NEW", skin: "skin", unknownPostcard: "Unknown postcard", lockedPostcard: "Find it during a city run.", finish: "Finish",
@@ -300,8 +331,64 @@ const COLLECTION_I18N = {
 };
 function collectionText() { return COLLECTION_I18N[lang] || COLLECTION_I18N.uk; }
 function getCollectionRewardCopy(reward) { return collectionText().rewards[reward.id] || { title: reward.title, desc: reward.desc }; }
-function getPostcardCopy(card) { return collectionText().postcards[card.id] || { title: card.title, desc: card.desc }; }
-function getAchievementCopy(item) { return collectionText().achievements[item.id] || { title: item.title, desc: item.desc }; }
+const POSTCARD_COPY = {
+  uk: {
+    kyiv_khreshchatyk: { title: "Хрещатик", desc: "Головна вулиця Києва з каштанами." },
+    kyiv_maidan: { title: "Майдан", desc: "Святкова площа з прапорами та вогнями." },
+    kyiv_arsenalna: { title: "Метро «Арсенальна»", desc: "Найглибша станція київського метро." },
+    lviv_ratusha: { title: "Ратуша", desc: "Вежа над площею Ринок." },
+    lviv_opera: { title: "Львівський оперний театр", desc: "Світло фасаду на проспекті Свободи." },
+    lviv_high_castle: { title: "Високий Замок", desc: "Панорама Львова з пагорба." },
+  },
+  en: {
+    kyiv_khreshchatyk: { title: "Khreshchatyk", desc: "Kyiv's main avenue with chestnut trees." },
+    kyiv_maidan: { title: "Maidan", desc: "A festive square with flags and lights." },
+    kyiv_arsenalna: { title: "Arsenalna Metro", desc: "Kyiv's deepest metro station." },
+    lviv_ratusha: { title: "Ratusha", desc: "The tower above Rynok Square." },
+    lviv_opera: { title: "Lviv Opera House", desc: "A glowing facade on Svobody Avenue." },
+    lviv_high_castle: { title: "High Castle", desc: "A view of Lviv from the hill." },
+  },
+  de: {
+    kyiv_khreshchatyk: { title: "Chreschtschatyk", desc: "Kyivs Hauptallee mit Kastanien." },
+    kyiv_maidan: { title: "Maidan", desc: "Ein festlicher Platz mit Fahnen und Lichtern." },
+    kyiv_arsenalna: { title: "Metro Arsenalna", desc: "Kyivs tiefste Metrostation." },
+    lviv_ratusha: { title: "Ratusha", desc: "Der Turm über dem Rynok-Platz." },
+    lviv_opera: { title: "Oper Lemberg", desc: "Leuchtende Fassade an der Svobody-Allee." },
+    lviv_high_castle: { title: "Hohes Schloss", desc: "Blick auf Lemberg vom Hügel." },
+  },
+  fr: {
+    kyiv_khreshchatyk: { title: "Khrechtchatyk", desc: "L'avenue principale de Kyiv et ses marronniers." },
+    kyiv_maidan: { title: "Maidan", desc: "Une place festive avec drapeaux et lumières." },
+    kyiv_arsenalna: { title: "Métro Arsenalna", desc: "La station de métro la plus profonde de Kyiv." },
+    lviv_ratusha: { title: "Ratusha", desc: "La tour au-dessus de la place Rynok." },
+    lviv_opera: { title: "Opéra de Lviv", desc: "Une façade lumineuse sur l'avenue Svobody." },
+    lviv_high_castle: { title: "Haut Château", desc: "Vue de Lviv depuis la colline." },
+  },
+  es: {
+    kyiv_khreshchatyk: { title: "Jreshchátyk", desc: "La avenida principal de Kyiv con castaños." },
+    kyiv_maidan: { title: "Maidán", desc: "Una plaza festiva con banderas y luces." },
+    kyiv_arsenalna: { title: "Metro Arsenalna", desc: "La estación de metro más profunda de Kyiv." },
+    lviv_ratusha: { title: "Ratusha", desc: "La torre sobre la plaza Rynok." },
+    lviv_opera: { title: "Ópera de Leópolis", desc: "Una fachada iluminada en la avenida Svobody." },
+    lviv_high_castle: { title: "Castillo Alto", desc: "Vista de Leópolis desde la colina." },
+  },
+};
+function getPostcardCopy(card) { return POSTCARD_COPY[lang]?.[card.id] || collectionText().postcards[card.id] || { title: card.title, desc: card.desc }; }
+function getAchievementCopy(item) {
+  if (currentLocation === 1 && item.id === "metro") {
+    const copy = { uk:["Пасажир львівського трамвая","Переживи трамвайну хвилю"], en:["Lviv Tram Passenger","Survive a tram wave"], de:["Fahrgast der Lemberger Tram","Überlebe eine Tramwelle"], fr:["Passager du tram de Lviv","Survis à une vague de tram"], es:["Pasajero del tranvía de Leópolis","Sobrevive a una oleada de tranvía"] }[lang] || ["Lviv Tram Passenger","Survive a tram wave"];
+    return { title: copy[0], desc: copy[1] };
+  }
+  if (currentLocation === 1 && item.id === "boss") {
+    const copy = { uk:["Робот-Лев переможений","Переможи Робота-Лева"], en:["Robot Lion Defeated","Defeat the Robot Lion"], de:["Roboterlöwe besiegt","Besiege den Roboterlöwen"], fr:["Robot-lion vaincu","Bats le Robot-lion"], es:["Robot León derrotado","Derrota al Robot León"] }[lang] || ["Robot Lion Defeated","Defeat the Robot Lion"];
+    return { title: copy[0], desc: copy[1] };
+  }
+  if (item.id === "trick3") {
+    const copy = { uk:["Майстер трюків","Виконай 3 трюки"], en:["Trick Master","Perform 3 tricks"], de:["Trickmeister","Führe 3 Tricks aus"], fr:["Maître des figures","Réalise 3 figures"], es:["Maestro de trucos","Realiza 3 trucos"] }[lang] || ["Trick Master","Perform 3 tricks"];
+    return { title: copy[0], desc: copy[1] };
+  }
+  return collectionText().achievements[item.id] || { title: item.title, desc: item.desc };
+}
 function refreshCollectionHeader() {
   const C = collectionText();
   const title = document.getElementById("collectionHeaderTitle");
@@ -602,9 +689,10 @@ function getMusicTrackIndex(track = settingMusicTrack) {
   return 0;
 }
 function getActiveMusicTrackIndex() {
-  if (currentLocation === 1 && settingMusicTrack === "kyiv") return 4;
-  const index = MUSIC_TRACKS.findIndex((track) => track.id === settingMusicTrack);
-  return index >= 0 ? index : 0;
+  if (currentLocation === 1) return 4;
+  if (settingMusicTrack === "march") return 1;
+  if (settingMusicTrack === "rain") return 2;
+  return 0;
 }
 function resetMusicPattern() {
   melodyIdx = 0;
@@ -1524,6 +1612,7 @@ const START_EMPTY_FRAMES = 210;
 const START_EMPTY_DISTANCE = 18;
 const START_SAFE_FRAMES = 360;
 const START_SAFE_DISTANCE = 38;
+const START_PHASE_BANNER_FRAMES = 165;
 const FINISH_APPROACH_DISTANCE = 10;
 const SCHOOL_BELL_FRAMES = 30 * 60;
 const SCHOOL_BELL_REWARD = 75;
@@ -1692,7 +1781,9 @@ function createSecretRoute() {
     currentLocation === 0
       ? SECRET_ROUTE_TYPES.filter((route) => route.id === "metro")
       : SECRET_ROUTE_TYPES.filter((route) => route.id !== "metro");
-  const type = availableTypes[currentLevel % availableTypes.length];
+  const type = currentLocation === 1 && currentLevel === 0
+    ? SECRET_ROUTE_TYPES.find((route) => route.id === "underpass")
+    : availableTypes[currentLevel % availableTypes.length];
   return {
     ...type,
     offered: false,
@@ -1762,14 +1853,14 @@ function completeSecretRoute() {
 }
 
 function t() {
-  return { ...LANGS[lang], ...(UI_TEXT[lang] || UI_TEXT.uk) };
+  return { ...LANGS[lang], ...(UI_TEXT[lang] || UI_TEXT.uk), sub: getCityCopy().subtitle };
 }
 const GAME_COPY = {
   uk: {
     collectCoins: (count) => `Збери ${count} монет`,
     passMetro: "Пройди метро",
     passRoute: "Пройди секретний тунель",
-    trick2: "Зроби TRICK x2",
+    trick2: "Зроби 2 трюки",
     runMeters: "Пробіжи 250 метрів",
     levelMissions: "Місії рівня",
     missionReward: (count) => `+${count} монет`,
@@ -1779,7 +1870,7 @@ const GAME_COPY = {
     trafficCarJump: "Перестрибнув машину!",
     greenCrosswalks: "Пройди 2 переходи на зелене",
     jumpCars: "Перестрибни 2 машини",
-    missionSummary: (reward, done, total) => `+${reward}₴ за місії (${done}/${total})`,
+    missionSummary: (reward, done, total) => `+${reward} монет за місії (${done}/${total})`,
     robotronName: "Роботрон",
     radioStart: "Роботрон на зв'язку. Допоможи Андрію добігти до фінішу.",
     radioCar: "Увага! Машина попереду.",
@@ -1795,7 +1886,7 @@ const GAME_COPY = {
     collectCoins: (count) => `Collect ${count} coins`,
     passMetro: "Take the metro",
     passRoute: "Take the secret tunnel",
-    trick2: "Do TRICK x2",
+    trick2: "Perform 2 tricks",
     runMeters: "Run 250 meters",
     levelMissions: "Level missions",
     missionReward: (count) => `+${count} coins`,
@@ -1821,7 +1912,7 @@ const GAME_COPY = {
     collectCoins: (count) => `Sammle ${count} Münzen`,
     passMetro: "Nimm die Metro",
     passRoute: "Geheimer Tunnel",
-    trick2: "Mach TRICK x2",
+    trick2: "Mach 2 Tricks",
     runMeters: "Laufe 250 Meter",
     levelMissions: "Level-Missionen",
     missionReward: (count) => `+${count} Münzen`,
@@ -1847,7 +1938,7 @@ const GAME_COPY = {
     collectCoins: (count) => `Ramasse ${count} pièces`,
     passMetro: "Prends le métro",
     passRoute: "Tunnel secret",
-    trick2: "Fais TRICK x2",
+    trick2: "Fais 2 figures",
     runMeters: "Cours 250 mètres",
     levelMissions: "Missions du niveau",
     missionReward: (count) => `+${count} pièces`,
@@ -1873,7 +1964,7 @@ const GAME_COPY = {
     collectCoins: (count) => `Recoge ${count} monedas`,
     passMetro: "Toma el metro",
     passRoute: "Túnel secreto",
-    trick2: "Haz TRICK x2",
+    trick2: "Haz 2 trucos",
     runMeters: "Corre 250 metros",
     levelMissions: "Misiones del nivel",
     missionReward: (count) => `+${count} monedas`,
@@ -1971,6 +2062,15 @@ function updateQuestReadyBadge() {
   badge.style.display = count > 0 ? "" : "none";
 }
 function makeLevelMissions() {
+  if (currentLocation === 1 && currentLevel === 0) {
+    return [
+      { id: "coins", title: "Збери 18 монет", target: 18, unit: "" },
+      { id: "distance", title: "Пробіжи 250 метрів", target: 250, unit: "м" },
+      { id: "route", title: "Знайди підземний прохід (центральна смуга)", target: 1, unit: "" },
+      { id: "postcard_ratusha", title: "Знайди листівку з Ратушею", target: 1, unit: "" },
+      { id: "avoid_tram", title: "Уникни львівського трамвая", target: 1, unit: "" },
+    ];
+  }
   const hasMetro = currentLocation === 0;
   const coinTarget = currentLevel >= 3 ? 28 : currentLevel >= 1 ? 22 : 18;
   const missions = [
@@ -3363,6 +3463,10 @@ function completeRoadEvent() {
   if (roadEvent.type === "kyiv_storm") addAchievementProgress("kyiv_storm_survivor");
   if (roadEvent.type === "lviv_tram" || roadEvent.type === "lviv_roadwork")
     addAchievementProgress("lviv_event_survivor");
+  if (roadEvent.type === "lviv_tram") {
+    addLevelMissionProgress("avoid_tram");
+    addAchievementProgress("metro");
+  }
 }
 function updateRoadEvent(startSafe) {
   if (roadEventCooldown > 0) roadEventCooldown--;
@@ -3403,8 +3507,8 @@ function completeChaseMode() {
   addParts(px, pY - 45, chaseMode.clean ? "#ffd700" : "#9fd8ff");
   showAndriiBubble(
     chaseMode.clean
-      ? `\u041f\u043e\u0433\u043e\u043d\u044e \u0432\u0438\u0442\u0440\u0438\u043c\u0430\u043d\u043e \u0431\u0435\u0437 \u0443\u0434\u0430\u0440\u0443! +${reward}\u20b4`
-      : `\u041f\u043e\u0433\u043e\u043d\u044e \u0432\u0438\u0442\u0440\u0438\u043c\u0430\u043d\u043e! +${reward}\u20b4`,
+      ? `Погоню витримано без удару! +${formatCoins(reward)}`
+      : `Погоню витримано! +${formatCoins(reward)}`,
     true,
   );
   sfxCoin();
@@ -3470,7 +3574,7 @@ function drawAchievementToast() {
   ctx.font = "10px sans-serif";
   const bottom = t.skinNames
     ? `\u041d\u043e\u0432\u0438\u0439 \u0441\u043a\u0456\u043d: ${t.skinNames}`
-    : `\u0417\u0430\u0431\u0435\u0440\u0438 +${t.reward}\u20b4 \u0443 \u0434\u043e\u0441\u044f\u0433\u043d\u0435\u043d\u043d\u044f\u0445`;
+    : `Забери +${formatCoins(t.reward)} у досягненнях`;
   ctx.fillText(bottom, W / 2, y + 21);
   ctx.restore();
   t.timer--;
@@ -3659,7 +3763,7 @@ function buildAchievements() {
     const status = done
       ? claimed
         ? '<div class="achievement-status">' + C.claimed + '</div>'
-        : '<button class="achievement-claim" data-achievement-id="' + item.id + '" type="button">' + C.claim + ' +' + reward + '\u20b4</button>'
+        : '<button class="achievement-claim" data-achievement-id="' + item.id + '" type="button">' + C.claim + ' +' + formatCoins(reward) + '</button>'
       : '<div class="achievement-status">' + C.inProgress + '</div>';
     const card = document.createElement("article");
     card.className = "achievement-item" + (done ? " complete" : "") + (claimed ? " claimed" : "") + (isNew ? " new" : "");
@@ -3709,7 +3813,7 @@ function buildCollection() {
       '<div>' +
         '<div class="collection-reward-title">' + copy.title + '</div>' +
         '<div class="collection-reward-desc">' + copy.desc + '</div>' +
-        '<div class="collection-reward-progress">' + progress + '/' + reward.ids.length + ' · +' + reward.coins + '₴' + (reward.skinId ? ' · ' + C.skin : '') + '</div>' +
+        '<div class="collection-reward-progress">' + progress + '/' + reward.ids.length + ' · +' + formatCoins(reward.coins) + (reward.skinId ? ' · ' + C.skin : '') + '</div>' +
       '</div>' +
       '<button class="collection-claim" data-reward-id="' + reward.id + '" type="button" ' + (!ready || claimed ? "disabled" : "") + '>' +
         (claimed ? C.claimed : C.claim) +
@@ -3805,7 +3909,7 @@ function buildQuests() {
         <div class="quest-progress-fill" style="width:${(chainProgress / chainStep.target) * 100}%"></div>
       </div>
       <div class="quest-item-footer">
-        <span class="quest-reward">+${MARICHKA_CHAIN_REWARD} ₴</span>
+        <span class="quest-reward">+${formatCoins(MARICHKA_CHAIN_REWARD)}</span>
         <span class="quest-item-count">${chainProgress} / ${chainStep.target}${chainUnit}</span>
         <button class="quest-claim quest-chain-claim" data-chain-step="${chainStep.id}" type="button" ${!chainReady ? "disabled" : ""}>
           ${chainReady ? "Забрати" : "В процесі"}
@@ -3834,7 +3938,7 @@ function buildQuests() {
         <div class="quest-progress-fill" style="width:${(progress / quest.target) * 100}%"></div>
       </div>
       <div class="quest-item-footer">
-        <span class="quest-reward">+${QUEST_REWARD} ₴</span>
+        <span class="quest-reward">+${formatCoins(QUEST_REWARD)}</span>
         <button class="quest-claim" data-quest-id="${quest.id}" type="button" ${!complete || claimed ? "disabled" : ""}>
           ${claimed ? "Отримано" : "Забрати"}
         </button>
@@ -3885,8 +3989,13 @@ function buildLevelBar() {
     btn.className = "lvl-btn" + (done ? " done" : isCur ? " current" : "");
     if (!locked) btn.classList.add("unlocked");
     const levelName = lvNames[i] || "";
-    btn.title = levelName;
-    btn.innerHTML = `<span>${done ? "✓" : locked ? "🔒" : i + 1}</span><span class="lvl-btn-name">${levelName}</span>`;
+    const requirements = currentLocation === 1
+      ? ["Пройди Площу Ринок", "Набери 500 очок", "Збери 20 монет", "Пройди попередній рівень"]
+      : ["Пройди попередній рівень"];
+    const requirement = requirements[Math.min(i - 1, requirements.length - 1)] || requirements[0];
+    btn.title = locked ? `${levelName}: ${requirement}` : levelName;
+    btn.setAttribute("aria-label", locked ? `${levelName}. Заблоковано: ${requirement}` : levelName);
+    btn.innerHTML = `<span>${done ? "✓" : locked ? "🔒" : i + 1}</span><span class="lvl-btn-name">${levelName}</span>${locked ? `<span class="lvl-btn-lock">${requirement}</span>` : ""}`;
     if (!locked) {
       btn.onclick = () => {
         currentLevel = i;
@@ -3998,6 +4107,10 @@ function buildDebugPresetBar() {
   });
 }function applyLang() {
   const L = t();
+  const city = getCityCopy();
+  document.title = city.brand;
+  document.getElementById("appTitle")?.replaceChildren(document.createTextNode(city.brand));
+  document.getElementById("menuTitle").textContent = city.brand;
   document.getElementById("menuSub").textContent = L.sub;
   document.getElementById("btnPlay").textContent = L.play;
   document.getElementById("btnShopOpen").textContent = L.shop;
@@ -4008,9 +4121,19 @@ function buildDebugPresetBar() {
   document.getElementById("btnQuestsOpen")?.setAttribute("title", L.quests);
   document.getElementById("btnAchievementsOpen")?.setAttribute("title", L.achievements);
   document.getElementById("btnCollectionOpen")?.setAttribute("title", L.collection);
+  [
+    ["btnTutorialOpen", L.tutorial],
+    ["btnSettingsOpen", L.settingsShort],
+    ["btnQuestsOpen", L.quests],
+    ["btnAchievementsOpen", L.achievements],
+    ["btnCollectionOpen", L.collection],
+  ].forEach(([id, label]) => document.getElementById(id)?.setAttribute("aria-label", label));
   const timeBadge = document.getElementById("menuTimeBadge");
   if (timeBadge) timeBadge.textContent = settingTimeOfDay === "night" ? L.timeNight : L.timeDay;
   document.getElementById("menuCoinsLabel").textContent = L.coins;
+  document.getElementById("menuCoinsUnit").textContent = getCoinWord();
+  document.getElementById("hudCoinsUnit").textContent = getCoinWord();
+  document.getElementById("shopCoinsUnit")?.replaceChildren(document.createTextNode(getCoinWord()));
   document.getElementById("shopTitle").textContent = L.shopTitle;
   document.getElementById("btnBackShop").textContent = L.back;
   document.getElementById("btnBackSettings").textContent = L.back;
@@ -4031,6 +4154,7 @@ function buildDebugPresetBar() {
   document.getElementById("btnNextRun")?.replaceChildren(document.createTextNode(L.next));
   document.getElementById("btnEndMenu")?.replaceChildren(document.createTextNode(L.toMenu));
   updateFireControl();
+  updateBonusControl();
   document
     .querySelectorAll(".lbtn")
     .forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
@@ -4063,12 +4187,9 @@ function buildSettings() {
     timeDesc.textContent =
       "\u041e\u0431\u0435\u0440\u0438 \u0444\u043e\u043d \u043c\u0435\u043d\u044e \u0442\u0430 \u0433\u0440\u0438";
   document.getElementById("sLblSound").textContent = L.lblSound;
-  document.getElementById("sDescSound").textContent =
-    settingMusicTrack === "march"
-      ? getMarchLyrics()[0]
-      : settingMusicTrack === "rain"
-        ? getRainLyrics()[0]
-        : L.descSound;
+  const cityMusic = getCityCopy().music;
+  const musicIndex = settingMusicTrack === "march" ? 1 : settingMusicTrack === "rain" ? 2 : 0;
+  document.getElementById("sDescSound").textContent = cityMusic[musicIndex] || L.descSound;
   document.getElementById("sLblVib").textContent = L.lblVib;
   document.getElementById("sDescVib").textContent = L.descVib;
   const robotVoiceUi = ROBOT_VOICE_UI[lang] || ROBOT_VOICE_UI.uk;
@@ -4090,7 +4211,10 @@ function buildSettings() {
   document.querySelectorAll("#segTime .seg-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.val === settingTimeOfDay);
   });
-  document.querySelectorAll("#segMusic .seg-btn").forEach((b) => {
+  document.querySelectorAll("#segMusic .seg-btn").forEach((b, index) => {
+    const trackName = cityMusic[index] || cityMusic[0];
+    b.textContent = trackName;
+    b.setAttribute("aria-label", trackName);
     b.classList.toggle("active", b.dataset.val === settingMusicTrack);
   });
   document.querySelectorAll("#segRobotVoice .seg-btn").forEach((b) => {
@@ -4201,12 +4325,11 @@ function buildBackpack() {
     "\u0421\u043b\u043e\u0442\u0456\u0432: " +
     backpackSlots +
     " / 3   \u041c\u043e\u043d\u0435\u0442: " +
-    totalCoins +
-    "\u20b4";
+    formatCoins(totalCoins);
   button.textContent =
     backpackSlots >= 3
       ? "\u0420\u044e\u043a\u0437\u0430\u043a \u043c\u0430\u043a\u0441\u0438\u043c\u0430\u043b\u044c\u043d\u0438\u0439"
-      : "\u0412\u0456\u0434\u043a\u0440\u0438\u0442\u0438 3-\u0439 \u0441\u043b\u043e\u0442 - " + price + "\u20b4";
+      : "\u0412\u0456\u0434\u043a\u0440\u0438\u0442\u0438 3-\u0439 \u0441\u043b\u043e\u0442 - " + formatCoins(price);
   button.disabled = backpackSlots >= 3 || totalCoins < price;
   store.innerHTML = "";
   BACKPACK_BONUS_STORE.forEach((item) => {
@@ -4223,8 +4346,8 @@ function buildBackpack() {
       '</span><span class="backpack-buy-count">x' +
       (bonusInventory[item.type] || 0) +
       '</span><span class="backpack-buy-price">' +
-      item.price +
-      "\u20b4</span>";
+      formatCoins(item.price) +
+      "</span>";
     card.disabled = totalCoins < item.price;
     store.appendChild(card);
   });
@@ -4646,7 +4769,7 @@ function buildShop() {
       pr.textContent = L.equip;
     } else {
       pr.className = "sitem-price";
-      pr.textContent = sk.price + "\u20b4";
+      pr.textContent = formatCoins(sk.price);
     }
     div.appendChild(cv2);
     div.appendChild(nm);
@@ -4694,7 +4817,7 @@ function buildShop() {
     lvl.textContent = getPlayerUpgradeEffectText(upgrade.id, level);
     const pr = document.createElement("div");
     pr.className = maxed ? "sitem-owned" : totalCoins >= price ? "sitem-price" : "sitem-price locked";
-    pr.textContent = maxed ? "\u041c\u0430\u043a\u0441\u0438\u043c\u0443\u043c" : price + "\u20b4";
+    pr.textContent = maxed ? "\u041c\u0430\u043a\u0441\u0438\u043c\u0443\u043c" : formatCoins(price);
     div.appendChild(icon);
     div.appendChild(nm);
     div.appendChild(desc);
@@ -4745,7 +4868,7 @@ function buildShop() {
     effect.textContent = getWeaponUpgradeEffectText(upgrade.id);
     const pr = document.createElement("div");
     pr.className = bought ? "sitem-owned" : totalCoins >= upgrade.price ? "sitem-price" : "sitem-price locked";
-    pr.textContent = bought ? "\u041a\u0443\u043f\u043b\u0435\u043d\u043e" : upgrade.price + "\u20b4";
+    pr.textContent = bought ? "\u041a\u0443\u043f\u043b\u0435\u043d\u043e" : formatCoins(upgrade.price);
     div.appendChild(icon);
     div.appendChild(nm);
     div.appendChild(desc);
@@ -5358,6 +5481,9 @@ function getLvl() {
 
 function startLevel() {
   focusApp();
+  const gameScreen = document.getElementById("sGame");
+  gameScreen?.classList.remove("run-hint-visible");
+  requestAnimationFrame(() => gameScreen?.classList.add("run-hint-visible"));
   cancelSpeech();
   if (startVoiceTimer) {
     clearTimeout(startVoiceTimer);
@@ -5462,6 +5588,7 @@ function startLevel() {
   andriiCooldown = 0;
   bubbleText = "";
   bubbleTimer = 0;
+  bubbleDeadline = 0;
   const autoRunLevelIntro = shouldAutoRunLevelIntro();
   gameState = autoRunLevelIntro ? "run" : "missionIntro";
   saveGame();
@@ -5570,10 +5697,22 @@ function updatePausePanel() {
   const isPaused = gameState === "paused";
   panel.classList.toggle("active", isPaused);
 }
+function updateBonusControl() {
+  const button = document.getElementById("cBonus");
+  if (!button) return;
+  const type = bonusBackpack[0] ? getBackpackBonusType(bonusBackpack[0]) : null;
+  const available = type ? bonusBackpack.filter((item) => getBackpackBonusType(item) === type).length : 0;
+  const label = type ? `${getBonusLabel(type)} ×${available}` : (lang === "uk" ? "Бонусів немає" : t().bonus);
+  button.textContent = label;
+  button.disabled = !type;
+  button.setAttribute("aria-label", label);
+  button.title = label;
+}
 function hudUp() {
   document.getElementById("hLives").textContent = lives;
   document.getElementById("hScore").textContent = score;
   document.getElementById("hCoins").textContent = runCoins;
+  document.getElementById("hudCoinsUnit").textContent = getCoinWord();
   document.getElementById("hudPts").textContent = t().pts;
   const rem = Math.max(0, Math.round(getFinishDistance() - totalDist));
   document.getElementById("hDist").textContent =
@@ -5588,6 +5727,7 @@ function hudUp() {
     (locNames[currentLocation] || "") +
     " · " +
     (lvNames[currentLevel] || "");
+  updateBonusControl();
 }
 
 const cv = document.getElementById("gc"),
@@ -5788,7 +5928,9 @@ function spawnPostcard() {
   if (secretRoute?.active || bossActive || gameState !== "run") return;
   const pool = getPostcardPool();
   if (!pool.length) return;
-  const card = pool[(Math.random() * pool.length) | 0];
+  const card = currentLocation === 1 && currentLevel === 0
+    ? pool.find((item) => item.id === "lviv_ratusha") || pool[(Math.random() * pool.length) | 0]
+    : pool[(Math.random() * pool.length) | 0];
   const lane = Math.floor(Math.random() * 3);
   postcardItems.push({
     x: BONUS_SPAWN_X,
@@ -10395,7 +10537,7 @@ function drawMarichkaRemodel(x, y, options = {}) {
       ctx.fillStyle = "#ffd700";
       ctx.font = "bold 11px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("x2 ₴", x, y - 85);
+      ctx.fillText("x2 ●", x, y - 85);
       ctx.textAlign = "left";
       ctx.globalAlpha = 1;
     }
@@ -11528,7 +11670,7 @@ function drawCoin(c) {
   ctx.fillStyle = "#b8860b";
   ctx.font = `bold ${Math.max(7, 10 * p.scale)}px sans-serif`;
   ctx.textAlign = "center";
-  if (spin > 0.32) ctx.fillText("₴", x, y + 3 * p.scale);
+  if (spin > 0.32) ctx.fillText("●", x, y + 3 * p.scale);
   ctx.textAlign = "left";
 }
 
@@ -12078,7 +12220,7 @@ function drawLevelClearOverlay() {
   ctx.fillStyle = "#ffd700";
   ctx.font = "13px sans-serif";
   ctx.fillText(
-    "+" + getLvl().bonusCoins + "₴ " + (L.winBonus || "bonus"),
+    "+" + formatCoins(getLvl().bonusCoins) + " " + (L.winBonus || "bonus"),
     W / 2,
     H / 2 + 40,
   );
@@ -12439,7 +12581,7 @@ function drawHUDCanvas() {
     ctx.fillStyle = "#fff6cf";
     ctx.font = "bold 12px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("ДЗВОНИК " + remain + "с  +" + SCHOOL_BELL_REWARD + "₴", W / 2, by + 14);
+    ctx.fillText("ДЗВОНИК " + remain + "с  +" + formatCoins(SCHOOL_BELL_REWARD), W / 2, by + 14);
     ctx.textAlign = "left";
   }
   ctx.fillStyle = "rgba(7,18,28,0.7)";
@@ -12486,7 +12628,7 @@ function drawHUDCanvas() {
     ctx.fillStyle = "#62d6ff";
     ctx.font = "bold 13px sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("TRICK x" + trickComboMult, 16, 102);
+    ctx.fillText((lang === "uk" ? "Трюк ×" : "TRICK ×") + trickComboMult, 16, 102);
     ctx.globalAlpha = 1;
   }
   drawLevelMiniMap();
@@ -12642,7 +12784,7 @@ function getCityStartCopy() {
       };
 }
 function drawStartPhaseBanner() {
-  if (gameState !== "run" || fr > START_SAFE_FRAMES + 120) return;
+  if (gameState !== "run" || fr > START_PHASE_BANNER_FRAMES) return;
   const copy = getCityStartCopy();
   const text = fr < START_EMPTY_FRAMES || totalDist < START_EMPTY_DISTANCE
     ? copy.phaseClear
@@ -12774,13 +12916,13 @@ function drawWinOverlay() {
   ctx.fillStyle = "#ffd700";
   ctx.font = "14px sans-serif";
   ctx.fillText(
-    `${L.earned}: ${runCoins} РјРѕРЅРµС‚   ${L.winBonus}: +${getLvl().bonusCoins} РјРѕРЅРµС‚`,
+      `${L.earned}: ${formatCoins(runCoins)} · ${L.winBonus}: +${formatCoins(getLvl().bonusCoins)}`,
     W / 2,
     H / 2 + 22,
   );
   ctx.fillStyle = "#aabbcc";
   ctx.font = "13px sans-serif";
-  ctx.fillText(L.total + ": " + totalCoins + " РјРѕРЅРµС‚", W / 2, H / 2 + 48);
+  ctx.fillText(L.total + ": " + formatCoins(totalCoins), W / 2, H / 2 + 48);
   ctx.fillStyle = "#8899aa";
   ctx.font = "12px sans-serif";
   ctx.fillText("↩ " + (t().back || "Back to menu"), W / 2, H / 2 + 76);
@@ -12819,13 +12961,13 @@ function drawOverlay() {
     ctx.fillStyle = "#ffd700";
     ctx.font = "15px sans-serif";
     ctx.fillText(
-      L.score + ": " + score + "   " + L.earned + ": " + runCoins + " РјРѕРЅРµС‚",
+      L.score + ": " + score + " · " + L.earned + ": " + formatCoins(runCoins),
       W / 2,
       H / 2 + 8,
     );
     ctx.fillStyle = "#6bcb77";
     ctx.font = "13px sans-serif";
-    ctx.fillText(L.total + ": " + totalCoins + " РјРѕРЅРµС‚", W / 2, H / 2 + 32);
+    ctx.fillText(L.total + ": " + formatCoins(totalCoins), W / 2, H / 2 + 32);
     ctx.fillStyle = "#8899aa";
     ctx.font = "12px sans-serif";
     ctx.fillText(
@@ -14386,7 +14528,7 @@ function update() {
     addLevelMissionProgress("coins", 15);
     sfxCoin();
     addParts(point.x, point.y, "#d99a48");
-    showAndriiBubble("\u041b\u044c\u0432\u0456\u0432\u0441\u044c\u043a\u0430 \u043a\u0430\u0432\u0430! +15\u20b4 \u0456 \u0448\u0432\u0438\u0434\u0448\u0438\u0439 \u0440\u0438\u0432\u043e\u043a!");
+    showAndriiBubble("Львівська кава! +15 монет і швидший ривок!");
     hudUp();
     return false;
   });
@@ -14435,7 +14577,7 @@ function update() {
     sfxCoin();
     addParts(point.x, point.y, "#f5c542");
     addParts(LANES[pLane], pY - 30, "#9fd8ff");
-    showAndriiBubble("\u0410\u0432\u0442\u043e\u0431\u0443\u0441 \u043f\u0456\u0434\u0432\u0456\u0437! +20\u20b4");
+    showAndriiBubble("Автобус підвіз! +20 монет");
     hudUp();
     return false;
   });
@@ -14469,6 +14611,7 @@ function update() {
       runCoins += 25;
       addQuestProgress("coins", 25);
       addLevelMissionProgress("coins", 25);
+      if (card.id === "lviv_ratusha") addLevelMissionProgress("postcard_ratusha");
       showAndriiBubble("Листівка: " + card.title + " +25 монет");
     }
     sfxCoin();
@@ -14857,6 +15000,7 @@ function speakMarichkaHint(key, cooldown = 640) {
 // Bubble над гравцем
 let bubbleText = "",
   bubbleTimer = 0,
+  bubbleDeadline = 0,
   bubbleQuietTimer = 0,
   bubbleQueue = [];
 function enqueueBubbleText(text) {
@@ -14867,11 +15011,13 @@ function enqueueBubbleText(text) {
 function activateBubbleText(text, duration = 130) {
   bubbleText = text;
   bubbleTimer = duration;
+  bubbleDeadline = performance.now() + (duration / 60) * 1000;
 }
 function showAndriiBubble(text, force = false) {
   if (gameState === "over") {
     bubbleText = "";
     bubbleTimer = 0;
+    bubbleDeadline = 0;
     bubbleQueue = [];
     return;
   }
@@ -14896,41 +15042,61 @@ function drawAndriiBubble() {
   if (gameState === "over") {
     bubbleText = "";
     bubbleTimer = 0;
+    bubbleDeadline = 0;
     bubbleQueue = [];
     return;
+  }
+  if (bubbleDeadline > 0) {
+    bubbleTimer = Math.max(0, Math.ceil(((bubbleDeadline - performance.now()) / 1000) * 60));
+  } else if (bubbleTimer > 0) {
+    bubbleTimer--;
   }
   if (bubbleTimer <= 0) {
     const nextBubble = bubbleQueue.shift();
     if (!nextBubble) return;
     activateBubbleText(nextBubble);
   }
-  bubbleTimer--;
-  const x = LANES[pLane],
-    y = pY - 112;
+  const x = LANES[pLane];
+  const y = pY - 112;
   const alpha = Math.min(1, bubbleTimer / 20);
   ctx.globalAlpha = alpha;
-  // хмарка
-  const pad = 8,
-    tw = ctx.measureText(bubbleText).width + pad * 2;
+  ctx.font = "bold 11px sans-serif";
+  const maxTextWidth = Math.min(220, W - 36);
+  const words = String(bubbleText).split(/\s+/);
+  const lines = [];
+  let line = "";
+  words.forEach((word) => {
+    const candidate = line ? `${line} ${word}` : word;
+    if (line && ctx.measureText(candidate).width > maxTextWidth) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+  });
+  if (line) lines.push(line);
+  const pad = 8;
+  const lineHeight = 13;
+  const tw = Math.max(...lines.map((text) => ctx.measureText(text).width), 42) + pad * 2;
+  const th = lines.length * lineHeight + 10;
   const bx = Math.max(10, Math.min(W - tw - 10, x - tw / 2));
-  const by = Math.max(8, y - 30);
+  const by = Math.max(8, y - th - 18);
   ctx.fillStyle = "rgba(255,255,255,0.92)";
   ctx.beginPath();
   ctx.roundRect
-    ? ctx.roundRect(bx, by, tw, 22, 5)
-    : ctx.fillRect(bx, by, tw, 22);
+    ? ctx.roundRect(bx, by, tw, th, 5)
+    : ctx.fillRect(bx, by, tw, th);
   ctx.fill();
   // хвіст хмарки
   ctx.beginPath();
-  ctx.moveTo(x - 6, by + 22);
-  ctx.lineTo(x, by + 32);
-  ctx.lineTo(x + 6, by + 22);
+  ctx.moveTo(x - 6, by + th);
+  ctx.lineTo(x, by + th + 10);
+  ctx.lineTo(x + 6, by + th);
   ctx.fill();
   // текст
   ctx.fillStyle = "#1a1a2e";
-  ctx.font = "bold 11px sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText(bubbleText, bx + pad, by + 15);
+  lines.forEach((text, index) => ctx.fillText(text, bx + pad, by + 15 + index * lineHeight));
   ctx.globalAlpha = 1;
 }
 

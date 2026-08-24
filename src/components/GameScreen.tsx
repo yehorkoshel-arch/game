@@ -6,7 +6,7 @@ export function GameScreen() {
     <div id="sGame" className="screen">
       <div id="multiplayer-container">
         <div className="player-screen player-screen-primary">
-          <h3 id="playerOneTitle">{'\u0413\u0440\u0430\u0432\u0435\u0446\u044c 1'}</h3>
+          <h3 id="playerOneTitle" aria-hidden="true">{'\u0413\u0440\u0430\u0432\u0435\u0446\u044c 1'}</h3>
           <div className="player-key-hint" id="playerOneHint">A/D · W/Space · S</div>
           <canvas id="gc" width={680} height={420} />
         </div>
@@ -41,7 +41,7 @@ export function GameScreen() {
         </div>
         <div className="hud-coin" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span>
-            {'\u20b4'} <span id="hCoins">4</span> &nbsp; <span id="hDist" style={{ color: '#aabbcc' }}>704 м до фінішу</span>
+            <span aria-hidden="true">●</span> <span id="hCoins">4</span> <span id="hudCoinsUnit">монет</span> &nbsp; <span id="hDist" style={{ color: '#aabbcc' }}>704 м до фінішу</span>
           </span>
           <button className="hud-pause-btn" id="btnPauseHud" type="button" title="Пауза (Esc / P)">
             Пауза

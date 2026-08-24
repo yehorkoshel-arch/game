@@ -9,27 +9,28 @@ export function MenuScreen() {
         День
       </div>
       <DancingAndrii />
-      <button className="gear-btn" id="btnSettingsOpen" title="Налаштування" type="button">
+      <button className="gear-btn" id="btnSettingsOpen" title="Налаштування" aria-label="Налаштування" type="button">
         ⚙
       </button>
       <button
         className="tutorial-icon-btn"
         id="btnTutorialOpen"
         title="Навчання"
+        aria-label="Навчання"
         type="button"
         onClick={() => window.dispatchEvent(new Event('kyiv-runner:open-tutorial'))}
       >
         ?
       </button>
-      <button className="quest-icon-btn" id="btnQuestsOpen" title="Квести" type="button">
+      <button className="quest-icon-btn" id="btnQuestsOpen" title="Квести" aria-label="Квести" type="button">
         ✓
         <span id="questReadyBadge" className="quest-ready-badge">0</span>
       </button>
-      <button className="achievement-icon-btn" id="btnAchievementsOpen" title="Досягнення" type="button">
+      <button className="achievement-icon-btn" id="btnAchievementsOpen" title="Досягнення" aria-label="Досягнення" type="button">
         ★
         <span id="achievementReadyBadge" className="quest-ready-badge">0</span>
       </button>
-      <button className="collection-icon-btn" id="btnCollectionOpen" title="Колекція" type="button">
+      <button className="collection-icon-btn" id="btnCollectionOpen" title="Колекція" aria-label="Колекція" type="button">
         ◧
       </button>
       <div className="menu-backing">
@@ -50,7 +51,7 @@ export function MenuScreen() {
             ES
           </button>
         </div>
-        <div className="title">KYIV RUNNER</div>
+        <div className="title" id="menuTitle">KYIV RUNNER</div>
         <div className="sub" id="menuSub">
           вулицями столиці
         </div>
@@ -81,7 +82,7 @@ export function MenuScreen() {
             flexWrap: 'wrap',
             justifyContent: 'center',
             maxWidth: '380px',
-            maxHeight: '90px',
+            maxHeight: '130px',
             overflowY: 'auto',
           }}
         />
@@ -93,7 +94,7 @@ export function MenuScreen() {
           </div>
         ) : null}
         <div className="menu-coins-line">
-          <span id="menuCoinsLabel">Монети</span>: <span id="menuCoins">396</span> ₴
+          <span id="menuCoinsLabel">Монети</span>: <span id="menuCoins">396</span> <span id="menuCoinsUnit">монет</span>
         </div>
       </div>
     </div>

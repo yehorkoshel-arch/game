@@ -51,6 +51,9 @@ export const UI_TEXT={
     tutorialJump:'Стрибай через ями, конуси та машини.',
     tutorialSlide:'Роби слайд під небезпечними перешкодами.',
     tutorialFire:'Стріляй, коли зброя доступна.',
+    tutorialBackpack:'Відкрий рюкзак і активуй зібраний бонус.',
+    tutorialShield:'Щит захищає від удару; на розгоні збирай монети й шукай секретний прохід.',
+    tutorialClose:'Закрити',
     player1:'Гравець 1',
     player2:'Гравець 2',
     player1Hint:'A/D \u0430\u0431\u043e \u2190/\u2192 \u00b7 W/Space \u0441\u0442\u0440\u0438\u0431\u043e\u043a \u00b7 S \u0441\u043b\u0430\u0439\u0434',
@@ -84,6 +87,9 @@ export const UI_TEXT={
     tutorialJump:'Jump over holes, cones, and cars.',
     tutorialSlide:'Slide under dangerous obstacles.',
     tutorialFire:'Shoot when a weapon is available.',
+    tutorialBackpack:'Open the backpack and activate a collected bonus.',
+    tutorialShield:'A shield blocks one hit; collect coins and look for secret routes.',
+    tutorialClose:'Close',
     player1:'Player 1',
     player2:'Player 2',
     player1Hint:'A/D or \u2190/\u2192 \u00b7 W/Space jump \u00b7 S slide',
@@ -117,6 +123,9 @@ export const UI_TEXT={
     tutorialJump:'Springe über Löcher, Kegel und Autos.',
     tutorialSlide:'Rutsche unter gefährlichen Hindernissen durch.',
     tutorialFire:'Schieße, wenn eine Waffe verfügbar ist.',
+    tutorialBackpack:'Öffne den Rucksack und aktiviere einen gesammelten Bonus.',
+    tutorialShield:'Ein Schild blockt einen Treffer; sammle Münzen und suche Geheimrouten.',
+    tutorialClose:'Schließen',
     player1:'Spieler 1',
     player2:'Spieler 2',
     player1Hint:'A/D oder \u2190/\u2192 \u00b7 W/Space Sprung \u00b7 S Slide',
@@ -150,6 +159,9 @@ export const UI_TEXT={
     tutorialJump:'Saute par-dessus les trous, cônes et voitures.',
     tutorialSlide:'Glisse sous les obstacles dangereux.',
     tutorialFire:'Tire quand une arme est disponible.',
+    tutorialBackpack:'Ouvre le sac et active un bonus collecté.',
+    tutorialShield:'Le bouclier bloque un coup ; collecte des pièces et cherche les routes secrètes.',
+    tutorialClose:'Fermer',
     player1:'Joueur 1',
     player2:'Joueur 2',
     player1Hint:'A/D ou \u2190/\u2192 \u00b7 W/Space saut \u00b7 S glissade',
@@ -183,6 +195,9 @@ export const UI_TEXT={
     tutorialJump:'Salta sobre hoyos, conos y coches.',
     tutorialSlide:'Deslízate bajo obstáculos peligrosos.',
     tutorialFire:'Dispara cuando haya un arma disponible.',
+    tutorialBackpack:'Abre la mochila y activa un bono recogido.',
+    tutorialShield:'El escudo bloquea un golpe; recoge monedas y busca rutas secretas.',
+    tutorialClose:'Cerrar',
     player1:'Jugador 1',
     player2:'Jugador 2',
     player1Hint:'A/D o \u2190/\u2192 \u00b7 W/Space salto \u00b7 S deslizar',
@@ -292,10 +307,32 @@ export const SKINS_BASE=[
 
 // ── ЛОКАЦІЇ ───────────────────────────────────────────────────────────────────
 // Локація 0 = Київ, Локація 1 = Львів
-export const LOCATION_NAMES={uk:['🇺🇦 Київ','🦁 Львів'],en:['🇺🇦 Kyiv','🦁 Lviv'],de:['🇺🇦 Kiew','🦁 Lemberg'],fr:['🇺🇦 Kiev','🦁 Lviv'],es:['🇺🇦 Kiev','🦁 Leópolis']};
+export const CITY_CONFIG={
+  0:{
+    brand:{uk:'KYIV RUNNER',en:'KYIV RUNNER',de:'KYIV RUNNER',fr:'KYIV RUNNER',es:'KYIV RUNNER'},
+    subtitle:{uk:'вулицями столиці',en:'through the streets of the capital',de:'durch die Straßen der Hauptstadt',fr:'dans les rues de la capitale',es:'por las calles de la capital'},
+    music:{uk:['Як тебе не любити, Києве мій','Дощовий Київ','Нічний Хрещатик'],en:['Kyiv melody','Rainy Kyiv','Night Khreshchatyk'],de:['Kyiv-Melodie','Regnerisches Kyiv','Nacht am Chreschtschatyk'],fr:['Mélodie de Kyiv','Kyiv sous la pluie','Khrechtchatyk la nuit'],es:['Melodía de Kyiv','Kyiv lluvioso','Jreshchátyk de noche']}
+  },
+  1:{
+    brand:{uk:'LVIV RUNNER',en:'LVIV RUNNER',de:'LVIV RUNNER',fr:'LVIV RUNNER',es:'LVIV RUNNER'},
+    subtitle:{uk:'вулицями міста Лева',en:'through the streets of the Lion City',de:'durch die Straßen der Löwenstadt',fr:'dans les rues de la ville du Lion',es:'por las calles de la Ciudad del León'},
+    music:{uk:['Ранок на Ринку','Львівський трамвай','Дощ над бруківкою'],en:['Morning at Rynok','Lviv Tram','Rain over Cobblestones'],de:['Morgen am Rynok','Lemberger Tram','Regen über Pflastersteinen'],fr:['Matin à Rynok','Tramway de Lviv','Pluie sur les pavés'],es:['Mañana en Rynok','Tranvía de Leópolis','Lluvia sobre adoquines']}
+  }
+};
+export const LOCATION_NAMES={uk:['🇺🇦 Київ','🦁 Львів'],en:['🇺🇦 Kyiv','🦁 Lviv'],de:['🇺🇦 Kyiv','🦁 Lemberg'],fr:['🇺🇦 Kyiv','🦁 Lviv'],es:['🇺🇦 Kyiv','🦁 Leópolis']};
 export const DISTRICT_NAMES={
-  kyiv:{uk:['Хрещатик','Поділ','Печерськ','Оболонь','Майдан','Арсенальна','Липки','Лук\'янівка','Солом\'янка','Святошин','Борщагівка','Воскресенка','Виноградар','Троєщина','Позняки','Харківський','Лівий берег','Дарниця','Деміївка','Голосіїв'],
-  en:['Khreshchatyk','Podil','Pechersk','Obolon','Maidan','Arsenalna','Lypky','Lukyanivka','Solomyanka','Svyatoshyn','Borshchahivka','Voskresenka','Vynohradar','Troyeshchyna','Poznyaky','Kharkivsky','Left Bank','Darnytsia','Demiivka','Holosiiv']},
-  lviv:{uk:['Ринок','Личаків','Сихів','Залізничний','Галицький','Левандівка','Знесіння','Рясне','Збоїща','Сокільники','Підзамче','Кортумова','Замарстинів','Кривчиці','Пасіки','Кульпарків','Лемківська','Клепарів','Богданівка','Погулянка'],
-  en:['Rynok','Lychakiv','Sykhiv','Zaliznychny','Halytsky','Levandivka','Znesinnnya','Ryasne','Zboishcha','Sokilnyky','Pidzamche','Kortumova','Zamarstyniv','Kryvchytsi','Pasiky','Kulparkiv','Lemkivska','Klepariv','Bogdanivka','Pohulanka']}
+  kyiv:{
+    uk:['Хрещатик','Поділ','Печерськ','Оболонь','Майдан','Арсенальна','Липки','Лук\'янівка','Солом\'янка','Святошин','Борщагівка','Воскресенка','Виноградар','Троєщина','Позняки','Харківський','Лівий берег','Дарниця','Деміївка','Голосіїв'],
+    en:['Khreshchatyk','Podil','Pechersk','Obolon','Maidan','Arsenalna','Lypky','Lukyanivka','Solomyanka','Sviatoshyn','Borshchahivka','Voskresenka','Vynohradar','Troyeshchyna','Pozniaky','Kharkivskyi','Left Bank','Darnytsia','Demiivka','Holosiiv'],
+    de:['Chreschtschatyk','Podil','Petschersk','Obolon','Maidan','Arsenalna','Lypky','Lukjaniwka','Solomjanka','Swjatoschyn','Borschtschahiwka','Woskressenka','Wynohradar','Trojeschtschyna','Posnjaky','Charkiwski','Linkes Ufer','Darnyzja','Demijiwka','Holossijiw'],
+    fr:['Khrechtchatyk','Podil','Petchersk','Obolon','Maïdan','Arsenalna','Lypky','Loukianivka','Solomianska','Sviatochyne','Borchtchahivka','Voskressenka','Vynohradar','Troïechtchyna','Pozniaky','Kharkivskyi','Rive gauche','Darnytsia','Demïivka','Holosiiv'],
+    es:['Jreshchátyk','Podil','Pechersk','Obolon','Maidán','Arsenalna','Lypky','Lukianivka','Solomianska','Sviatoshyn','Borshchahivka','Voskresenka','Vynohradar','Troyeshchyna','Pozniaky','Járkivskyi','Orilla izquierda','Darnytsia','Demiivka','Holosiiv']
+  },
+  lviv:{
+    uk:['Площа Ринок','Проспект Свободи','Підзамче','Личаків','Стрийський парк','Сихів','Левандівка','Знесіння','Замарстинів','Високий Замок','Залізничний','Галицький','Рясне','Збоїща','Сокільники','Кортумова','Кривчиці','Пасіки','Кульпарків','Лемківська'],
+    en:['Rynok Square','Svobody Avenue','Pidzamche','Lychakiv','Stryiskyi Park','Sykhiv','Levandivka','Znesinnia','Zamarstyniv','High Castle','Zaliznychnyi','Halytskyi','Riasne','Zboishcha','Sokilnyky','Kortumova','Kryvchytsi','Pasiky','Kulparkiv','Lemkivska'],
+    de:['Rynok-Platz','Svobody-Allee','Pidzamche','Lychakiw','Stryjskyj-Park','Sychiw','Lewandiwka','Snesinnja','Samarstyniw','Hohes Schloss','Salisnytschnyj','Halytskyj','Rjasne','Sbojischtscha','Sokilnyky','Kortumowa','Krywytschi','Pasiky','Kulparkiw','Lemkiwska'],
+    fr:['Place Rynok','Avenue Svobody','Pidzamtche','Lytchakiv','Parc Stryiskyi','Sykhiv','Levandivka','Znesinnia','Zamarstyniv','Haut Château','Zaliznychnyi','Halytskyi','Riasne','Zboishcha','Sokilnyky','Kortumova','Kryvchytsi','Pasiky','Kulparkiv','Lemkivska'],
+    es:['Plaza Rynok','Avenida Svobody','Pidzamche','Lychakiv','Parque Stryiskyi','Sykhiv','Levandivka','Znesinnia','Zamarstyniv','Castillo Alto','Zaliznychnyi','Halytskyi','Riasne','Zboishcha','Sokilnyky','Kortumova','Kryvchytsi','Pasiky','Kulparkiv','Lemkivska']
+  }
 };

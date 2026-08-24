@@ -27,7 +27,9 @@ canvas{display:block}
 .player-screen-primary{flex:0 0 680px;width:680px;max-width:100%;height:420px;border-right:none}
 .player-screen-primary canvas{width:680px;height:420px;max-width:100%}
 .player-screen h3{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:3;margin:0;padding:4px 10px;border:1px solid rgba(255,204,0,.42);border-radius:6px;background:rgba(10,14,28,.72);color:#ffcc00;font-size:13px;font-weight:800}
-.player-key-hint{position:absolute;top:38px;left:50%;transform:translateX(-50%);z-index:3;max-width:92%;padding:3px 8px;border:1px solid rgba(126,215,255,.32);border-radius:6px;background:rgba(7,15,28,.58);color:#bfeeff;font-size:10px;font-weight:800;white-space:nowrap;pointer-events:none;animation:playerHintAutoHide 4.4s ease forwards}
+.player-key-hint{position:absolute;top:38px;left:50%;transform:translateX(-50%);z-index:3;max-width:92%;padding:3px 8px;border:1px solid rgba(126,215,255,.32);border-radius:6px;background:rgba(7,15,28,.58);color:#bfeeff;font-size:10px;font-weight:800;white-space:nowrap;pointer-events:none;opacity:0;visibility:hidden}
+#sGame.run-hint-visible .player-screen-primary .player-key-hint{animation:playerHintAutoHide 4.4s ease forwards}
+#sGame:not(.multiplayer-active) .player-screen-primary h3{display:none}
 .player-screen-secondary .player-key-hint{display:none}
 #sGame.multiplayer-active .player-key-hint{display:block;animation:none;opacity:1;visibility:visible}
 #sGame.multiplayer-active .player-screen h3{top:8px}
@@ -94,7 +96,7 @@ canvas{display:block}
 .srow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:0.5px solid #1e2e44}
 .srow:last-child{border-bottom:none}
 .srow-label{font-size:14px;color:#aabbcc}
-.srow-desc{font-size:11px;color:#556677;margin-top:2px}
+.srow-desc{font-size:11px;color:#b6c6df;margin-top:2px}
 .music-settings-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 14px}
 .music-settings-copy{min-width:0}
 .music-track-picker{grid-column:1/-1}
@@ -186,7 +188,7 @@ canvas{display:block}
 .collection-reward.ready{border-color:#756426;background:#211f20}
 .collection-reward.claimed{border-color:#285b42;background:#14261f}
 .collection-reward-title{font-size:12px;font-weight:800;color:#e5ebf7}
-.collection-reward-desc{margin-top:2px;font-size:10px;color:#8291ad}
+.collection-reward-desc{margin-top:2px;font-size:10px;color:#b9c8e2}
 .collection-reward-progress{margin-top:4px;font-size:10px;color:#ffd700}
 .collection-claim{min-width:76px;padding:6px 8px;border:1px solid #ffd700;border-radius:6px;background:#ffd700;color:#17192a;font-size:10px;font-weight:800;cursor:pointer}
 .collection-claim:disabled{border-color:#354057;background:#273047;color:#697792;cursor:default}
@@ -198,7 +200,7 @@ canvas{display:block}
 .collection-card.unlocked .collection-art{background:linear-gradient(135deg,#1f4b8f,#d49b3a)}
 .collection-info{padding:9px}
 .collection-title{font-size:12px;font-weight:800;color:#e5ebf7}
-.collection-desc{margin-top:3px;font-size:10px;line-height:1.3;color:#8291ad}
+.collection-desc{margin-top:3px;font-size:10px;line-height:1.3;color:#b9c8e2}
 .collection-card.locked .collection-title{color:#758198}
 .collection-card.locked .collection-art{filter:grayscale(1);opacity:.58}
 .postcard-viewer{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,8,18,.76);z-index:12;padding:20px}
@@ -229,12 +231,13 @@ canvas{display:block}
 .backpack-buy-price{grid-area:price;font-size:11px;color:#ffd700;text-align:center}
 #btnBackpackUpgrade:disabled{opacity:.45;cursor:default}
 .lvl-bar{display:flex;gap:6px;margin-top:14px}
-#sMenu .lvl-btn{width:58px;height:50px;border-radius:10px;border:1.5px solid var(--menu-chip-border);background:rgba(7,14,34,.55);color:rgba(242,246,255,.72);font-size:14px;font-weight:700;cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:border-color .2s,background .2s,color .2s;text-shadow:0 1px 4px rgba(0,0,0,.35);padding:3px}
+#sMenu .lvl-btn{width:68px;min-height:62px;border-radius:8px;border:1.5px solid var(--menu-chip-border);background:rgba(7,14,34,.55);color:rgba(242,246,255,.72);font-size:14px;font-weight:700;cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:border-color .2s,background .2s,color .2s;text-shadow:0 1px 4px rgba(0,0,0,.35);padding:4px}
 #sMenu .lvl-btn.unlocked{border-color:var(--menu-chip-border);background:var(--menu-chip-bg);color:var(--menu-chip-text);cursor:pointer}
 #sMenu .lvl-btn.unlocked:hover{border-color:var(--menu-btn-border);color:var(--menu-btn-text);background:var(--menu-btn-bg-hover)}
 #sMenu .lvl-btn.current{border-color:var(--menu-btn-active-bg);color:var(--menu-btn-active-text);background:var(--menu-btn-active-bg);box-shadow:0 0 10px rgba(255,215,0,0.3);text-shadow:none}
 #sMenu .lvl-btn.done{border-color:#2d6a34;color:#6bcb77;background:#0d1e10}
-#sMenu .lvl-btn-name{max-width:54px;font-size:7px;line-height:1.05;opacity:.95;letter-spacing:0;text-transform:none;white-space:normal;overflow-wrap:normal;word-break:normal;text-align:center}
+#sMenu .lvl-btn-name{max-width:62px;font-size:8px;line-height:1.08;opacity:.98;letter-spacing:0;text-transform:none;white-space:normal;overflow-wrap:anywhere;word-break:normal;text-align:center}
+#sMenu .lvl-btn-lock{max-width:62px;font-size:6px;line-height:1.05;color:#dbe7ff;opacity:.88;text-align:center;overflow-wrap:anywhere}
 .loc-tabs{display:flex;gap:0;margin-bottom:10px;border-radius:8px;overflow:hidden;border:1px solid var(--menu-chip-border)}
 .loc-tab{flex:1;padding:7px 10px;font-size:12px;font-weight:700;border:none;background:var(--menu-chip-bg);color:var(--menu-chip-text);cursor:pointer;transition:background .2s,color .2s;text-shadow:0 1px 4px rgba(0,0,0,.35)}
 .loc-tab.active{background:var(--menu-btn-active-bg);color:var(--menu-btn-active-text);text-shadow:none}
@@ -299,10 +302,15 @@ canvas{display:block}
 .step p{margin:0;font-size:14px;color:#ccc}
 .btn-primary{background:#ffcc00;color:#1e1e2f;border:none;padding:12px 30px;font-size:16px;font-weight:bold;border-radius:8px;cursor:pointer;transition:transform .1s,background .2s}
 .btn-primary:hover{background:#ffdd33;transform:scale(1.05)}
+.tutorial-actions{display:flex;gap:10px;align-items:center;justify-content:center}
+.btn-secondary{border:1px solid #6ea7d9;background:transparent;color:#dcecff;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-secondary:hover{border-color:#ffcc00;color:#ffdd33}
 @media (max-width:480px){
   .tutorial-content{padding:20px;border-radius:12px}
   .tutorial-content h2{font-size:20px}
-  .btn-primary{width:100%;padding:12px 18px}
+  .tutorial-actions{flex-direction:column-reverse}
+  .btn-primary,.btn-secondary{width:100%;padding:12px 18px}
+  #sMenu .lvl-btn{width:62px;min-height:64px}
 }
 
 

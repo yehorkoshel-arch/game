@@ -6,7 +6,7 @@ export function ShopScreen() {
           Магазин скінів
         </div>
         <div className="shop-coins-badge">
-          ₴ <span id="shopCoins">396</span>
+          <span aria-hidden="true">●</span> <span id="shopCoins">396</span> <span id="shopCoinsUnit">монет</span>
         </div>
       </div>
       <div className="shop-body">
@@ -19,12 +19,12 @@ export function ShopScreen() {
           <div className="sitem">
             <canvas width={52} height={62} />
             <div className="sitem-name">Ніндзя</div>
-            <div className="sitem-price">100₴</div>
+            <div className="sitem-price">100 монет</div>
           </div>
           <div className="sitem">
             <canvas width={52} height={62} />
             <div className="sitem-name">Козак</div>
-            <div className="sitem-price">180₴</div>
+            <div className="sitem-price">180 монет</div>
           </div>
         </div>
       </div>

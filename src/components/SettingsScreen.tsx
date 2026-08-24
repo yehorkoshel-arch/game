@@ -61,7 +61,7 @@ export function SettingsScreen() {
           <div className="music-track-picker">
             <div className="seg" id="segMusic">
               <button className="seg-btn" data-val="kyiv" type="button">
-                Як тебе не любити, Києве мій
+                Мелодія міста
               </button>
               <button className="seg-btn" data-val="march" type="button">
                 Шалійте, шалійте, скажені кати
@@ -90,7 +90,7 @@ export function SettingsScreen() {
             <div className="srow-label" id="sLblVib">Вібрація</div>
             <div className="srow-desc" id="sDescVib">Вібрація при зіткненні</div>
           </div>
-          <button className="tog off" id="togVib" type="button" />
+          <button className="tog off" id="togVib" type="button" aria-label="Увімкнути вібрацію" />
         </div>
       </div>
       <div className="settings-footer">
