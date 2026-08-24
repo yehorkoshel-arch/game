@@ -3961,21 +3961,20 @@ function startDebugScenario(loc, level, mode = "start") {
   if (mode === "finish") {
     bossDefeated = true;
     totalDist = Math.max(0, getFinishDistance() - FINISH_APPROACH_DISTANCE - 4);
-    showAndriiBubble("���� ������");
+    showAndriiBubble("\u0424\u0456\u043d\u0456\u0448 \u043f\u043e\u0440\u0443\u0447!");
   } else if (mode === "boss") {
     totalDist = Math.max(0, getFinishDistance() - 245);
     bossActive = false;
     bossDefeated = false;
-    showAndriiBubble("���� ����");
+    showAndriiBubble("\u0411\u043e\u0441 \u043f\u043e\u043f\u0435\u0440\u0435\u0434\u0443!");
   } else if (mode === "tram") {
     totalDist = Math.min(160, Math.max(0, getFinishDistance() * 0.28));
-    showAndriiBubble("���� �������");
+    showAndriiBubble("\u0422\u0440\u0430\u043c\u0432\u0430\u0439\u043d\u0430 \u0445\u0432\u0438\u043b\u044f!");
   } else if (mode === "weapon") {
     totalDist = 130;
-    showAndriiBubble("���� ����");
+    showAndriiBubble("\u041c\u0456\u043d\u0456\u0433\u0430\u043d \u0433\u043e\u0442\u043e\u0432\u0438\u0439!");
     updateFireControl();
-  }
-  hudUp();
+  }  hudUp();
   saveGame();
 }
 
@@ -3984,10 +3983,10 @@ function buildDebugPresetBar() {
   if (!bar) return;
   bar.innerHTML = "";
   const presets = [
-    { label: "Գ���", loc: currentLocation, level: currentLevel, mode: "finish" },
-    { label: "��� ���", loc: 0, level: LEVELS_KYIV.length - 1, mode: "boss" },
-    { label: "�������", loc: 1, level: 2, mode: "tram" },
-    { label: "�����", loc: 1, level: 2, mode: "weapon" },
+    { label: "\u0424\u0406\u041d\u0406\u0428", loc: currentLocation, level: currentLevel, mode: "finish" },
+    { label: "\u0411\u041e\u0421", loc: 0, level: LEVELS_KYIV.length - 1, mode: "boss" },
+    { label: "\u0422\u0420\u0410\u041c\u0412\u0410\u0419", loc: 1, level: 2, mode: "tram" },
+    { label: "\u041c\u0406\u041d\u0406\u0413\u0410\u041d", loc: 1, level: 2, mode: "weapon" },
   ];
   presets.forEach((preset) => {
     const btn = document.createElement("button");
@@ -3997,8 +3996,7 @@ function buildDebugPresetBar() {
     btn.onclick = () => startDebugScenario(preset.loc, preset.level, preset.mode);
     bar.appendChild(btn);
   });
-}
-function applyLang() {
+}function applyLang() {
   const L = t();
   document.getElementById("menuSub").textContent = L.sub;
   document.getElementById("btnPlay").textContent = L.play;
@@ -7053,7 +7051,7 @@ function drawLvivTram() {
     ctx.fillStyle = "#ffdf78";
     ctx.font = "bold 11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("РґР·РµРЅСЊ-РґР·РµРЅСЊ!", tramX + 114, tramY - 27);
+    ctx.fillText("\u0434\u0437\u0435\u043d\u044c-\u0434\u0437\u0435\u043d\u044c!", tramX + 114, tramY - 27);
     ctx.restore();
   }
 
@@ -13463,8 +13461,7 @@ function drawSchoolMarichkaScene() {
       "right",
     );
   } else if (schoolDialogueStep === 2) {
-    drawSpeechBox(
-      "�����",
+    drawSpeechBox("\u041c\u0430\u0440\u0456\u0447\u043a\u0430",
       getMarichkaLine("thanks"),
       28,
       48,
